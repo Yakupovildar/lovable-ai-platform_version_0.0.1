@@ -58,6 +58,14 @@ def serve_frontend():
     """Serve main frontend page"""
     return send_file('../index.html')
 
+@app.route('/<path:filename>')
+def serve_static_files(filename):
+    """Serve static files (CSS, JS, images)"""
+    try:
+        return send_file(f'../{filename}')
+    except FileNotFoundError:
+        return jsonify({"error": "File not found"}), 404
+
 @app.route('/api/health')
 def health_check():
     """Health check endpoint"""
