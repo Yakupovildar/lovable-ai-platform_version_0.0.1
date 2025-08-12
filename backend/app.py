@@ -14,40 +14,60 @@ import threading
 import queue
 import time
 import random
-# Placeholder imports for missing modules
-class SuperSmartAI:
-    def generate_response(self, message):
-        return {"type": "ai_response", "message": f"AI получил: {message}"}
+# Import real modules
+try:
+    from advanced_ai import SuperSmartAI
+except ImportError:
+    print("⚠️ advanced_ai.py не найден, используем базовую версию")
+    class SuperSmartAI:
+        def generate_personalized_response(self, message, session_id="default"):
+            return {"type": "ai_response", "message": f"AI получил: {message}"}
 
-class SmartNLP:
-    def correct_and_normalize(self, text):
-        return text.lower().strip()
+try:
+    from smart_nlp import SmartNLP
+except ImportError:
+    print("⚠️ smart_nlp.py не найден, используем базовую версию")
+    class SmartNLP:
+        def correct_and_normalize(self, text):
+            return text.lower().strip()
 
-class ProjectVersionControl:
-    def get_next_version(self, project_type):
-        return "1.0"
-    def save_project_version(self, project_id, version, files, message):
-        pass
-    def get_project_versions(self, project_id):
-        return []
+try:
+    from version_control import ProjectVersionControl
+except ImportError:
+    print("⚠️ version_control.py не найден, используем базовую версию")
+    class ProjectVersionControl:
+        def get_next_version(self, project_type):
+            return "1.0"
+        def save_project_version(self, project_id, version, files, message):
+            pass
+        def get_project_versions(self, project_id):
+            return []
 
-class UserInteractionLogger:
-    def log_event(self, event, data, session_id=None):
-        print(f"LOG: {event} - {data}")
-    def log_interaction(self, session_id, message, processed, msg_type):
-        print(f"INTERACTION: {session_id} - {message}")
-    def log_incoming_message(self, session_id, message):
-        print(f"INCOMING: {session_id} - {message}")
-    def log_ai_response(self, session_id, response):
-        print(f"AI_RESPONSE: {session_id}")
-    def log_error(self, event, data):
-        print(f"ERROR: {event} - {data}")
+try:
+    from logging_system import UserInteractionLogger
+except ImportError:
+    print("⚠️ logging_system.py не найден, используем базовую версию")
+    class UserInteractionLogger:
+        def log_event(self, event, data, session_id=None):
+            print(f"LOG: {event} - {data}")
+        def log_interaction(self, session_id, message, processed, msg_type):
+            print(f"INTERACTION: {session_id} - {message}")
+        def log_incoming_message(self, session_id, message):
+            print(f"INCOMING: {session_id} - {message}")
+        def log_ai_response(self, session_id, response):
+            print(f"AI_RESPONSE: {session_id}")
+        def log_error(self, event, data):
+            print(f"ERROR: {event} - {data}")
 
-class AdvancedProjectGenerator:
-    def generate_project(self, project_type, description, project_name, user_preferences=None):
-        return generator.generate_project(project_type, description, project_name)
-    def add_feature(self, project_id, feature):
-        return True
+try:
+    from advanced_generator import AdvancedProjectGenerator
+except ImportError:
+    print("⚠️ advanced_generator.py не найден, используем базовую версию")
+    class AdvancedProjectGenerator:
+        def generate_project(self, project_type, description, project_name, user_preferences=None):
+            return generator.generate_project(project_type, description, project_name)
+        def add_feature(self, project_id, feature):
+            return True
 
 app = Flask(__name__)
 CORS(app)
@@ -88,7 +108,40 @@ os.makedirs(USER_DATA_DIR, exist_ok=True)
 project_queue = queue.Queue()
 
 # Инициализация новых компонентов
-ai_agent = SuperSmartAI()
+try:
+    ai_agent = SuperSmartAI()
+    print("✅ SuperSmartAI инициализирован успешно")
+except Exception as e:
+    print(f"⚠️ Ошибка инициализации SuperSmartAI: {e}")
+    # Fallback AI агент
+    class FallbackAI:
+        def generate_personalized_response(self, message, session_id="default"):
+            if "игру" in message.lower() or "змейка" in message.lower():
+                return {
+                    "type": "ai_response", 
+                    "message": "🎮 Отлично! Создаю игру Змейка для вас!\n\nЯ создам полнофункциональную игру с:\n• Управление стрелками или WASD\n• Система очков и рекордов\n• Красивая графика\n• Адаптивный дизайн",
+                    "suggestions": ["Создать игру сейчас", "Изменить стиль", "Добавить функции", "Создать другую игру"]
+                }
+            elif "привет" in message.lower() or "кто ты" in message.lower():
+                return {
+                    "type": "ai_response",
+                    "message": "👋 Привет! Я Lovable AI - ваш персональный помощник для создания приложений!\n\n🚀 Я могу создать:\n• Игры (змейка, тетрис, аркады)\n• Веб-приложения (TODO, калькуляторы)\n• Лендинги и сайты\n• Мобильные PWA приложения",
+                    "suggestions": ["Создать игру", "Создать приложение", "Показать примеры", "Помочь с идеей"]
+                }
+            elif "дела" in message.lower():
+                return {
+                    "type": "ai_response",
+                    "message": "💫 У меня всё отлично! Готов создавать потрясающие приложения!\n\nЧто хотите создать сегодня?",
+                    "suggestions": ["Игру змейка", "TODO приложение", "Погодное приложение", "Калькулятор"]
+                }
+            else:
+                return {
+                    "type": "ai_response",
+                    "message": "🤖 Я понял ваш запрос! Расскажите подробнее, что хотите создать?\n\n💡 Например:\n• 'Создай игру змейка'\n• 'Сделай TODO приложение'\n• 'Хочу калькулятор'",
+                    "suggestions": ["Создать игру", "Создать приложение", "Показать примеры", "Помочь с выбором"]
+                }
+    ai_agent = FallbackAI()
+
 nlp_processor = SmartNLP()
 version_control = ProjectVersionControl()
 interaction_logger = UserInteractionLogger()
@@ -2790,7 +2843,7 @@ class SmartAI:
 
         # Попытка получить ответ от основного AI ассистента
         try:
-            ai_response = ai_agent.generate_response(message) # Используем базовый AI
+            ai_response = ai_agent.generate_personalized_response(message, session_id) # Используем правильный метод
             if ai_response and ai_response.get("type") == "ai_response":
                  # Добавляем стандартные предложения, если они не противоречат ответу AI
                 default_suggestions = [
