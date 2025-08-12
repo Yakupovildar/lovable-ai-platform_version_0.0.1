@@ -56,8 +56,12 @@ except ImportError:
             print(f"INCOMING: {session_id} - {message}")
         def log_ai_response(self, session_id, response):
             print(f"AI_RESPONSE: {session_id}")
-        def log_error(self, event, data):
-            print(f"ERROR: {event} - {data}")
+        def log_error(self, event, error_data):
+            print(f"ERROR: {event} - {error_data}")
+        def log_user_request(self, user_id, session_id, request_data):
+            return f"req_{session_id}"
+        def log_project_creation(self, user_id, session_id, project_data):
+            print(f"PROJECT: {user_id} - {project_data}")
 
 try:
     from advanced_generator import AdvancedProjectGenerator
