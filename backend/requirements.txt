@@ -19,3 +19,11 @@ faker==22.0.0
 fuzzywuzzy==0.18.0
 python-levenshtein==0.25.0
 textdistance==4.6.3
+flask==2.3.3
+flask-cors==4.0.0
+flask-socketio==5.3.6
+python-socketio==5.9.0
+python-engineio==4.7.1
+requests==2.31.0
+uuid
+pathlib

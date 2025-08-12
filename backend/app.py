@@ -14,15 +14,49 @@ import threading
 import queue
 import time
 import random
-from advanced_ai import SuperSmartAI
-from smart_nlp import SmartNLP
-from version_control import ProjectVersionControl
-from logging_system import UserInteractionLogger
-from advanced_generator import AdvancedProjectGenerator
+# Placeholder imports for missing modules
+class SuperSmartAI:
+    def generate_response(self, message):
+        return {"type": "ai_response", "message": f"AI получил: {message}"}
+
+class SmartNLP:
+    def correct_and_normalize(self, text):
+        return text.lower().strip()
+
+class ProjectVersionControl:
+    def get_next_version(self, project_type):
+        return "1.0"
+    def save_project_version(self, project_id, version, files, message):
+        pass
+    def get_project_versions(self, project_id):
+        return []
+
+class UserInteractionLogger:
+    def log_event(self, event, data, session_id=None):
+        print(f"LOG: {event} - {data}")
+    def log_interaction(self, session_id, message, processed, msg_type):
+        print(f"INTERACTION: {session_id} - {message}")
+    def log_incoming_message(self, session_id, message):
+        print(f"INCOMING: {session_id} - {message}")
+    def log_ai_response(self, session_id, response):
+        print(f"AI_RESPONSE: {session_id}")
+    def log_error(self, event, data):
+        print(f"ERROR: {event} - {data}")
+
+class AdvancedProjectGenerator:
+    def generate_project(self, project_type, description, project_name, user_preferences=None):
+        return generator.generate_project(project_type, description, project_name)
+    def add_feature(self, project_id, feature):
+        return True
 
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+@app.route('/api/health')
+def health_check():
+    """Health check endpoint"""
+    return jsonify({"status": "ok", "message": "Backend is running"})
 
 # Конфигурация
 PROJECTS_DIR = "projects"
