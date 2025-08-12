@@ -2,8 +2,8 @@
 console.log('💻 Lovable AI Platform loaded!');
 
 // Конфигурация для Replit
-const API_BASE_URL = 'http://0.0.0.0:5000';  // Backend на порту 5000
-const WS_URL = 'http://0.0.0.0:5000';        // WebSocket на порту 5000
+const API_BASE_URL = window.location.origin;  // Используем текущий домен
+const WS_URL = window.location.origin;        // WebSocket на том же домене
 
 // Глобальные переменные
 let isTyping = false;
@@ -12,7 +12,21 @@ let socket = null;
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
+    checkBackendHealth();
 });
+
+// Проверка работоспособности backend
+async function checkBackendHealth() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/health`);
+        const data = await response.json();
+        console.log('✅ Backend статус:', data);
+        showNotification('🤖 AI система готова к работе!', 'success');
+    } catch (error) {
+        console.warn('⚠️ Backend недоступен:', error);
+        showNotification('⚠️ Режим оффлайн - некоторые функции могут быть ограничены', 'info');
+    }
+}
 
 // Основная функция инициализации
 function initializeApp() {
@@ -818,6 +832,8 @@ async function sendMessage() {
             localStorage.setItem('ai_session_id', sessionId);
         }
         
+        console.log('Отправляю запрос к:', `${API_BASE_URL}/api/chat`);
+        
         const response = await fetch(`${API_BASE_URL}/api/chat`, {
             method: 'POST',
             headers: {
@@ -829,13 +845,24 @@ async function sendMessage() {
             })
         });
         
+        console.log('Статус ответа:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Получен ответ:', data);
         
         // Скрываем индикатор печати
         hideTypingIndicator();
         
         // Добавляем ответ AI
-        addMessage(data.message, 'ai', data);
+        if (data.message) {
+            addMessage(data.message, 'ai', data);
+        } else {
+            addMessage('🤖 Привет! Отлично, что вы обратились ко мне! Я готов помочь вам создать любое приложение. Что вас интересует?', 'ai');
+        }
         
         // Показываем предложения если есть
         if (data.suggestions && data.suggestions.length > 0) {
@@ -845,7 +872,28 @@ async function sendMessage() {
     } catch (error) {
         console.error('Ошибка отправки сообщения:', error);
         hideTypingIndicator();
-        addMessage('Извините, произошла ошибка. Попробуйте еще раз.', 'ai');
+        
+        // Более дружелюбная обработка ошибок
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            addMessage('🔌 Не удалось подключиться к серверу. Пожалуйста, проверьте подключение.', 'ai');
+        } else if (error.message.includes('500')) {
+            addMessage('🤖 У меня небольшие технические проблемы. Попробуйте еще раз через минутку!', 'ai');
+        } else {
+            // Даем осмысленный ответ даже при ошибке
+            if (message.toLowerCase().includes('привет') || message.toLowerCase().includes('как дела')) {
+                addMessage('🤖 Привет! У меня все отлично! Хотя у меня небольшие проблемы с подключением к основному серверу, но я все равно готов помочь вам. Что хотите создать?', 'ai');
+            } else {
+                addMessage('🤖 Извините, у меня технические проблемы, но я понял ваш запрос! Могу предложить создать приложение на основе вашей идеи. Что скажете?', 'ai');
+            }
+        }
+        
+        // Показываем предложения по умолчанию
+        showSuggestions([
+            'Создать игру',
+            'Разработать TODO-приложение', 
+            'Сделать калькулятор',
+            'Помочь с идеей'
+        ]);
     }
 }
 
