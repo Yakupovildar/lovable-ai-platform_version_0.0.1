@@ -52,16 +52,15 @@ except ImportError:
             print(f"LOG: {event} - {data}")
         def log_interaction(self, session_id, message, processed, msg_type):
             print(f"INTERACTION: {session_id} - {message}")
-        def log_incoming_message(self, session_id, message):
-            print(f"INCOMING: {session_id} - {message}")
-        def log_ai_response(self, session_id, response):
-            print(f"AI_RESPONSE: {session_id}")
-        def log_error(self, event, error_data):
-            print(f"ERROR: {event} - {error_data}")
         def log_user_request(self, user_id, session_id, request_data):
+            print(f"USER_REQUEST: {user_id} - {session_id} - {request_data}")
             return f"req_{session_id}"
+        def log_ai_response(self, user_id, session_id, request_id, response_data, processing_time):
+            print(f"AI_RESPONSE: {user_id} - {session_id} - {request_id}")
         def log_project_creation(self, user_id, session_id, project_data):
             print(f"PROJECT: {user_id} - {project_data}")
+        def log_error(self, user_id, session_id, error_data):
+            print(f"ERROR: {user_id} - {session_id} - {error_data}")
 
 try:
     from advanced_generator import AdvancedProjectGenerator
@@ -2916,18 +2915,22 @@ def chat():
 
     try:
         # Логируем запрос перед обработкой AI
-        interaction_logger.log_incoming_message(session_id, message)
+        user_id = data.get('user_id', 'anonymous')
+        request_id = interaction_logger.log_user_request(user_id, session_id, {"message": message})
         
+        start_time = time.time()
         ai_response = ai_agent.generate_personalized_response(message, session_id)
+        processing_time = int((time.time() - start_time) * 1000)
         
         # Логируем ответ AI
-        interaction_logger.log_ai_response(session_id, ai_response)
+        interaction_logger.log_ai_response(user_id, session_id, request_id, ai_response, processing_time)
         
         return jsonify(ai_response)
         
     except Exception as e:
         print(f"Ошибка в API /api/chat: {e}")
-        interaction_logger.log_error("api_chat_exception", {"session_id": session_id, "error": str(e)})
+        user_id = data.get('user_id', 'anonymous') if 'data' in locals() else 'anonymous'
+        interaction_logger.log_error(user_id, session_id, {"error": str(e), "endpoint": "/api/chat"})
         
         # Fallback на базовый ответ
         return jsonify({
