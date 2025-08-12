@@ -53,6 +53,11 @@ app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+@app.route('/')
+def serve_frontend():
+    """Serve main frontend page"""
+    return send_file('../index.html')
+
 @app.route('/api/health')
 def health_check():
     """Health check endpoint"""
