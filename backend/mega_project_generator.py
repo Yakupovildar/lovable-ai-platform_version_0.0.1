@@ -414,7 +414,6 @@ function App() {{
               <Routes>
                 <Route path="/" element={{<Dashboard />}} />
                 <Route path="/login" element={{<Login />}} />
-                {/* Add more routes based on template features */}
               </Routes>
             </main>
           </div>
