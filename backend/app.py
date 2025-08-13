@@ -24,6 +24,22 @@ except ImportError:
             return {"type": "ai_response", "message": f"AI получил: {message}"}
 
 try:
+    from enhanced_ai_services import SuperPoweredAI
+    super_ai = SuperPoweredAI()
+    print("✅ SuperPoweredAI инициализирован успешно")
+except ImportError:
+    print("⚠️ enhanced_ai_services.py не найден")
+    super_ai = None
+
+try:
+    from mega_project_generator import MegaProjectGenerator
+    mega_generator = MegaProjectGenerator()
+    print("✅ MegaProjectGenerator инициализирован успешно")
+except ImportError:
+    print("⚠️ mega_project_generator.py не найден")
+    mega_generator = None
+
+try:
     from smart_nlp import SmartNLP
 except ImportError:
     print("⚠️ smart_nlp.py не найден, используем базовую версию")
