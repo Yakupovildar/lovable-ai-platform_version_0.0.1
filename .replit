@@ -6,9 +6,16 @@ channel = "stable-25_05"
 packages = ["iana-etc"]
 
 [workflows]
-[workflows.backend]
-language = "python3"
-start = ["cd", "backend", "&&", "python3", "app.py"]
+runButton = "Run Backend"
+
+[[workflows.workflow]]
+name = "Run Backend"
+author = 46233810
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && python app.py"
 
 [deployment]
 run = ["python3", "backend/app.py"]
