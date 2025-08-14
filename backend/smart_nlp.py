@@ -5,17 +5,7 @@ from typing import List, Dict, Any
 class SmartNLP:
     def __init__(self):
         self.stopwords = {
-            'а', 'в', 'и', 'с', 'на', 'по', 'для', 'от', 'до', 'из', 'к', 'о', 'у', 'за', 'над', 'под', 'при', 'про'
-        }
-
-        # Словарь исправлений опечаток
-        self.corrections = {
-            'создай': ['создай', 'создать', 'сделай', 'сделать'],
-            'приложение': ['приложение', 'прилож', 'app'],
-            'игра': ['игра', 'игру', 'game'],
-            'сайт': ['сайт', 'сайты', 'website', 'веб'],
-            'мобильное': ['мобильное', 'мобильн', 'mobile'],
-            'веб': ['веб', 'web', 'интернет']
+            'и', 'в', 'во', 'не', 'что', 'он', 'на', 'я', 'с', 'со', 'как', 'а', 'то', 'все', 'она', 'так', 'его', 'но', 'да', 'ты', 'к', 'у', 'же', 'вы', 'за', 'бы', 'по', 'только', 'ее', 'мне', 'было', 'вот', 'от', 'меня', 'еще', 'нет', 'о', 'из', 'ему', 'теперь', 'когда', 'даже', 'ну', 'вдруг', 'ли', 'если', 'уже', 'или', 'ни', 'быть', 'был', 'него', 'до', 'вас', 'нибудь', 'опять', 'уж', 'вам', 'ведь', 'там', 'потом', 'себя', 'ничего', 'ей', 'может', 'они', 'тут', 'где', 'есть', 'надо', 'ней', 'для', 'мы', 'тебя', 'их', 'чем', 'была', 'сам', 'чтоб', 'без', 'будто', 'чего', 'раз', 'тоже', 'себе', 'под', 'будет', 'ж', 'тогда', 'кто', 'этот', 'того', 'потому', 'этого', 'какой', 'совсем', 'ним', 'здесь', 'этом', 'один', 'почти', 'мой', 'тем', 'чтобы', 'нее', 'сейчас', 'были', 'куда', 'зачем', 'всех', 'никогда', 'можно', 'при', 'наконец', 'два', 'об', 'другой', 'хоть', 'после', 'над', 'больше', 'тот', 'через', 'эти', 'нас', 'про', 'всего', 'них', 'какая', 'много', 'разве', 'три', 'эту', 'моя', 'впрочем', 'хорошо', 'свою', 'этой', 'перед', 'иногда', 'лучше', 'чуть', 'том', 'нельзя', 'такой', 'им', 'более', 'всегда', 'конечно', 'всю', 'между'
         }
 
     def correct_and_normalize(self, text: str) -> str:
@@ -29,89 +19,85 @@ class SmartNLP:
         # Удаляем лишние пробелы
         text = re.sub(r'\s+', ' ', text)
 
-        # Удаляем знаки препинания в конце
-        text = text.rstrip(string.punctuation)
+        # Простые исправления частых опечаток
+        corrections = {
+            'создай': ['создай', 'создать', 'сделай', 'сделать'],
+            'игра': ['игра', 'игру', 'игры'],
+            'приложение': ['приложение', 'прилож', 'приложения'],
+            'сайт': ['сайт', 'сайты', 'website'],
+            'мобильное': ['мобильное', 'мобильн', 'mobile'],
+        }
+
+        # Применяем исправления
+        for correct, variants in corrections.items():
+            for variant in variants:
+                if variant in text and variant != correct:
+                    text = text.replace(variant, correct)
 
         return text
 
     def extract_keywords(self, text: str) -> List[str]:
         """Извлекает ключевые слова из текста"""
-        text = self.correct_and_normalize(text)
-        words = text.split()
+        if not text:
+            return []
+
+        # Убираем пунктуацию
+        text = text.translate(str.maketrans('', '', string.punctuation))
+
+        # Разбиваем на слова
+        words = text.lower().split()
 
         # Фильтруем стоп-слова
         keywords = [word for word in words if word not in self.stopwords and len(word) > 2]
 
         return keywords
 
-    def analyze_intent(self, text: str) -> Dict[str, Any]:
-        """Анализирует намерение в тексте"""
-        text = self.correct_and_normalize(text)
-        keywords = self.extract_keywords(text)
+    def analyze_sentiment(self, text: str) -> Dict[str, Any]:
+        """Простой анализ тональности"""
+        positive_words = ['хочу', 'нужно', 'создай', 'сделай', 'отлично', 'супер', 'класс', 'круто', 'прекрасно']
+        negative_words = ['не', 'нет', 'плохо', 'ужасно', 'отвратительно']
 
-        intent_patterns = {
-            'create_project': ['создай', 'сделай', 'разработай', 'построй'],
-            'modify_project': ['изменить', 'доработать', 'улучшить', 'добавить'],
-            'help': ['помощь', 'помоги', 'как', 'что'],
-            'greeting': ['привет', 'здравствуй', 'добрый']
-        }
+        text_lower = text.lower()
 
-        detected_intent = 'general'
-        confidence = 0.0
+        positive_count = sum(1 for word in positive_words if word in text_lower)
+        negative_count = sum(1 for word in negative_words if word in text_lower)
 
-        for intent, patterns in intent_patterns.items():
-            matches = sum(1 for pattern in patterns if pattern in text)
-            if matches > 0:
-                current_confidence = matches / len(patterns)
-                if current_confidence > confidence:
-                    confidence = current_confidence
-                    detected_intent = intent
+        if positive_count > negative_count:
+            sentiment = 'positive'
+        elif negative_count > positive_count:
+            sentiment = 'negative'
+        else:
+            sentiment = 'neutral'
 
         return {
-            'intent': detected_intent,
-            'confidence': confidence,
-            'keywords': keywords
+            'sentiment': sentiment,
+            'confidence': abs(positive_count - negative_count) / max(len(text.split()), 1),
+            'positive_score': positive_count,
+            'negative_score': negative_count
         }
 
-    def extract_entities(self, text: str) -> Dict[str, List[str]]:
-        """Извлекает именованные сущности"""
-        text = self.correct_and_normalize(text)
+    def classify_intent(self, text: str) -> str:
+        """Классифицирует намерение пользователя"""
+        text_lower = text.lower()
 
-        entities = {
-            'project_types': [],
-            'technologies': [],
-            'platforms': []
-        }
+        # Создание приложения
+        if any(word in text_lower for word in ['создай', 'сделай', 'разработай', 'хочу создать']):
+            return 'create_app'
 
-        # Типы проектов
-        project_patterns = ['игра', 'приложение', 'сайт', 'бот', 'калькулятор']
-        for pattern in project_patterns:
-            if pattern in text:
-                entities['project_types'].append(pattern)
+        # Вопросы
+        elif any(word in text_lower for word in ['как', 'что', 'где', 'когда', 'почему']):
+            return 'question'
 
-        # Технологии
-        tech_patterns = ['react', 'vue', 'angular', 'python', 'javascript', 'html', 'css']
-        for pattern in tech_patterns:
-            if pattern in text:
-                entities['technologies'].append(pattern)
+        # Приветствие
+        elif any(word in text_lower for word in ['привет', 'здравствуй', 'добрый']):
+            return 'greeting'
 
-        # Платформы
-        platform_patterns = ['ios', 'android', 'веб', 'мобильное']
-        for pattern in platform_patterns:
-            if pattern in text:
-                entities['platforms'].append(pattern)
+        # Подтверждение
+        elif any(word in text_lower for word in ['да', 'согласен', 'ок', 'хорошо']):
+            return 'confirmation'
 
-        return entities
+        # Отрицание
+        elif any(word in text_lower for word in ['нет', 'не согласен', 'отмена']):
+            return 'rejection'
 
-    def get_similarity(self, text1: str, text2: str) -> float:
-        """Вычисляет похожесть двух текстов"""
-        keywords1 = set(self.extract_keywords(text1))
-        keywords2 = set(self.extract_keywords(text2))
-
-        if not keywords1 or not keywords2:
-            return 0.0
-
-        intersection = keywords1.intersection(keywords2)
-        union = keywords1.union(keywords2)
-
-        return len(intersection) / len(union) if union else 0.0
+        return 'general'
