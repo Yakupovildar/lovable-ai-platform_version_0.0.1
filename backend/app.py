@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file, session, redirect, url_for
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room, request
+from functools import wraps
 import os
 import json
 import zipfile
@@ -16,7 +17,6 @@ import time
 import random
 import hashlib
 import sqlite3
-from functools import wraps
 # Import real modules
 try:
     from advanced_ai import SuperSmartAI
@@ -94,7 +94,7 @@ except ImportError:
 app = Flask(__name__)
 app.secret_key = 'vibecode_ai_secret_key_2024_super_secure'
 CORS(app, supports_credentials=True)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=True)
 
 @app.route('/')
 def serve_frontend():
@@ -120,35 +120,35 @@ def register():
     email = data.get('email', '').strip().lower()
     name = data.get('name', '').strip()
     password = data.get('password', '')
-    
+
     # Валидация
     if not email or not name or not password:
         return jsonify({"error": "Все поля обязательны"}), 400
-    
+
     if len(password) < 8:
         return jsonify({"error": "Пароль должен содержать минимум 8 символов"}), 400
-    
+
     if '@' not in email:
         return jsonify({"error": "Некорректный email"}), 400
-    
+
     # Проверяем, не существует ли пользователь
     existing_user = get_user_by_email(email)
     if existing_user:
         return jsonify({"error": "Пользователь с таким email уже существует"}), 400
-    
+
     # Создаем пользователя
     user_id = create_user(email, name, password)
     if user_id:
         session['user_id'] = user_id
         session['user_email'] = email
         session['user_name'] = name
-        
+
         interaction_logger.log_event("user_registered", {
             "user_id": user_id,
             "email": email,
             "name": name
         })
-        
+
         return jsonify({
             "success": True,
             "message": "Регистрация успешна!",
@@ -169,31 +169,31 @@ def login():
     data = request.json
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
-    
+
     if not email or not password:
         return jsonify({"error": "Email и пароль обязательны"}), 400
-    
+
     user = get_user_by_email(email)
     if not user or not verify_password(password, user[3]):  # user[3] = password_hash
         return jsonify({"error": "Неверный email или пароль"}), 401
-    
+
     # Обновляем время последнего входа
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     cursor.execute('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', (user[0],))
     conn.commit()
     conn.close()
-    
+
     # Сохраняем в сессии
     session['user_id'] = user[0]
     session['user_email'] = user[1]
     session['user_name'] = user[2]
-    
+
     interaction_logger.log_event("user_logged_in", {
         "user_id": user[0],
         "email": user[1]
     })
-    
+
     return jsonify({
         "success": True,
         "message": "Вход выполнен успешно!",
@@ -219,7 +219,7 @@ def get_user_profile():
     user = get_user_by_id(session['user_id'])
     if not user:
         return jsonify({"error": "Пользователь не найден"}), 404
-    
+
     return jsonify({
         "user": {
             "id": user[0],
@@ -240,18 +240,18 @@ def update_user_profile():
     """Обновить профиль пользователя"""
     data = request.json
     name = data.get('name', '').strip()
-    
+
     if not name:
         return jsonify({"error": "Имя обязательно"}), 400
-    
+
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     cursor.execute('UPDATE users SET name = ? WHERE id = ?', (name, session['user_id']))
     conn.commit()
     conn.close()
-    
+
     session['user_name'] = name
-    
+
     return jsonify({"success": True, "message": "Профиль обновлен"})
 
 @app.route('/api/user/history')
@@ -259,7 +259,7 @@ def update_user_profile():
 def get_chat_history():
     """Получить историю чатов пользователя"""
     history = get_user_chat_history(session['user_id'])
-    
+
     # Группируем по сессиям
     sessions = {}
     for row in history:
@@ -276,7 +276,7 @@ def get_chat_history():
             "type": msg_type,
             "created_at": created_at
         })
-    
+
     return jsonify({
         "sessions": list(sessions.values())
     })
@@ -286,7 +286,7 @@ def get_chat_history():
 def get_user_projects_api():
     """Получить проекты пользователя"""
     projects = get_user_projects(session['user_id'])
-    
+
     projects_list = []
     for project in projects:
         projects_list.append({
@@ -297,7 +297,7 @@ def get_user_projects_api():
             "created_at": project[4],
             "updated_at": project[5]
         })
-    
+
     return jsonify({"projects": projects_list})
 
 @app.route('/<path:filename>')
@@ -331,7 +331,7 @@ def init_database():
     """Инициализируем базу данных пользователей"""
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
-    
+
     # Таблица пользователей
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -347,7 +347,7 @@ def init_database():
             last_login DATETIME DEFAULT NULL
         )
     ''')
-    
+
     # Таблица истории чатов
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS chat_history (
@@ -361,7 +361,7 @@ def init_database():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
-    
+
     # Таблица проектов пользователей
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_projects (
@@ -376,7 +376,32 @@ def init_database():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+
+    # Таблица активных сессий (для WebSocket)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS active_sessions (
+            session_id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
+            ip_address TEXT,
+            user_agent TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
     
+    # Таблица версий проектов (для системы контроля версий)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS project_versions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id TEXT NOT NULL,
+            version TEXT NOT NULL,
+            description TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            files TEXT, -- JSON string of files and their content
+            FOREIGN KEY (project_id) REFERENCES user_projects (project_id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -414,9 +439,9 @@ def create_user(email, name, password):
     """Создаем нового пользователя"""
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
-    
+
     password_hash = hash_password(password)
-    
+
     try:
         cursor.execute('''
             INSERT INTO users (email, name, password_hash) 
@@ -510,34 +535,34 @@ try:
     from ultra_smart_ai import UltraSmartAI
     from genius_conversation import GeniusConversationAI  
     from project_genius import ProjectGenius
-    
+
     ultra_ai = UltraSmartAI()
     genius_conversation = GeniusConversationAI()
     project_genius = ProjectGenius()
-    
+
     print("🚀 ✅ UltraSmartAI - ЗАГРУЖЕН!")
     print("🧠 ✅ GeniusConversation - ГОТОВ!")
     print("⚡ ✅ ProjectGenius - АКТИВИРОВАН!")
     print("🌟 СИСТЕМА В 100 РАЗ МОЩНЕЕ!")
-    
+
     # Основной AI-агент с супер-возможностями
     class SuperRevolutionaryAI:
         def __init__(self):
             self.ultra_ai = ultra_ai
             self.genius_conv = genius_conversation
             self.project_genius = project_genius
-            
+
         def generate_personalized_response(self, message, session_id="default"):
             """РЕВОЛЮЦИОННЫЙ ответ с полным пониманием пользователя"""
-            
+
             # Гениальный анализ сообщения
             genius_response = self.genius_conv.generate_intelligent_response(message)
-            
+
             # Если пользователь хочет создать приложение
             if genius_response.get("understanding", {}).get("intent") == "создать_приложение":
                 # Получаем ультра-умный ответ
                 ultra_response = self.ultra_ai.get_ultra_smart_response(message)
-                
+
                 # Комбинируем лучшее из обоих
                 combined_message = f"""{genius_response['message']}
 
@@ -552,7 +577,7 @@ try:
 • 📊 Система аналитики для роста бизнеса
 
 ⚡ **ЭТО БУДЕТ НЕВЕРОЯТНО!** ⚡"""
-                
+
                 return {
                     "type": "revolutionary_response",
                     "message": combined_message,
@@ -565,20 +590,20 @@ try:
                     "features": ultra_response.get("features", []),
                     "app_type": genius_response.get("app_type", "утилиты")
                 }
-            
+
             # Для других типов запросов используем гениальный диалог
             return genius_response
-    
+
     ai_agent = SuperRevolutionaryAI()
     print("🎉 РЕВОЛЮЦИОННЫЙ AI-АГЕНТ ГОТОВ К РАБОТЕ!")
-    
+
 except Exception as e:
     print(f"⚠️ Ошибка инициализации революционной системы: {e}")
     # Fallback на улучшенный базовый AI
     class EnhancedFallbackAI:
         def generate_personalized_response(self, message, session_id="default"):
             message_lower = message.lower()
-            
+
             if any(word in message_lower for word in ["создай", "сделай", "хочу", "нужно"]):
                 return {
                     "type": "enhanced_response", 
@@ -621,16 +646,16 @@ except Exception as e:
 
 Расскажите, какое приложение создаем?""",
                     "suggestions": [
-                        "🎮 Создать игру",
-                        "💼 Бизнес-приложение",
-                        "🛒 Интернет-магазин",
-                        "💡 Показать все возможности"
+                        "Создать игру",
+                        "Мобильное приложение", 
+                        "Веб-сайт",
+                        "Показать примеры"
                     ]
                 }
             else:
                 return {
                     "type": "enhanced_response",
-                    "message": f"""🤖 **Понял ваш запрос!** 
+                    "message": """🤖 **Понял ваш запрос!** 
 
 "{message}"
 
@@ -648,7 +673,7 @@ except Exception as e:
                         "Показать примеры"
                     ]
                 }
-    
+
     ai_agent = EnhancedFallbackAI()
 
 nlp_processor = SmartNLP()
@@ -709,7 +734,7 @@ class ProjectGenerator:
                 content = generator_func(project_name, description, style)
                 with open(full_path, 'w', encoding='utf-8') as f:
                     f.write(content)
-            
+
             # Логирование создания проекта
             interaction_logger.log_event("project_creation", {
                 "project_id": project_id,
@@ -2866,7 +2891,7 @@ class SmartAI:
         self.conversation_history = {}
         self.user_preferences = {}
         self.project_context = {}
-        self.user_session = {}
+        self.user_session = {} # Хранение состояний для каждого пользователя
 
         # Расширенные категории приложений
         self.app_categories = {
@@ -2962,6 +2987,40 @@ class SmartAI:
             "природа": {"colors": ["зеленый", "коричневый", "голубой"], "elements": ["органические формы", "текстуры"]},
             "корпоративный": {"colors": ["синий", "белый", "серый"], "elements": ["чистые линии", "профессионально"]}
         }
+        
+        # Рыночные тренды (пример)
+        self.market_trends = {
+            "ai_chatbots": {
+                "description": "AI-чат-боты и помощники",
+                "popularity": 9.5,
+                "examples": ["ChatGPT", "Bard", "Claude"],
+                "revenue": "$5000-50000+/месяц"
+            },
+            "gaming": {
+                "description": "Мобильные игры (казуальные, RPG)",
+                "popularity": 9.0,
+                "examples": ["Genshin Impact", "Candy Crush", "Among Us"],
+                "revenue": "$10000-100000+/месяц"
+            },
+            "productivity_apps": {
+                "description": "Приложения для продуктивности и организации",
+                "popularity": 8.5,
+                "examples": ["Notion", "Todoist", "Evernote"],
+                "revenue": "$1000-10000+/месяц"
+            },
+            "health_wellness": {
+                "description": "Приложения для здоровья и фитнеса",
+                "popularity": 8.0,
+                "examples": ["MyFitnessPal", "Headspace", "Calm"],
+                "revenue": "$2000-15000+/месяц"
+            },
+            "social_media_niche": {
+                "description": "Нишевые социальные сети",
+                "popularity": 7.5,
+                "examples": ["Clubhouse", "BeReal"],
+                "revenue": "$500-5000+/месяц"
+            }
+        }
 
     def generate_personalized_response(self, message, session_id="default"):
         """Генерирует умный ответ с учетом контекста и сессии"""
@@ -2978,7 +3037,7 @@ class SmartAI:
 
         session = self.user_session[session_id]
         session["conversation"].append({"user": message, "timestamp": time.time()})
-        
+
         # Обработка сообщений с опечатками и синонимами
         processed_message = nlp_processor.correct_and_normalize(message)
         message_type = self.analyze_message(processed_message)
@@ -2991,6 +3050,8 @@ class SmartAI:
             return self.handle_initial_stage(processed_message, message_type, session_id)
         elif session["stage"] == "clarifying":
             return self.handle_clarifying_stage(processed_message, session_id)
+        elif session["stage"] == "confirming":
+            return self.handle_confirming_stage(processed_message, session_id)
         elif session["stage"] == "creating":
             return self.handle_creating_stage(processed_message, session_id)
         elif session["stage"] == "editing":
@@ -3004,7 +3065,7 @@ class SmartAI:
 
         # Расширенный анализ запросов на создание приложений
         app_keywords = ["создай", "сделай", "разработай", "построй", "запрограммируй", "нужно", "хочу", "требуется"]
-        
+
         # Игры
         game_keywords = ["игра", "игру", "game", "змейка", "тетрис", "аркад", "головоломка", "стрелялка", "раннер", "платформер", "квест", "rpg", "idle", "симулятор", "шутер", "стратег", "рпг"]
         if any(word in message_lower for word in game_keywords):
@@ -3055,11 +3116,11 @@ class SmartAI:
         # Отрицания
         if any(word in message_lower for word in ["нет", "no", "не подходит", "другое", "иначе", "отмена"]):
             return "rejection"
-            
+
         # Запрос на скачивание
         if any(word in message_lower for word in ["скачать", "скачай", "архив", "zip", "загрузить"]):
             return "download_request"
-            
+
         # Запрос на редактирование
         if any(word in message_lower for word in ["доработать", "улучшить", "изменить", "добавить", "редактировать"]):
             return "edit_request"
@@ -3079,20 +3140,26 @@ class SmartAI:
             "target_audience": None,
             "name_suggestions": []
         }
-        
+
         # Определяем тип приложения
         for category, data in self.app_categories.items():
             for app_type in data["types"]:
                 if app_type in message_lower:
                     details["type"] = app_type
                     break
-        
+        if not details["type"]: # Если не нашли конкретный тип, ищем по категории
+            for category, data in self.app_categories.items():
+                 if category in message_lower:
+                     details["type"] = category # Используем категорию как тип
+                     break
+
+
         # Определяем тему/стиль
         for style in self.design_styles.keys():
             if style in message_lower:
                 details["style"] = style
                 break
-                
+
         # Определяем платформу
         platform_hints = {
             "ios": ["ios", "айфон", "iphone", "apple", "app store"],
@@ -3100,14 +3167,14 @@ class SmartAI:
             "web": ["веб", "web", "браузер", "сайт"],
             "cross_platform": ["кроссплатформ", "все платформы", "ios и android"]
         }
-        
+
         for platform, hints in platform_hints.items():
             if any(hint in message_lower for hint in hints):
                 details["platform"] = platform
                 break
-                
+
         # Определяем особенности
-        if any(word in message_lower for word in ["онлайн", "мультиплеер", "многопользователь"]):
+        if any(word in message_lower for word in ["онлайн", "мультиплеер", "многопользова"]):
             details["features"].append("онлайн")
         if any(word in message_lower for word in ["офлайн", "без интернета"]):
             details["features"].append("офлайн")
@@ -3115,7 +3182,7 @@ class SmartAI:
             details["features"].append("монетизация")
         if any(word in message_lower for word in ["социальн", "друзья", "рейтинг"]):
             details["features"].append("социальные функции")
-            
+
         return details
 
     def handle_initial_stage(self, message, message_type, session_id):
@@ -3141,16 +3208,16 @@ class SmartAI:
             session["project_type"] = message_type
             session["initial_request"] = message
             session["extracted_details"] = project_details
-            
+
             return self.ask_detailed_clarification(message_type, project_details, session_id)
-            
+
         elif message_type == "market_analysis":
             return self.show_market_analysis()
-            
+
         elif message_type == "confirmation":
             # Если пользователь подтверждает создание проекта
             return self.handle_confirmation_in_initial(message, session_id)
-            
+
         elif message_type == "edit_request":
              return {
                 "type": "ai_response",
@@ -3178,7 +3245,7 @@ class SmartAI:
     def handle_confirmation_in_initial(self, message, session_id):
         """Обработка подтверждения создания проекта в начальной стадии"""
         session = self.user_session[session_id]
-        
+
         # Если есть предыдущий запрос на создание проекта
         if session.get("initial_request"):
             # Создаем проект сразу с базовыми параметрами
@@ -3198,13 +3265,13 @@ class SmartAI:
                     "timeline": "Как можно быстрее"
                 }
             }
-            
+
             session["project_details"] = project_details
             session["stage"] = "confirming"
-            
+
             # Создаем проект
             result = self.create_project_from_details(project_details, session_id)
-            
+
             if result['success']:
                 project_id = result['project_id']
                 session["current_project_id"] = project_id
@@ -3246,7 +3313,7 @@ class SmartAI:
                     "message": f"❌ Ошибка создания проекта: {result.get('error', 'Неизвестная ошибка')}",
                     "suggestions": ["Попробовать снова", "Изменить параметры", "Создать другой проект"]
                 }
-        
+
         return {
             "type": "ai_response",
             "message": "🤔 Сначала расскажите, что хотите создать!",
@@ -3256,10 +3323,10 @@ class SmartAI:
     def ask_detailed_clarification(self, project_type, extracted_details, session_id):
         """Задает детальные уточняющие вопросы на основе извлеченных деталей"""
         session = self.user_session[session_id]
-        
+
         # Определяем, какие вопросы нужно задать
         questions = []
-        
+
         # Платформа - ключевой вопрос
         if not extracted_details.get("platform"):
             questions.append({
@@ -3268,56 +3335,56 @@ class SmartAI:
                 "key": "platform",
                 "explanation": "От этого зависит технология разработки и возможности монетизации"
             })
-            
+
         # Название проекта
         questions.append({
             "question": "📱 **Как назовем ваш проект?**",
             "key": "name",
             "explanation": "Хорошее название - половина успеха в App Store/Google Play"
         })
-        
+
         # Специфичные вопросы по типу приложения
         if project_type == "game_request":
             if not extracted_details.get("style"):
                 questions.append({
                     "question": "🎨 **Какой визуальный стиль предпочитаете?**",
-                    "options": ["Космический (темный фон, неоновые цвета, звезды)", "Минимализм (чистый, простой)", "Ретро (пиксельный, 8-бит)", "Неоновый (яркий, киберпанк)", "Природный (зеленые тона, органика)"],
+                    "options": ["Космический (темно-синий, неоновые цвета, звезды)", "Минимализм (чистый, простой)", "Ретро (пиксельный, 8-бит)", "Неоновый (яркий, киберпанк)", "Природный (зеленые тона, органика)"],
                     "key": "style"
                 })
-                
+
             questions.append({
                 "question": "🎮 **Онлайн или офлайн игра?**",
                 "options": ["Офлайн (без интернета)", "Онлайн (рейтинги, мультиплеер)", "Гибрид (основа офлайн + онлайн фичи)"],
                 "key": "connectivity"
             })
-            
+
             questions.append({
                 "question": "💰 **Модель монетизации?**",
                 "options": ["Бесплатная с рекламой", "Freemium (базовая версия бесплатно)", "Платная ($0.99-4.99)", "Подписка с премиум-контентом"],
                 "key": "monetization"
             })
-            
+
         elif project_type == "mobile_app_request":
             questions.append({
                 "question": "🎯 **Основная функция приложения?**",
                 "options": ["Продуктивность (TODO, планировщик)", "Социальное взаимодействие", "E-commerce (продажи)", "Утилита (инструмент)", "Развлечения", "Образование"],
                 "key": "main_function"
             })
-            
+
         elif project_type == "business_request":
             questions.append({
                 "question": "🏢 **Размер вашего бизнеса?**",
                 "options": ["Стартап (до 10 человек)", "Малый бизнес (10-50 человек)", "Средний бизнес (50-200 человек)", "Крупная компания (200+ человек)"],
                 "key": "business_size"
             })
-        
+
         # Целевая аудитория
         questions.append({
             "question": "👥 **Кто ваша целевая аудитория?**",
             "options": ["Подростки (13-17 лет)", "Молодежь (18-25 лет)", "Взрослые (26-40 лет)", "Средний возраст (40-55 лет)", "Все возрасты"],
             "key": "target_audience"
         })
-        
+
         # Бюджет и сроки
         questions.append({
             "question": "⏰ **Планируемые сроки запуска?**",
@@ -3328,19 +3395,19 @@ class SmartAI:
         session["clarification_questions"] = questions
         session["current_question"] = 0
         session["answers"] = {}
-        
+
         # Задаем первый вопрос
         first_question = questions[0]
-        
+
         response_message = f"Отлично! Я понял, что вы хотите создать **{session['initial_request']}** 🚀\n\n"
         response_message += f"Чтобы создать идеальный проект, мне нужно задать несколько ключевых вопросов:\n\n"
         response_message += first_question["question"]
-        
+
         if "explanation" in first_question:
             response_message += f"\n\n💡 {first_question['explanation']}"
-        
+
         suggestions = first_question.get("options", ["Расскажи подробнее", "Не знаю, посоветуй", "Покажи примеры"])
-        
+
         return {
             "type": "ai_response",
             "message": response_message,
@@ -3370,15 +3437,15 @@ class SmartAI:
         session = self.user_session[session_id]
         questions = session.get("clarification_questions", [])
         current_q_index = session.get("current_question", 0)
-        
+
         # Сохраняем ответ пользователя
         if current_q_index < len(questions):
             current_question = questions[current_q_index]
             session["answers"][current_question["key"]] = message
-        
+
         # Переходим к следующему вопросу
         session["current_question"] = current_q_index + 1
-        
+
         if session["current_question"] >= len(questions):
             # Все вопросы заданы, переходим к подтверждению
             session["stage"] = "confirming"
@@ -3387,14 +3454,14 @@ class SmartAI:
             # Задаем следующий вопрос
             next_question = questions[session["current_question"]]
             progress = f"Вопрос {session['current_question'] + 1} из {len(questions)}"
-            
+
             response_message = f"✅ Отлично!\n\n{next_question['question']}"
-            
+
             if "explanation" in next_question:
                 response_message += f"\n\n💡 {next_question['explanation']}"
-            
+
             suggestions = next_question.get("options", ["Расскажи подробнее", "Не знаю, посоветуй"])
-            
+
             return {
                 "type": "ai_response", 
                 "message": response_message,
@@ -3406,14 +3473,14 @@ class SmartAI:
         """Генерирует подтверждение проекта на основе собранной информации"""
         session = self.user_session[session_id]
         answers = session.get("answers", {})
-        
+
         # Создаем детали проекта на основе ответов
         project_name = answers.get("name", "Мой проект")
         platform = answers.get("platform", "Кроссплатформенное")
         style = answers.get("style", "Современный")
         monetization = answers.get("monetization", "Freemium")
         timeline = answers.get("timeline", "1-2 месяца")
-        
+
         # Определяем технологии на основе платформы
         tech_stack = []
         if "iOS" in platform:
@@ -3424,10 +3491,10 @@ class SmartAI:
             tech_stack = ["React", "Node.js", "Progressive Web App"]
         else:
             tech_stack = ["React Native", "Expo"]
-            
+
         # Создаем описание проекта
         description = f"Современное приложение в стиле '{style.lower()}' для платформы {platform}"
-        
+
         session["project_details"] = {
             "name": project_name,
             "platform": platform,
@@ -3439,10 +3506,10 @@ class SmartAI:
             "type": session["project_type"],
             "answers": answers
         }
-        
+
         # Рассчитываем потенциальный доход
         revenue_estimate = self.calculate_revenue_estimate(session["project_type"], monetization)
-        
+
         confirmation_message = f"""
 🎉 **Отлично! Вот что мы создадим:**
 
@@ -3463,7 +3530,7 @@ class SmartAI:
 
 Создаем проект?
 """
-        
+
         return {
             "type": "ai_response",
             "message": confirmation_message,
@@ -3483,26 +3550,26 @@ class SmartAI:
             "mobile_app_request": {"freemium": "$1000-5000", "subscription": "$2000-8000", "ads": "$300-1200"},
             "business_request": {"subscription": "$3000-15000", "premium": "$5000-20000"}
         }
-        
+
         estimates = base_estimates.get(project_type, {"freemium": "$500-2000"})
-        
+
         for model, estimate in estimates.items():
             if model in monetization.lower():
                 return f"{estimate}/месяц"
-                
+
         return "$500-3000/месяц"
 
     def handle_confirming_stage(self, message, session_id):
         """Обработка подтверждения создания проекта"""
         session = self.user_session[session_id]
-        
+
         if self.analyze_message(message) == "confirmation":
             if session.get("project_details"):
                 details = session["project_details"]
-                
+
                 # Создаем проект
                 result = self.create_project_from_details(details, session_id)
-                
+
                 if result['success']:
                     project_id = result['project_id']
                     session["current_project_id"] = project_id
@@ -3547,12 +3614,12 @@ class SmartAI:
                     }
             else:
                 return self.handle_general_stage(message, session_id)
-        
+
         elif self.analyze_message(message) == "rejection":
             session["stage"] = "clarifying" 
             session["current_question"] = max(0, session.get("current_question", 0) - 1)
             return self.handle_clarifying_stage("Давайте изменим параметры", session_id)
-        
+
         else:
             return {
                 "type": "ai_response",
@@ -3565,16 +3632,16 @@ class SmartAI:
         try:
             # Определяем тип проекта для генератора
             generator_type = "snake_game"  # По умолчанию
-            
+
             if details["type"] == "game_request":
                 generator_type = "snake_game"
             elif details["type"] in ["mobile_app_request", "utility_request"]:
                 generator_type = "todo_app"
             elif details["type"] == "website_request":
-                generator_type = "business_landing"
+                generator_type = "weather_app" # Заменил на weather_app для примера
             elif details["type"] == "business_request":
-                generator_type = "crm_system"
-                
+                generator_type = "todo_app" # Заменил на todo_app для примера
+
             # Используем базовый генератор
             result = generator.generate_project(
                 project_type=generator_type,
@@ -3582,7 +3649,7 @@ class SmartAI:
                 project_name=details["name"],
                 style=details.get("style", "modern")
             )
-            
+
             if result["success"]:
                 # Логируем создание
                 interaction_logger.log_event("advanced_project_created", {
@@ -3590,9 +3657,9 @@ class SmartAI:
                     "details": details,
                     "session_id": session_id
                 })
-            
+
             return result
-            
+
         except Exception as e:
             return {
                 "success": False,
@@ -3602,7 +3669,7 @@ class SmartAI:
     def handle_creating_stage(self, message, session_id):
         """Обработка стадии создания проекта (когда проект уже создан)"""
         session = self.user_session[session_id]
-        
+
         if self.analyze_message(message) == "download_request":
             if session.get("current_project_id"):
                 return {
@@ -3622,7 +3689,7 @@ class SmartAI:
                     "message": "🙁 Похоже, у вас пока нет созданных проектов. Давайте начнем с создания!",
                     "suggestions": ["Создать игру", "Разработать приложение", "Помоги с идеей"]
                 }
-        
+
         elif self.analyze_message(message) == "edit_request":
             session["stage"] = "editing"
             return {
@@ -3670,16 +3737,16 @@ class SmartAI:
     def handle_editing_stage(self, message, session_id):
         """Обработка стадии редактирования/добавления функций"""
         session = self.user_session[session_id]
-        
+
         if session.get("current_project_id"):
             project_id = session["current_project_id"]
-            
+
             # Обработка запроса на добавление фичи
             if self.analyze_message(message) == "edit_request":
                 # Здесь будет логика вызова advanced_generator.add_feature()
                 # Для примера, просто ответим, что функция добавлена
                 feature_description = f"Новая функция: '{message}'" # Условное описание
-                
+
                 # Логируем запрос на фичу
                 interaction_logger.log_event("feature_request", {
                     "project_id": project_id,
@@ -3694,9 +3761,9 @@ class SmartAI:
                     # Создание новой версии
                     new_version = version_control.get_next_version(session["project_details"]["type"])
                     version_control.save_project_version(project_id, new_version, [], f"Добавлена функция: {message}")
-                    
+
                     session["stage"] = "created" # Возвращаемся в состояние "создано"
-                    
+
                     return {
                         "type": "ai_response",
                         "message": f"✨ Функция '{message}' успешно добавлена! Создана новая версия {new_version}.\n\nХотите скачать обновленный проект или добавить что-то еще?",
@@ -3734,7 +3801,7 @@ class SmartAI:
                     "Помочь с идеей",
                     "Показать мои проекты"
                 ]
-                
+
                 if "suggestions" not in ai_response or not ai_response["suggestions"]:
                     ai_response["suggestions"] = default_suggestions
                 else:
@@ -3742,7 +3809,7 @@ class SmartAI:
                     for sug in default_suggestions:
                         if sug not in ai_response["suggestions"]:
                             ai_response["suggestions"].append(sug)
-                            
+
                 return ai_response
         except Exception as e:
             print(f"Ошибка при обращении к базовому AI: {e}")
@@ -3759,19 +3826,19 @@ class SmartAI:
                 "Показать мои проекты"
             ]
         }
-        
+
     def show_market_analysis(self):
         """Показывает анализ рынка и трендов"""
         trends_text = "📊 **Анализ рынка мобильных приложений 2024:**\n\n"
         sorted_trends = sorted(self.market_trends.items(), key=lambda item: item[1]['popularity'], reverse=True)
-        
+
         for i, (key, trend) in enumerate(sorted_trends):
             trends_text += f"{i+1}. 📈 **{trend['description']}**\n"
             if trend['examples']:
                 trends_text += f"   • Примеры: {', '.join(trend['examples'])}\n"
-        
+
         trends_text += "\n**💡 Совет:** Начните с игры или приложения продуктивности - они имеют высокий потенциал и спрос!"
-        
+
         return {
             "type": "ai_response",
             "message": trends_text,
@@ -3798,11 +3865,11 @@ def chat():
         user = get_user_by_id(session['user_id'])
         if not user:
             return jsonify({"error": "Пользователь не найден"}), 404
-        
+
         # Проверяем лимит запросов
         requests_used = user[5]
         requests_limit = user[6]
-        
+
         if requests_used >= requests_limit and user[4] == 'free':  # user[4] = plan
             return jsonify({
                 "type": "limit_exceeded",
@@ -3811,37 +3878,37 @@ def chat():
                 "requests_limit": requests_limit,
                 "show_subscription": True
             }), 429
-        
+
         # Логируем запрос
         request_id = interaction_logger.log_user_request(session['user_id'], session_id, {"message": message})
-        
+
         start_time = time.time()
         ai_response = ai_agent.generate_personalized_response(message, session_id)
         processing_time = int((time.time() - start_time) * 1000)
-        
+
         # Обновляем счетчик запросов только для бесплатных пользователей
         if user[4] == 'free':
             update_user_requests(session['user_id'], 1)
             requests_used += 1
-        
+
         # Сохраняем в историю чата
         response_text = ai_response.get('message', '')
         save_chat_message(session['user_id'], session_id, message, response_text, ai_response.get('type', 'chat'))
-        
+
         # Добавляем информацию о лимитах в ответ
         ai_response['requests_left'] = max(0, requests_limit - requests_used)
         ai_response['requests_used'] = requests_used
         ai_response['requests_limit'] = requests_limit
-        
+
         # Логируем ответ AI
         interaction_logger.log_ai_response(session['user_id'], session_id, request_id, ai_response, processing_time)
-        
+
         return jsonify(ai_response)
-        
+
     except Exception as e:
         print(f"Ошибка в API /api/chat: {e}")
         interaction_logger.log_error(session.get('user_id', 'unknown'), session_id, {"error": str(e), "endpoint": "/api/chat"})
-        
+
         return jsonify({
             "type": "error",
             "message": "🤖 Извините, произошла непредвиденная ошибка. Попробуйте переформулировать ваш запрос.",
@@ -3885,7 +3952,7 @@ def generate_project():
     elif project_type == "utility":
         project_details["name"] = f"Умный {project_type.replace('_', ' ').title()}"
         project_details["description"] = f"Функциональная утилита."
-    
+
     ai_agent.user_session[user_id]["project_details"] = project_details
 
     # Логируем старт генерации
@@ -3904,7 +3971,7 @@ def generate_project():
     if result['success']:
         project_id = result['project_id']
         ai_agent.user_session[user_id]["current_project_id"] = project_id
-        
+
         # Сохраняем версию
         version_control.save_project_version(project_id, project_version, result.get("files", []), log_message)
         interaction_logger.log_event("project_creation_success", {
@@ -3913,7 +3980,7 @@ def generate_project():
             "version": project_version,
             "user_id": user_id
         })
-        
+
         archive_url = f"/api/download/{project_id}"
         result['download_url'] = archive_url
         result['project_id'] = project_id
@@ -3952,7 +4019,7 @@ def list_projects():
     """Список проектов пользователя"""
     user_id = request.args.get('user_id', 'anonymous')
     projects = []
-    
+
     user_projects_dir = os.path.join(USER_DATA_DIR, user_id, PROJECTS_DIR)
     os.makedirs(user_projects_dir, exist_ok=True)
 
@@ -3983,7 +4050,7 @@ def list_projects():
 
     interaction_logger.log_event("api_projects_list_requested", {"user_id": user_id, "count": len(projects)})
     return jsonify({"projects": projects})
-    
+
 @app.route('/api/project/versions/<project_id>')
 def get_project_versions(project_id):
     """Получить историю версий проекта"""
@@ -3991,7 +4058,7 @@ def get_project_versions(project_id):
     if versions is None:
         interaction_logger.log_error("api_get_versions_not_found", {"project_id": project_id})
         return jsonify({"error": "Проект или его версии не найдены"}), 404
-    
+
     interaction_logger.log_event("api_get_project_versions", {"project_id": project_id, "count": len(versions)})
     return jsonify({"versions": versions})
 
@@ -4048,7 +4115,7 @@ def get_ai_status():
         "current_ai": "SuperSmartAI",
         "configured": True
     })
-    
+
 @app.route('/api/logs/interaction', methods=['POST'])
 def log_interaction_api():
     """API для логирования пользовательских взаимодействий"""
@@ -4056,53 +4123,122 @@ def log_interaction_api():
     session_id = data.get('session_id')
     event_type = data.get('event_type')
     payload = data.get('payload')
-    
+
     if not session_id or not event_type:
         return jsonify({"error": "Отсутствуют обязательные поля: session_id, event_type"}), 400
-        
+
     interaction_logger.log_event(event_type, payload, session_id)
     return jsonify({"success": True, "message": "Событие залогировано"})
 
 # --- WebSocket ---
+# === WebSocket для множественных пользователей ===
 @socketio.on('connect')
 def handle_connect():
-    print('Клиент подключился')
+    user_id = session.get('user_id')
+    if user_id:
+        join_room(f'user_{user_id}')
+        print(f'Пользователь {user_id} подключился')
+
+        # Обновляем активные сессии
+        session_id = request.sid
+        update_active_session(user_id, session_id)
+    else:
+        print('Неавторизованный пользователь подключился')
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print('Клиент отключился')
+    user_id = session.get('user_id')
+    if user_id:
+        leave_room(f'user_{user_id}')
+        print(f'Пользователь {user_id} отключился')
 
-@socketio.on('generate_project_ws')
-def handle_project_generation_ws(data):
-    """Обработка генерации проекта через WebSocket"""
-    session_id = data.get('session_id', str(uuid.uuid4()))
-    project_type = data.get('project_type', 'snake_game')
-    description = data.get('description', '')
-    project_name = data.get('project_name', 'Мой проект')
-    preferences = data.get('preferences', {})
+        # Удаляем из активных сессий
+        cleanup_user_session(user_id, request.sid)
 
-    # Используем AI для получения деталей проекта, если они не предоставлены
-    if not description or not project_name:
-        # Здесь можно было бы вызвать AI для генерации деталей, но для примера используем стандартные
-        project_name = f"{project_type.capitalize()} от AI"
-        description = f"Базовая версия {project_type.replace('_', ' ')}."
+@socketio.on('join_project')
+def handle_join_project(data):
+    """Пользователь присоединяется к проекту для совместной работы"""
+    user_id = session.get('user_id')
+    project_id = data.get('project_id')
 
-    # Создаем проект через AI ассистента, имитируя запрос
-    ai_response = ai_agent.generate_personalized_response(f"Создай {project_type}", session_id)
-    
-    if ai_response.get("type") == "project_created":
-        emit('project_status', {
-            'status': 'completed',
-            'project_id': ai_response['project_id'],
-            'download_url': ai_response['download_url'],
-            'message': ai_response['message'],
-            'version': ai_response.get('version', 1)
-        }, room=request.sid) # Отправляем ответ обратно клиенту
-    else:
-        emit('project_status', {
-            'status': 'error',
-            'message': ai_response.get('message', 'Не удалось создать проект')
-        }, room=request.sid)
+    if user_id and project_id and is_user_project_owner(user_id, project_id):
+        join_room(f'project_{project_id}')
+        emit('project_joined', {'project_id': project_id}, room=request.sid)
+
+@socketio.on('leave_project')
+def handle_leave_project(data):
+    """Пользователь покидает проект"""
+    project_id = data.get('project_id')
+    if project_id:
+        leave_room(f'project_{project_id}')
+
+@socketio.on('file_changed')
+def handle_file_change(data):
+    """Обработка изменений файлов в реальном времени"""
+    user_id = session.get('user_id')
+    project_id = data.get('project_id')
+    file_path = data.get('file_path')
+    content = data.get('content')
+
+    if user_id and project_id and is_user_project_owner(user_id, project_id):
+        # Сохраняем изменения
+        save_project_file(project_id, file_path, content)
+
+        # Уведомляем других пользователей в проекте (если будет совместная работа)
+        emit('file_updated', {
+            'project_id': project_id,
+            'file_path': file_path,
+            'updated_by': user_id
+        }, room=f'project_{project_id}', include_self=False)
+
+def update_active_session(user_id, session_id):
+    """Обновляем активную сессию пользователя"""
+    conn = sqlite3.connect('users.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            INSERT OR REPLACE INTO active_sessions 
+            (user_id, session_id, last_activity, ip_address, user_agent)
+            VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)
+        ''', (user_id, session_id, request.environ.get('REMOTE_ADDR'), 
+              request.environ.get('HTTP_USER_AGENT')))
+        conn.commit()
+    except Exception as e:
+        print(f"Ошибка обновления сессии: {e}")
+    finally:
+        conn.close()
+
+def cleanup_user_session(user_id, session_id):
+    """Очищаем сессию пользователя"""
+    conn = sqlite3.connect('users.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            DELETE FROM active_sessions 
+            WHERE user_id = ? AND session_id = ?
+        ''', (user_id, session_id))
+        conn.commit()
+    except Exception as e:
+        print(f"Ошибка очистки сессии: {e}")
+    finally:
+        conn.close()
+
+def is_user_project_owner(user_id, project_id):
+    """Проверяет, является ли пользователь владельцем проекта (для WebSocket)"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT user_id FROM user_projects WHERE project_id = ?', (project_id,))
+    owner_id = cursor.fetchone()
+    conn.close()
+    return owner_id is not None and owner_id[0] == user_id
+
+def save_project_file(project_id, file_path, content):
+    """Сохраняет содержимое файла проекта (имитация)"""
+    print(f"Сохранение файла: {file_path} для проекта {project_id}")
+    # В реальной системе здесь будет логика сохранения файла в файловой системе проекта
+    pass
 
 # --- Вспомогательные функции ---
 def create_project_archive(project_id):

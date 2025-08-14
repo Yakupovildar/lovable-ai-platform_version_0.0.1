@@ -370,6 +370,230 @@ function displayProjects(projects) {
             <div style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.7);">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
                 <h3>Пока нет проектов</h3>
+                <p>Создайте свой первый проект через чат!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const projectCards = projects.map(project => `
+        <div class="project-card" data-project-id="${project.project_id}">
+            <div class="project-header">
+                <h3>${project.name}</h3>
+                <span class="project-type">${project.type}</span>
+            </div>
+            <div class="project-content">
+                <p class="project-description">${project.description || 'Без описания'}</p>
+                <div class="project-stats">
+                    <span>📄 ${project.files ? project.files.length : 0} файлов</span>
+                    <span>🔄 v${project.version || 1}</span>
+                    <span class="project-status status-${project.status || 'active'}">${project.status || 'active'}</span>
+                </div>
+            </div>
+            <div class="project-actions">
+                <button onclick="openProject('${project.project_id}')" class="btn-primary">
+                    <i>📝</i> Редактировать
+                </button>
+                <button onclick="runProject('${project.project_id}')" class="btn-secondary">
+                    <i>▶️</i> Запустить
+                </button>
+                <button onclick="shareProject('${project.project_id}')" class="btn-outline">
+                    <i>🔗</i> Поделиться
+                </button>
+            </div>
+            <div class="project-footer">
+                <small>Создан: ${formatDate(project.created_at)}</small>
+                <small>Изменен: ${formatDate(project.updated_at)}</small>
+            </div>
+        </div>
+    `).join('');
+    
+    projectsGrid.innerHTML = projectCards;
+}
+
+async function openProject(projectId) {
+    try {
+        const response = await fetch(`/api/project/${projectId}/files`);
+        if (response.ok) {
+            const data = await response.json();
+            showProjectEditor(projectId, data.files);
+        } else {
+            showNotification('Ошибка загрузки проекта', 'error');
+        }
+    } catch (error) {
+        console.error('Ошибка открытия проекта:', error);
+        showNotification('Ошибка открытия проекта', 'error');
+    }
+}
+
+async function runProject(projectId) {
+    try {
+        const response = await fetch(`/api/project/${projectId}/run`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showNotification('Проект запущен!', 'success');
+            // Открыть проект в новой вкладке или iframe
+            window.open(data.url, '_blank');
+        } else {
+            showNotification('Ошибка запуска проекта', 'error');
+        }
+    } catch (error) {
+        console.error('Ошибка запуска проекта:', error);
+        showNotification('Ошибка запуска проекта', 'error');
+    }
+}
+
+function shareProject(projectId) {
+    const shareUrl = `${window.location.origin}/project/${projectId}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        showNotification('Ссылка скопирована в буфер обмена!', 'success');
+    });
+}
+
+function showProjectEditor(projectId, files) {
+    const modal = document.createElement('div');
+    modal.className = 'project-editor-modal';
+    
+    const fileList = files.map(file => `
+        <div class="file-item" onclick="selectFile('${file.path}')">
+            <span class="file-icon">${getFileIcon(file.type)}</span>
+            <span class="file-name">${file.path}</span>
+        </div>
+    `).join('');
+    
+    modal.innerHTML = `
+        <div class="modal-content project-editor">
+            <div class="modal-header">
+                <h2>Редактор проекта</h2>
+                <button onclick="closeModal()" class="close-btn">×</button>
+            </div>
+            <div class="editor-body">
+                <div class="file-sidebar">
+                    <h3>Файлы</h3>
+                    <div class="file-list">
+                        ${fileList}
+                    </div>
+                    <button onclick="addNewFile('${projectId}')" class="btn-outline">
+                        + Добавить файл
+                    </button>
+                </div>
+                <div class="code-editor">
+                    <div class="editor-tabs" id="editorTabs"></div>
+                    <textarea id="codeEditor" placeholder="Выберите файл для редактирования"></textarea>
+                    <div class="editor-actions">
+                        <button onclick="saveCurrentFile()" class="btn-primary">💾 Сохранить</button>
+                        <button onclick="formatCode()" class="btn-secondary">🎨 Форматировать</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Инициализируем редактор с первым файлом
+    if (files.length > 0) {
+        selectFile(files[0].path, files);
+    }
+    
+    // Сохраняем данные для редактора
+    window.currentProject = { projectId, files };
+}
+
+function selectFile(filePath, files = null) {
+    const fileData = files || window.currentProject.files;
+    const file = fileData.find(f => f.path === filePath);
+    
+    if (file) {
+        const codeEditor = document.getElementById('codeEditor');
+        codeEditor.value = file.content;
+        codeEditor.setAttribute('data-file-path', filePath);
+        
+        // Обновляем активную вкладку
+        updateEditorTabs(filePath);
+    }
+}
+
+async function saveCurrentFile() {
+    const codeEditor = document.getElementById('codeEditor');
+    const filePath = codeEditor.getAttribute('data-file-path');
+    const content = codeEditor.value;
+    
+    if (!filePath) {
+        showNotification('Не выбран файл для сохранения', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/project/${window.currentProject.projectId}/file`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                file_path: filePath,
+                file_content: content
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('Файл сохранен!', 'success');
+        } else {
+            showNotification('Ошибка сохранения файла', 'error');
+        }
+    } catch (error) {
+        console.error('Ошибка сохранения:', error);
+        showNotification('Ошибка сохранения файла', 'error');
+    }
+}
+
+function getFileIcon(fileType) {
+    const icons = {
+        'html': '📄',
+        'css': '🎨', 
+        'javascript': '⚡',
+        'python': '🐍',
+        'text': '📝'
+    };
+    return icons[fileType] || '📄';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+function closeModal() {
+    const modal = document.querySelector('.project-editor-modal');
+    if (modal) {
+        modal.remove();
+    }
+                <h3>Пока нет проектов</h3>
                 <p>Создайте свой первый проект в чате с AI</p>
                 <button class="btn-primary" onclick="showTab('chat')" style="margin-top: 1rem;">
                     💬 Начать в чате
