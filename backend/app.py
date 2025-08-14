@@ -3036,6 +3036,8 @@ cityInput.addEventListener('keypress', (e) => {
 Требуется API ключ OpenWeatherMap.
 """
 
+    pass  # Инициализация будет после определения класса
+
     # Инициализируем генератор проектов после определения класса
     generator = ProjectGenerator()
 
