@@ -20,83 +20,63 @@ import hashlib
 import sqlite3
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-import redis
 import pickle
 import logging
-from performance_monitor import performance_monitor, monitor_performance
-# Import real modules
-try:
-    from advanced_ai import SuperSmartAI
-except ImportError:
-    print("⚠️ advanced_ai.py не найден, используем базовую версию")
-    class SuperSmartAI:
-        def generate_personalized_response(self, message, session_id="default"):
-            return {"type": "ai_response", "message": f"AI получил: {message}"}
+# Базовые мониторинг и производительность
+class SimplePerformanceMonitor:
+    def __init__(self):
+        self.stats = {}
+    
+    def get_stats(self):
+        return self.stats
 
-try:
-    from enhanced_ai_services import SuperPoweredAI
-    super_ai = SuperPoweredAI()
-    print("✅ SuperPoweredAI инициализирован успешно")
-except ImportError:
-    print("⚠️ enhanced_ai_services.py не найден")
-    super_ai = None
+def monitor_performance(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"⚡ {func.__name__} выполнен за {end_time - start_time:.2f}с")
+        return result
+    return wrapper
 
-try:
-    from mega_project_generator import MegaProjectGenerator
-    mega_generator = MegaProjectGenerator()
-    print("✅ MegaProjectGenerator инициализирован успешно")
-except ImportError:
-    print("⚠️ mega_project_generator.py не найден")
-    mega_generator = None
+performance_monitor = SimplePerformanceMonitor()
 
-try:
-    from smart_nlp import SmartNLP
-except ImportError:
-    print("⚠️ smart_nlp.py не найден, используем базовую версию")
-    class SmartNLP:
-        def correct_and_normalize(self, text):
-            return text.lower().strip()
+# Базовый NLP процессор
+class SmartNLP:
+    def correct_and_normalize(self, text):
+        return text.lower().strip()
 
-try:
-    from version_control import ProjectVersionControl
-except ImportError:
-    print("⚠️ version_control.py не найден, используем базовую версию")
-    class ProjectVersionControl:
-        def get_next_version(self, project_type):
-            return "1.0"
-        def save_project_version(self, project_id, version, files, message):
-            pass
-        def get_project_versions(self, project_id):
-            return []
+# Базовая система контроля версий
+class ProjectVersionControl:
+    def get_next_version(self, project_type):
+        return "1.0"
+    def save_project_version(self, project_id, version, files, message):
+        pass
+    def get_project_versions(self, project_id):
+        return []
 
-try:
-    from logging_system import UserInteractionLogger
-except ImportError:
-    print("⚠️ logging_system.py не найден, используем базовую версию")
-    class UserInteractionLogger:
-        def log_event(self, event, data, session_id=None):
-            print(f"LOG: {event} - {data}")
-        def log_interaction(self, session_id, message, processed, msg_type):
-            print(f"INTERACTION: {session_id} - {message}")
-        def log_user_request(self, user_id, session_id, request_data):
-            print(f"USER_REQUEST: {user_id} - {session_id} - {request_data}")
-            return f"req_{session_id}"
-        def log_ai_response(self, user_id, session_id, request_id, response_data, processing_time):
-            print(f"AI_RESPONSE: {user_id} - {session_id} - {request_id}")
-        def log_project_creation(self, user_id, session_id, project_data):
-            print(f"PROJECT: {user_id} - {project_data}")
-        def log_error(self, user_id, session_id, error_data):
-            print(f"ERROR: {user_id} - {session_id} - {error_data}")
+# Базовая система логирования
+class UserInteractionLogger:
+    def log_event(self, event, data, session_id=None):
+        print(f"LOG: {event} - {data}")
+    def log_interaction(self, session_id, message, processed, msg_type):
+        print(f"INTERACTION: {session_id} - {message}")
+    def log_user_request(self, user_id, session_id, request_data):
+        print(f"USER_REQUEST: {user_id} - {session_id} - {request_data}")
+        return f"req_{session_id}"
+    def log_ai_response(self, user_id, session_id, request_id, response_data, processing_time):
+        print(f"AI_RESPONSE: {user_id} - {session_id} - {request_id}")
+    def log_project_creation(self, user_id, session_id, project_data):
+        print(f"PROJECT: {user_id} - {project_data}")
+    def log_error(self, user_id, session_id, error_data):
+        print(f"ERROR: {user_id} - {session_id} - {error_data}")
 
-try:
-    from advanced_generator import AdvancedProjectGenerator
-except ImportError:
-    print("⚠️ advanced_generator.py не найден, используем базовую версию")
-    class AdvancedProjectGenerator:
-        def generate_project(self, project_type, description, project_name, user_preferences=None):
-            return generator.generate_project(project_type, description, project_name)
-        def add_feature(self, project_id, feature):
-            return True
+# Расширенный генератор проектов
+class AdvancedProjectGenerator:
+    def generate_project(self, project_type, description, project_name, user_preferences=None):
+        return generator.generate_project(project_type, description, project_name)
+    def add_feature(self, project_id, feature):
+        return True
 
 app = Flask(__name__)
 app.secret_key = 'vibecode_ai_secret_key_2024_super_secure'
@@ -114,14 +94,16 @@ executor = ThreadPoolExecutor(max_workers=50)
 memory_cache = {}
 cache_ttl = {}
 
-# Пытаемся подключиться к Redis
+# Пытаемся подключиться к Redis (опционально)
 try:
+    import redis
     redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
     redis_client.ping()
     print("✅ Redis подключен для кэширования")
     USE_REDIS = True
-except:
-    print("⚠️ Redis недоступен, используем память для кэша")
+except Exception as e:
+    print(f"⚠️ Redis недоступен: {e}")
+    print("💡 Используем память для кэша")
     USE_REDIS = False
     redis_client = None
 

@@ -101,3 +101,79 @@ class SmartNLP:
             return 'rejection'
 
         return 'general'
+import re
+import string
+from typing import List, Dict, Any
+
+class SmartNLP:
+    def __init__(self):
+        self.name = "SmartNLP"
+        print("🧠 SmartNLP инициализирован")
+        
+        # Словарь исправлений для частых опечаток
+        self.corrections = {
+            "превет": "привет",
+            "приветы": "привет", 
+            "создай": "создай",
+            "сделй": "сделай",
+            "игра": "игра",
+            "приложене": "приложение",
+            "сайт": "сайт"
+        }
+    
+    def correct_and_normalize(self, text: str) -> str:
+        """Исправляет опечатки и нормализует текст"""
+        if not text:
+            return ""
+        
+        # Убираем лишние пробелы
+        text = re.sub(r'\s+', ' ', text.strip())
+        
+        # Исправляем известные опечатки
+        words = text.split()
+        corrected_words = []
+        
+        for word in words:
+            word_lower = word.lower().strip(string.punctuation)
+            if word_lower in self.corrections:
+                corrected_words.append(self.corrections[word_lower])
+            else:
+                corrected_words.append(word)
+        
+        return ' '.join(corrected_words)
+    
+    def extract_keywords(self, text: str) -> List[str]:
+        """Извлекает ключевые слова"""
+        keywords = []
+        text_lower = text.lower()
+        
+        # Простое извлечение ключевых слов
+        app_keywords = ["игра", "приложение", "сайт", "программа", "система", "платформа"]
+        for keyword in app_keywords:
+            if keyword in text_lower:
+                keywords.append(keyword)
+        
+        return keywords
+    
+    def analyze_intent(self, text: str) -> Dict[str, Any]:
+        """Анализирует намерения пользователя"""
+        text_lower = text.lower()
+        
+        intent = "general"
+        confidence = 0.5
+        
+        if any(word in text_lower for word in ["создай", "сделай", "разработай"]):
+            intent = "create_request"
+            confidence = 0.9
+        elif any(word in text_lower for word in ["привет", "здравствуй", "добрый"]):
+            intent = "greeting"
+            confidence = 0.9
+        elif any(word in text_lower for word in ["помощь", "помоги", "не знаю"]):
+            intent = "help_request"
+            confidence = 0.8
+        
+        return {
+            "intent": intent,
+            "confidence": confidence,
+            "keywords": self.extract_keywords(text)
+        }

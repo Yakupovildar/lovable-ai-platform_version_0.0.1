@@ -88,3 +88,62 @@ def monitor_performance(func):
             duration = time.time() - start_time
             performance_monitor.record_request(duration, success)
     return wrapper
+import time
+import threading
+import logging
+from datetime import datetime
+from typing import Dict, List, Any
+from collections import deque
+
+logger = logging.getLogger(__name__)
+
+class PerformanceMonitor:
+    def __init__(self):
+        self.stats = {
+            "requests_count": 0,
+            "average_response_time": 0,
+            "active_sessions": 0,
+            "cache_hits": 0,
+            "cache_misses": 0
+        }
+        self.request_times = deque(maxlen=100)
+        self._lock = threading.Lock()
+    
+    def record_request(self, response_time):
+        """Записать время запроса"""
+        with self._lock:
+            self.stats["requests_count"] += 1
+            self.request_times.append(response_time)
+            if self.request_times:
+                self.stats["average_response_time"] = sum(self.request_times) / len(self.request_times)
+    
+    def get_stats(self):
+        """Получить статистику"""
+        return self.stats.copy()
+    
+    def increment_active_sessions(self):
+        """Увеличить счетчик активных сессий"""
+        with self._lock:
+            self.stats["active_sessions"] += 1
+    
+    def decrement_active_sessions(self):
+        """Уменьшить счетчик активных сессий"""
+        with self._lock:
+            self.stats["active_sessions"] = max(0, self.stats["active_sessions"] - 1)
+
+# Глобальный экземпляр
+performance_monitor = PerformanceMonitor()
+
+def monitor_performance(func):
+    """Декоратор для мониторинга производительности"""
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        try:
+            result = func(*args, **kwargs)
+            return result
+        finally:
+            end_time = time.time()
+            response_time = end_time - start_time
+            performance_monitor.record_request(response_time)
+            logger.info(f"⚡ {func.__name__} выполнен за {response_time:.3f}с")
+    return wrapper

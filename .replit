@@ -1,19 +1,11 @@
-modules = ["python-3.12", "nodejs-20", "web"]
+
+run = "cd backend && python app.py"
 
 [nix]
-channel = "stable-25_05"
+channel = "stable-23.11"
 
-[workflows]
-runButton = "Start Backend"
-
-[[workflows.workflow]]
-name = "Start Backend"
-author = 46233810
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd backend && python app.py"
+[deployment]
+run = ["sh", "-c", "cd backend && python app.py"]
 
 [[ports]]
 localPort = 5000
