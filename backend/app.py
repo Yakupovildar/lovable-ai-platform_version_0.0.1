@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, session, redirect, url_for
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 import os
@@ -6,7 +6,7 @@ import json
 import zipfile
 import tempfile
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 from pathlib import Path
 import subprocess
@@ -14,6 +14,9 @@ import threading
 import queue
 import time
 import random
+import hashlib
+import sqlite3
+from functools import wraps
 # Import real modules
 try:
     from advanced_ai import SuperSmartAI
@@ -89,13 +92,213 @@ except ImportError:
             return True
 
 app = Flask(__name__)
-CORS(app)
+app.secret_key = 'vibecode_ai_secret_key_2024_super_secure'
+CORS(app, supports_credentials=True)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route('/')
 def serve_frontend():
     """Serve main frontend page"""
     return send_file('../index.html')
+
+@app.route('/dashboard')
+def serve_dashboard():
+    """Serve dashboard page"""
+    return send_file('../dashboard.html')
+
+@app.route('/auth')
+def serve_auth():
+    """Serve auth page"""
+    return send_file('../auth.html')
+
+# === API для аутентификации ===
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    """Регистрация нового пользователя"""
+    data = request.json
+    email = data.get('email', '').strip().lower()
+    name = data.get('name', '').strip()
+    password = data.get('password', '')
+    
+    # Валидация
+    if not email or not name or not password:
+        return jsonify({"error": "Все поля обязательны"}), 400
+    
+    if len(password) < 8:
+        return jsonify({"error": "Пароль должен содержать минимум 8 символов"}), 400
+    
+    if '@' not in email:
+        return jsonify({"error": "Некорректный email"}), 400
+    
+    # Проверяем, не существует ли пользователь
+    existing_user = get_user_by_email(email)
+    if existing_user:
+        return jsonify({"error": "Пользователь с таким email уже существует"}), 400
+    
+    # Создаем пользователя
+    user_id = create_user(email, name, password)
+    if user_id:
+        session['user_id'] = user_id
+        session['user_email'] = email
+        session['user_name'] = name
+        
+        interaction_logger.log_event("user_registered", {
+            "user_id": user_id,
+            "email": email,
+            "name": name
+        })
+        
+        return jsonify({
+            "success": True,
+            "message": "Регистрация успешна!",
+            "user": {
+                "id": user_id,
+                "email": email,
+                "name": name,
+                "plan": "free",
+                "requests_left": 15
+            }
+        })
+    else:
+        return jsonify({"error": "Ошибка при создании пользователя"}), 500
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    """Авторизация пользователя"""
+    data = request.json
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+    
+    if not email or not password:
+        return jsonify({"error": "Email и пароль обязательны"}), 400
+    
+    user = get_user_by_email(email)
+    if not user or not verify_password(password, user[3]):  # user[3] = password_hash
+        return jsonify({"error": "Неверный email или пароль"}), 401
+    
+    # Обновляем время последнего входа
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', (user[0],))
+    conn.commit()
+    conn.close()
+    
+    # Сохраняем в сессии
+    session['user_id'] = user[0]
+    session['user_email'] = user[1]
+    session['user_name'] = user[2]
+    
+    interaction_logger.log_event("user_logged_in", {
+        "user_id": user[0],
+        "email": user[1]
+    })
+    
+    return jsonify({
+        "success": True,
+        "message": "Вход выполнен успешно!",
+        "user": {
+            "id": user[0],
+            "email": user[1],
+            "name": user[2],
+            "plan": user[4],
+            "requests_left": max(0, user[6] - user[5])  # requests_limit - requests_used
+        }
+    })
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    """Выход из системы"""
+    session.clear()
+    return jsonify({"success": True, "message": "Вы вышли из системы"})
+
+@app.route('/api/user/profile')
+@login_required
+def get_user_profile():
+    """Получить профиль пользователя"""
+    user = get_user_by_id(session['user_id'])
+    if not user:
+        return jsonify({"error": "Пользователь не найден"}), 404
+    
+    return jsonify({
+        "user": {
+            "id": user[0],
+            "email": user[1],
+            "name": user[2],
+            "plan": user[4],
+            "requests_used": user[5],
+            "requests_limit": user[6],
+            "requests_left": max(0, user[6] - user[5]),
+            "subscription_expires": user[7],
+            "created_at": user[8]
+        }
+    })
+
+@app.route('/api/user/update', methods=['POST'])
+@login_required
+def update_user_profile():
+    """Обновить профиль пользователя"""
+    data = request.json
+    name = data.get('name', '').strip()
+    
+    if not name:
+        return jsonify({"error": "Имя обязательно"}), 400
+    
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('UPDATE users SET name = ? WHERE id = ?', (name, session['user_id']))
+    conn.commit()
+    conn.close()
+    
+    session['user_name'] = name
+    
+    return jsonify({"success": True, "message": "Профиль обновлен"})
+
+@app.route('/api/user/history')
+@login_required
+def get_chat_history():
+    """Получить историю чатов пользователя"""
+    history = get_user_chat_history(session['user_id'])
+    
+    # Группируем по сессиям
+    sessions = {}
+    for row in history:
+        session_id, message, response, msg_type, created_at = row
+        if session_id not in sessions:
+            sessions[session_id] = {
+                "session_id": session_id,
+                "created_at": created_at,
+                "messages": []
+            }
+        sessions[session_id]["messages"].append({
+            "message": message,
+            "response": response,
+            "type": msg_type,
+            "created_at": created_at
+        })
+    
+    return jsonify({
+        "sessions": list(sessions.values())
+    })
+
+@app.route('/api/user/projects')
+@login_required
+def get_user_projects_api():
+    """Получить проекты пользователя"""
+    projects = get_user_projects(session['user_id'])
+    
+    projects_list = []
+    for project in projects:
+        projects_list.append({
+            "project_id": project[0],
+            "name": project[1],
+            "type": project[2],
+            "description": project[3],
+            "created_at": project[4],
+            "updated_at": project[5]
+        })
+    
+    return jsonify({"projects": projects_list})
 
 @app.route('/<path:filename>')
 def serve_static_files(filename):
@@ -122,6 +325,181 @@ os.makedirs(PROJECTS_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(LOGS_DIR, exist_ok=True)
 os.makedirs(USER_DATA_DIR, exist_ok=True)
+
+# Инициализация базы данных
+def init_database():
+    """Инициализируем базу данных пользователей"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    
+    # Таблица пользователей
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            plan TEXT DEFAULT 'free',
+            requests_used INTEGER DEFAULT 0,
+            requests_limit INTEGER DEFAULT 15,
+            subscription_expires DATETIME DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_login DATETIME DEFAULT NULL
+        )
+    ''')
+    
+    # Таблица истории чатов
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            session_id TEXT NOT NULL,
+            message TEXT NOT NULL,
+            response TEXT NOT NULL,
+            message_type TEXT DEFAULT 'chat',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # Таблица проектов пользователей
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            project_id TEXT NOT NULL,
+            project_name TEXT NOT NULL,
+            project_type TEXT NOT NULL,
+            project_description TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+
+# Инициализируем базу данных
+init_database()
+
+# Утилиты для работы с пользователями
+def hash_password(password):
+    """Хешируем пароль"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password, password_hash):
+    """Проверяем пароль"""
+    return hash_password(password) == password_hash
+
+def get_user_by_email(email):
+    """Получаем пользователя по email"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+    user = cursor.fetchone()
+    conn.close()
+    return user
+
+def get_user_by_id(user_id):
+    """Получаем пользователя по ID"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    return user
+
+def create_user(email, name, password):
+    """Создаем нового пользователя"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    
+    password_hash = hash_password(password)
+    
+    try:
+        cursor.execute('''
+            INSERT INTO users (email, name, password_hash) 
+            VALUES (?, ?, ?)
+        ''', (email, name, password_hash))
+        user_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return user_id
+    except sqlite3.IntegrityError:
+        conn.close()
+        return None
+
+def update_user_requests(user_id, increment=1):
+    """Обновляем количество использованных запросов"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE users SET requests_used = requests_used + ? 
+        WHERE id = ?
+    ''', (increment, user_id))
+    conn.commit()
+    conn.close()
+
+def login_required(f):
+    """Декоратор для проверки авторизации"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({"error": "Требуется авторизация", "redirect": "/auth"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+def save_chat_message(user_id, session_id, message, response, message_type='chat'):
+    """Сохраняем сообщение в истории чата"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO chat_history (user_id, session_id, message, response, message_type)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (user_id, session_id, message, response, message_type))
+    conn.commit()
+    conn.close()
+
+def get_user_chat_history(user_id, limit=50):
+    """Получаем историю чатов пользователя"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT session_id, message, response, message_type, created_at
+        FROM chat_history 
+        WHERE user_id = ? 
+        ORDER BY created_at DESC 
+        LIMIT ?
+    ''', (user_id, limit))
+    history = cursor.fetchall()
+    conn.close()
+    return history
+
+def save_user_project(user_id, project_id, project_name, project_type, description=""):
+    """Сохраняем проект пользователя"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO user_projects (user_id, project_id, project_name, project_type, project_description)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (user_id, project_id, project_name, project_type, description))
+    conn.commit()
+    conn.close()
+
+def get_user_projects(user_id):
+    """Получаем проекты пользователя"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT project_id, project_name, project_type, project_description, created_at, updated_at
+        FROM user_projects 
+        WHERE user_id = ? 
+        ORDER BY updated_at DESC
+    ''', (user_id,))
+    projects = cursor.fetchall()
+    conn.close()
+    return projects
 
 # Очередь для обработки генерации проектов
 project_queue = queue.Queue()
@@ -3408,32 +3786,62 @@ class SmartAI:
 # --- API Routes ---
 
 @app.route('/api/chat', methods=['POST'])
+@login_required
 def chat():
-    """Обработка сообщений чата"""
+    """Обработка сообщений чата с проверкой лимитов"""
     data = request.json
     message = data.get('message', '')
-    session_id = data.get('session_id', str(uuid.uuid4())) # Генерируем session_id, если не предоставлен
+    session_id = data.get('session_id', str(uuid.uuid4()))
 
     try:
-        # Логируем запрос перед обработкой AI
-        user_id = data.get('user_id', 'anonymous')
-        request_id = interaction_logger.log_user_request(user_id, session_id, {"message": message})
+        # Получаем текущего пользователя
+        user = get_user_by_id(session['user_id'])
+        if not user:
+            return jsonify({"error": "Пользователь не найден"}), 404
+        
+        # Проверяем лимит запросов
+        requests_used = user[5]
+        requests_limit = user[6]
+        
+        if requests_used >= requests_limit and user[4] == 'free':  # user[4] = plan
+            return jsonify({
+                "type": "limit_exceeded",
+                "message": "⚡ Лимит бесплатных запросов исчерпан! Оформите подписку для продолжения работы.",
+                "requests_used": requests_used,
+                "requests_limit": requests_limit,
+                "show_subscription": True
+            }), 429
+        
+        # Логируем запрос
+        request_id = interaction_logger.log_user_request(session['user_id'], session_id, {"message": message})
         
         start_time = time.time()
         ai_response = ai_agent.generate_personalized_response(message, session_id)
         processing_time = int((time.time() - start_time) * 1000)
         
+        # Обновляем счетчик запросов только для бесплатных пользователей
+        if user[4] == 'free':
+            update_user_requests(session['user_id'], 1)
+            requests_used += 1
+        
+        # Сохраняем в историю чата
+        response_text = ai_response.get('message', '')
+        save_chat_message(session['user_id'], session_id, message, response_text, ai_response.get('type', 'chat'))
+        
+        # Добавляем информацию о лимитах в ответ
+        ai_response['requests_left'] = max(0, requests_limit - requests_used)
+        ai_response['requests_used'] = requests_used
+        ai_response['requests_limit'] = requests_limit
+        
         # Логируем ответ AI
-        interaction_logger.log_ai_response(user_id, session_id, request_id, ai_response, processing_time)
+        interaction_logger.log_ai_response(session['user_id'], session_id, request_id, ai_response, processing_time)
         
         return jsonify(ai_response)
         
     except Exception as e:
         print(f"Ошибка в API /api/chat: {e}")
-        user_id = data.get('user_id', 'anonymous') if 'data' in locals() else 'anonymous'
-        interaction_logger.log_error(user_id, session_id, {"error": str(e), "endpoint": "/api/chat"})
+        interaction_logger.log_error(session.get('user_id', 'unknown'), session_id, {"error": str(e), "endpoint": "/api/chat"})
         
-        # Fallback на базовый ответ
         return jsonify({
             "type": "error",
             "message": "🤖 Извините, произошла непредвиденная ошибка. Попробуйте переформулировать ваш запрос.",

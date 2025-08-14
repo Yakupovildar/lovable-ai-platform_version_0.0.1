@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет - Vibecode AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Навигация личного кабинета -->
+    <nav class="dashboard-navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-text">💻 Vibecode AI</span>
+            </div>
+            <div class="nav-user">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Пользователь</span>
+                    <span class="user-plan" id="userPlan">Бесплатный план</span>
+                </div>
+                <div class="user-requests">
+                    <span class="requests-count" id="requestsCount">15</span>
+                    <span class="requests-label">запросов осталось</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <div class="dashboard-container">
+        <!-- Боковая панель -->
+        <aside class="sidebar">
+            <div class="sidebar-menu">
+                <button class="menu-item active" data-tab="chat">
+                    <span class="menu-icon">💬</span>
+                    <span class="menu-text">AI Чат</span>
+                </button>
+                <button class="menu-item" data-tab="projects">
+                    <span class="menu-icon">📁</span>
+                    <span class="menu-text">Мои проекты</span>
+                </button>
+                <button class="menu-item" data-tab="history">
+                    <span class="menu-icon">📋</span>
+                    <span class="menu-text">История чатов</span>
+                </button>
+                <button class="menu-item" data-tab="subscription">
+                    <span class="menu-icon">💎</span>
+                    <span class="menu-text">Подписка</span>
+                </button>
+                <button class="menu-item" data-tab="settings">
+                    <span class="menu-icon">⚙️</span>
+                    <span class="menu-text">Настройки</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Основная область -->
+        <main class="main-content">
+            <!-- Вкладка AI Чат -->
+            <div class="tab-content active" id="chat-tab">
+                <div class="chat-header">
+                    <h2>AI Ассистент</h2>
+                    <p>Создавайте приложения и сайты простым описанием на русском языке</p>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai-message">
+                            <div class="message-avatar">🤖</div>
+                            <div class="message-content">
+                                <p>Привет! Я Vibecode AI. Опишите, какое приложение или сайт вы хотите создать?</p>
+                                <div class="quick-suggestions">
+                                    <button class="suggestion-btn" onclick="sendSuggestion('Создай интернет-магазин')">🛒 Интернет-магазин</button>
+                                    <button class="suggestion-btn" onclick="sendSuggestion('Создай блог')">📝 Блог</button>
+                                    <button class="suggestion-btn" onclick="sendSuggestion('Создай портфолио')">🎨 Портфолио</button>
+                                    <button class="suggestion-btn" onclick="sendSuggestion('Создай лендинг')">🚀 Лендинг</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" placeholder="Опишите ваш проект..." class="chat-input">
+                        <button id="sendMessage" class="send-btn">Отправить</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка Мои проекты -->
+            <div class="tab-content" id="projects-tab">
+                <div class="projects-header">
+                    <h2>Мои проекты</h2>
+                    <button class="btn-primary" onclick="showTab('chat')">+ Создать новый проект</button>
+                </div>
+                <div class="projects-grid" id="projectsGrid">
+                    <!-- Проекты будут загружены динамически -->
+                </div>
+            </div>
+
+            <!-- Вкладка История чатов -->
+            <div class="tab-content" id="history-tab">
+                <div class="history-header">
+                    <h2>История разговоров</h2>
+                    <button class="btn-secondary" onclick="clearHistory()">Очистить историю</button>
+                </div>
+                <div class="history-list" id="historyList">
+                    <!-- История будет загружена динамически -->
+                </div>
+            </div>
+
+            <!-- Вкладка Подписка -->
+            <div class="tab-content" id="subscription-tab">
+                <div class="subscription-header">
+                    <h2>Выберите тарифный план</h2>
+                    <p>Выберите подходящий план для ваших задач</p>
+                </div>
+                
+                <div class="pricing-cards">
+                    <!-- Бесплатный план -->
+                    <div class="pricing-card free">
+                        <div class="plan-header">
+                            <h3>Бесплатный</h3>
+                            <div class="plan-price">
+                                <span class="price">₽0</span>
+                                <span class="period">/месяц</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <div class="feature">✅ 15 запросов к AI</div>
+                            <div class="feature">✅ Базовые шаблоны</div>
+                            <div class="feature">✅ Экспорт проектов</div>
+                            <div class="feature">❌ Без приоритетной поддержки</div>
+                            <div class="feature">❌ Ограниченная история</div>
+                        </div>
+                        <button class="plan-btn current" disabled>Текущий план</button>
+                    </div>
+
+                    <!-- Персональный план -->
+                    <div class="pricing-card personal recommended">
+                        <div class="plan-badge">Рекомендуемый</div>
+                        <div class="plan-header">
+                            <h3>Персональный</h3>
+                            <div class="plan-price">
+                                <span class="price">₽799</span>
+                                <span class="period">/месяц</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <div class="feature">✅ Безлимитные запросы</div>
+                            <div class="feature">✅ Все шаблоны и стили</div>
+                            <div class="feature">✅ Приоритетная поддержка</div>
+                            <div class="feature">✅ Полная история чатов</div>
+                            <div class="feature">✅ Экспорт в GitHub</div>
+                        </div>
+                        <button class="plan-btn" onclick="showComingSoon()">Скоро доступно</button>
+                    </div>
+
+                    <!-- Командный план -->
+                    <div class="pricing-card team">
+                        <div class="plan-header">
+                            <h3>Командный</h3>
+                            <div class="plan-price">
+                                <span class="price">₽1599</span>
+                                <span class="period">/месяц</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <div class="feature">✅ Все из Персонального</div>
+                            <div class="feature">✅ Совместная работа</div>
+                            <div class="feature">✅ Управление командой</div>
+                            <div class="feature">✅ Корпоративная поддержка</div>
+                            <div class="feature">✅ API доступ</div>
+                        </div>
+                        <button class="plan-btn" onclick="showComingSoon()">Скоро доступно</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка Настройки -->
+            <div class="tab-content" id="settings-tab">
+                <div class="settings-header">
+                    <h2>Настройки аккаунта</h2>
+                </div>
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label>Имя</label>
+                        <input type="text" id="userName" placeholder="Ваше имя">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="userEmail" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Уведомления</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked>
+                                <span class="checkmark"></span>
+                                Email уведомления о новых проектах
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked>
+                                <span class="checkmark"></span>
+                                Уведомления о скидках и акциях
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="saveSettings()">Сохранить настройки</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно исчерпания запросов -->
+    <div class="modal" id="limitModal">
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚡ Лимит запросов исчерпан</h3>
+                    <button class="modal-close" onclick="closeLimitModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы использовали все бесплатные запросы. Оформите подписку для продолжения работы без ограничений!</p>
+                    <div class="limit-offer">
+                        <div class="offer-highlight">
+                            🎉 Первый месяц со скидкой 50%
+                        </div>
+                        <div class="offer-price">
+                            <span class="old-price">₽799</span>
+                            <span class="new-price">₽399</span>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn-primary" onclick="showTab('subscription')">Выбрать план</button>
+                        <button class="btn-secondary" onclick="closeLimitModal()">Может позже</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

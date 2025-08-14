@@ -316,22 +316,43 @@
         </div>
     </section>
 
-    <!-- Чат интерфейс -->
-    <section id="chat" class="chat-section">
+    <!-- Призыв к действию -->
+    <section id="cta" class="cta-section">
         <div class="container">
-            <h2 class="section-title">Попробуйте чат прямо сейчас</h2>
-            <div class="chat-container">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message ai-message">
-                        <div class="message-avatar">🤖</div>
-                        <div class="message-content">
-                            <p>Привет! Я Vibecode AI. Какой код вы хотите создать сегодня?</p>
-                        </div>
+            <div class="cta-content">
+                <h2 class="section-title">Готовы начать создавать?</h2>
+                <p class="cta-subtitle">Присоединяйтесь к тысячам разработчиков, которые уже создают с Vibecode AI</p>
+                
+                <div class="cta-stats">
+                    <div class="cta-stat">
+                        <span class="stat-number">15,000+</span>
+                        <span class="stat-text">Созданных проектов</span>
+                    </div>
+                    <div class="cta-stat">
+                        <span class="stat-number">2,500+</span>
+                        <span class="stat-text">Довольных пользователей</span>
+                    </div>
+                    <div class="cta-stat">
+                        <span class="stat-number">5 мин</span>
+                        <span class="stat-text">Среднее время создания</span>
                     </div>
                 </div>
-                <div class="chat-input-container">
-                    <input type="text" id="chatInput" placeholder="Опишите, какой код вам нужен..." class="chat-input">
-                    <button id="sendMessage" class="send-btn">Отправить</button>
+                
+                <div class="cta-buttons">
+                    <button class="btn-primary large" onclick="startCreating()">
+                        <span>🚀 Начать создавать бесплатно</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                    <button class="btn-secondary large" onclick="showDemo()">
+                        <span>📺 Посмотреть демо</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                </div>
+                
+                <div class="cta-guarantee">
+                    <p>✅ Бесплатно навсегда для первых 15 запросов</p>
+                    <p>⚡ Мгновенное создание проектов</p>
+                    <p>🇷🇺 Полная поддержка русского языка</p>
                 </div>
             </div>
         </div>
