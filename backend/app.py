@@ -17,6 +17,12 @@ import time
 import random
 import hashlib
 import sqlite3
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import redis
+import pickle
+import logging
+from performance_monitor import performance_monitor, monitor_performance
 # Import real modules
 try:
     from advanced_ai import SuperSmartAI
@@ -94,7 +100,29 @@ except ImportError:
 app = Flask(__name__)
 app.secret_key = 'vibecode_ai_secret_key_2024_super_secure'
 CORS(app, supports_credentials=True)
-socketio = SocketIO(app, cors_allowed_origins="*", manage_session=True)
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=True, async_mode='threading')
+
+# Настройка логирования для отладки
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Пул потоков для асинхронных операций
+executor = ThreadPoolExecutor(max_workers=50)
+
+# Кэш в памяти (fallback если Redis недоступен)
+memory_cache = {}
+cache_ttl = {}
+
+# Пытаемся подключиться к Redis
+try:
+    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_client.ping()
+    print("✅ Redis подключен для кэширования")
+    USE_REDIS = True
+except:
+    print("⚠️ Redis недоступен, используем память для кэша")
+    USE_REDIS = False
+    redis_client = None
 
 @app.route('/')
 def serve_frontend():
@@ -313,6 +341,59 @@ def health_check():
     """Health check endpoint"""
     return jsonify({"status": "ok", "message": "Backend is running"})
 
+@app.route('/api/status')
+def status_check():
+    """Быстрая проверка статуса сервиса"""
+    return jsonify({
+        "status": "ok",
+        "version": "2.0",
+        "cache_enabled": USE_REDIS or len(memory_cache) > 0,
+        "active_threads": threading.active_count(),
+        "memory_cache_size": len(memory_cache),
+        "redis_connected": USE_REDIS,
+        "performance": "optimized"
+    })
+
+@app.route('/api/cache/clear', methods=['POST'])
+@login_required
+def clear_cache():
+    """Очистка кэша пользователя"""
+    user_id = session.get('user_id')
+    if user_id:
+        clear_user_cache(user_id)
+        return jsonify({"success": True, "message": "Кэш очищен"})
+    return jsonify({"success": False, "message": "Не авторизован"}), 401
+
+@app.route('/api/performance')
+def get_performance():
+    """Получить статистику производительности"""
+    stats = performance_monitor.get_stats()
+    return jsonify(stats)
+
+@app.route('/api/optimize', methods=['POST'])
+def optimize_performance():
+    """Оптимизация производительности"""
+    # Очищаем старые кэши
+    global memory_cache, cache_ttl
+    current_time = time.time()
+    
+    # Удаляем устаревшие записи из кэша
+    expired_keys = [k for k, v in cache_ttl.items() if current_time - v > 600]
+    for key in expired_keys:
+        memory_cache.pop(key, None)
+        cache_ttl.pop(key, None)
+    
+    # Очищаем неактивные сессии AI
+    if hasattr(super_ai, 'cleanup_inactive_sessions'):
+        super_ai.cleanup_inactive_sessions()
+    
+    return jsonify({
+        "success": True,
+        "message": "Оптимизация выполнена",
+        "cleared_cache_entries": len(expired_keys),
+        "active_cache_size": len(memory_cache)
+    })
+
 # Конфигурация
 PROJECTS_DIR = "projects"
 TEMP_DIR = "temp"
@@ -325,6 +406,120 @@ os.makedirs(PROJECTS_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(LOGS_DIR, exist_ok=True)
 os.makedirs(USER_DATA_DIR, exist_ok=True)
+
+# === СИСТЕМА КЭШИРОВАНИЯ ===
+def get_cache_key(prefix: str, *args) -> str:
+    """Генерирует ключ для кэша"""
+    return f"{prefix}:{'_'.join(str(arg) for arg in args)}"
+
+def get_from_cache(key: str):
+    """Получает данные из кэша"""
+    if USE_REDIS and redis_client:
+        try:
+            data = redis_client.get(key)
+            return pickle.loads(data) if data else None
+        except:
+            pass
+    
+    # Fallback на память
+    if key in memory_cache:
+        if time.time() - cache_ttl.get(key, 0) < 300:  # 5 минут
+            return memory_cache[key]
+        else:
+            memory_cache.pop(key, None)
+            cache_ttl.pop(key, None)
+    return None
+
+def set_cache(key: str, data, ttl: int = 300):
+    """Сохраняет данные в кэш"""
+    if USE_REDIS and redis_client:
+        try:
+            redis_client.setex(key, ttl, pickle.dumps(data))
+            return
+        except:
+            pass
+    
+    # Fallback на память
+    memory_cache[key] = data
+    cache_ttl[key] = time.time()
+
+def clear_user_cache(user_id: int):
+    """Очищает кэш пользователя"""
+    pattern = f"user_{user_id}:*"
+    if USE_REDIS and redis_client:
+        try:
+            keys = redis_client.keys(pattern)
+            if keys:
+                redis_client.delete(*keys)
+        except:
+            pass
+    
+    # Очищаем из памяти
+    keys_to_remove = [k for k in memory_cache.keys() if k.startswith(f"user_{user_id}:")]
+    for key in keys_to_remove:
+        memory_cache.pop(key, None)
+        cache_ttl.pop(key, None)
+
+# === АСИНХРОННЫЕ ОБРАБОТЧИКИ ===
+def async_ai_response(message: str, session_id: str, user_id: int):
+    """Асинхронная обработка AI ответов"""
+    try:
+        # Проверяем кэш сначала
+        cache_key = get_cache_key("ai_response", user_id, hash(message))
+        cached_response = get_from_cache(cache_key)
+        
+        if cached_response:
+            logger.info(f"Возвращаем кэшированный ответ для user {user_id}")
+            return cached_response
+        
+        # Генерируем новый ответ
+        start_time = time.time()
+        ai_response = ai_agent.generate_personalized_response(message, session_id)
+        processing_time = int((time.time() - start_time) * 1000)
+        
+        # Кэшируем ответ
+        set_cache(cache_key, ai_response, ttl=600)  # 10 минут
+        
+        logger.info(f"AI ответ сгенерирован за {processing_time}ms для user {user_id}")
+        return ai_response
+        
+    except Exception as e:
+        logger.error(f"Ошибка async_ai_response: {e}")
+        return {
+            "type": "error",
+            "message": "Временная ошибка обработки. Попробуйте снова.",
+            "suggestions": ["Повторить запрос", "Создать приложение", "Получить помощь"]
+        }
+
+def async_project_generation(project_type: str, description: str, project_name: str, user_id: int):
+    """Асинхронная генерация проектов"""
+    try:
+        # Проверяем кэш
+        cache_key = get_cache_key("project", project_type, hash(description))
+        cached_project = get_from_cache(cache_key)
+        
+        if cached_project:
+            logger.info(f"Возвращаем кэшированный проект для user {user_id}")
+            return cached_project
+        
+        # Генерируем новый проект
+        start_time = time.time()
+        result = generator.generate_project(project_type, description, project_name)
+        processing_time = int((time.time() - start_time) * 1000)
+        
+        if result['success']:
+            # Кэшируем только успешные проекты
+            set_cache(cache_key, result, ttl=1800)  # 30 минут
+            logger.info(f"Проект сгенерирован за {processing_time}ms для user {user_id}")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Ошибка async_project_generation: {e}")
+        return {
+            "success": False,
+            "error": f"Ошибка генерации: {str(e)}"
+        }
 
 # Инициализация базы данных
 def init_database():
@@ -3854,6 +4049,7 @@ class SmartAI:
 
 @app.route('/api/chat', methods=['POST'])
 @login_required
+@monitor_performance
 def chat():
     """Обработка сообщений чата с проверкой лимитов"""
     data = request.json
@@ -3861,16 +4057,24 @@ def chat():
     session_id = data.get('session_id', str(uuid.uuid4()))
 
     try:
-        # Получаем текущего пользователя
-        user = get_user_by_id(session['user_id'])
+        user_id = session['user_id']
+        
+        # Быстрая проверка кэша пользователя
+        user_cache_key = get_cache_key("user", user_id)
+        user = get_from_cache(user_cache_key)
+        
         if not user:
-            return jsonify({"error": "Пользователь не найден"}), 404
+            user = get_user_by_id(user_id)
+            if not user:
+                return jsonify({"error": "Пользователь не найден"}), 404
+            # Кэшируем пользователя на 1 минуту
+            set_cache(user_cache_key, user, ttl=60)
 
         # Проверяем лимит запросов
         requests_used = user[5]
         requests_limit = user[6]
 
-        if requests_used >= requests_limit and user[4] == 'free':  # user[4] = plan
+        if requests_used >= requests_limit and user[4] == 'free':
             return jsonify({
                 "type": "limit_exceeded",
                 "message": "⚡ Лимит бесплатных запросов исчерпан! Оформите подписку для продолжения работы.",
@@ -3879,118 +4083,106 @@ def chat():
                 "show_subscription": True
             }), 429
 
-        # Логируем запрос
-        request_id = interaction_logger.log_user_request(session['user_id'], session_id, {"message": message})
+        # Асинхронно запускаем обработку AI
+        future = executor.submit(async_ai_response, message, session_id, user_id)
+        
+        # Ждем ответ максимум 10 секунд
+        try:
+            ai_response = future.result(timeout=10)
+        except:
+            return jsonify({
+                "type": "error",
+                "message": "⏱️ Запрос обрабатывается слишком долго. Попробуйте упростить запрос.",
+                "suggestions": ["Повторить", "Упростить запрос", "Создать базовое приложение"]
+            })
 
-        start_time = time.time()
-        ai_response = ai_agent.generate_personalized_response(message, session_id)
-        processing_time = int((time.time() - start_time) * 1000)
-
-        # Обновляем счетчик запросов только для бесплатных пользователей
+        # Асинхронно обновляем счетчики и логи
         if user[4] == 'free':
-            update_user_requests(session['user_id'], 1)
+            executor.submit(update_user_requests, user_id, 1)
             requests_used += 1
 
-        # Сохраняем в историю чата
+        # Асинхронно сохраняем в историю
         response_text = ai_response.get('message', '')
-        save_chat_message(session['user_id'], session_id, message, response_text, ai_response.get('type', 'chat'))
+        executor.submit(save_chat_message, user_id, session_id, message, response_text, ai_response.get('type', 'chat'))
 
-        # Добавляем информацию о лимитах в ответ
+        # Очищаем кэш пользователя для актуальных данных
+        clear_user_cache(user_id)
+
+        # Добавляем информацию о лимитах
         ai_response['requests_left'] = max(0, requests_limit - requests_used)
         ai_response['requests_used'] = requests_used
         ai_response['requests_limit'] = requests_limit
-
-        # Логируем ответ AI
-        interaction_logger.log_ai_response(session['user_id'], session_id, request_id, ai_response, processing_time)
+        ai_response['cache_hit'] = 'cached' in str(ai_response.get('processing_info', ''))
 
         return jsonify(ai_response)
 
     except Exception as e:
-        print(f"Ошибка в API /api/chat: {e}")
-        interaction_logger.log_error(session.get('user_id', 'unknown'), session_id, {"error": str(e), "endpoint": "/api/chat"})
-
+        logger.error(f"Ошибка в API /api/chat: {e}")
         return jsonify({
             "type": "error",
-            "message": "🤖 Извините, произошла непредвиденная ошибка. Попробуйте переформулировать ваш запрос.",
-            "suggestions": ["Создать приложение", "Получить совет", "Изучить рынок", "Повторить запрос"]
+            "message": "🤖 Извините, произошла ошибка. Попробуйте снова.",
+            "suggestions": ["Создать приложение", "Получить совет", "Повторить запрос"]
         })
 
 @app.route('/api/generate-project', methods=['POST'])
+@monitor_performance
 def generate_project():
-    """Генерация проекта (из UI)"""
+    """Генерация проекта (из UI) с кэшированием"""
     data = request.json
     description = data.get('description', '')
     project_name = data.get('project_name', 'Мой проект')
     project_type = data.get('project_type', 'snake_game')
     style = data.get('style', 'modern')
-    user_preferences = data.get('preferences', {}) # Получаем предпочтения из UI
+    user_preferences = data.get('preferences', {})
+    user_id = session.get('user_id', 'anonymous')
 
-    # Создаем запись пользователя, если ее нет
-    user_id = data.get('user_id', 'anonymous') # Предполагаем, что есть user_id
-    if user_id not in ai_agent.user_session:
-         ai_agent.user_session[user_id] = {
-             "stage": "created", # Сразу переводим в состояние "создано"
-             "current_project_id": None,
-             "project_details": {},
-             "preferences": user_preferences # Сохраняем предпочтения
-         }
-    else:
-        ai_agent.user_session[user_id]["preferences"].update(user_preferences)
+    try:
+        # Асинхронно генерируем проект
+        future = executor.submit(async_project_generation, project_type, description, project_name, user_id)
+        
+        # Ждем результат максимум 15 секунд
+        try:
+            result = future.result(timeout=15)
+        except:
+            return jsonify({
+                "success": False,
+                "error": "Генерация проекта займет больше времени. Попробуйте упростить описание.",
+                "message": "⏱️ Тайм-аут генерации. Попробуйте создать более простой проект."
+            })
 
-    # Обновляем детали проекта на основе предпочтений
-    project_details = {
-        "type": project_type,
-        "name": project_name,
-        "description": description
-    }
-    if project_type == "game":
-        project_details["name"] = f"{style.capitalize()} {project_type.replace('_', ' ').title()} Игра"
-        project_details["description"] = f"Увлекательная {project_type.replace('_', ' ')} игра в {style} стиле."
-    elif project_type == "productivity":
-        project_details["name"] = f"Удобный {project_type.replace('_', ' ').title()}"
-        project_details["description"] = f"Приложение для повышения продуктивности."
-    elif project_type == "utility":
-        project_details["name"] = f"Умный {project_type.replace('_', ' ').title()}"
-        project_details["description"] = f"Функциональная утилита."
+        if result['success']:
+            project_id = result['project_id']
+            
+            # Асинхронно логируем и сохраняем версии
+            executor.submit(log_project_creation, project_id, project_name, user_id)
+            
+            archive_url = f"/api/download/{project_id}"
+            result['download_url'] = archive_url
+            result['project_id'] = project_id
+            result['message'] = f"Проект '{project_name}' успешно создан!"
+            result['generation_time'] = result.get('generation_time', 'быстро')
 
-    ai_agent.user_session[user_id]["project_details"] = project_details
+        return jsonify(result)
 
-    # Логируем старт генерации
-    project_version = version_control.get_next_version(project_type)
-    log_message = f"Генерация проекта (UI): {project_details['name']} (v{project_version})"
-    interaction_logger.log_event("project_creation_start", {**project_details, "version": project_version, "user_id": user_id})
-
-    # Генерируем проект
-    result = advanced_generator.generate_project(
-        project_type=project_type,
-        description=project_details["description"],
-        project_name=project_details["name"],
-        user_preferences=user_preferences
-    )
-
-    if result['success']:
-        project_id = result['project_id']
-        ai_agent.user_session[user_id]["current_project_id"] = project_id
-
-        # Сохраняем версию
-        version_control.save_project_version(project_id, project_version, result.get("files", []), log_message)
-        interaction_logger.log_event("project_creation_success", {
-            "project_id": project_id,
-            "project_name": project_details["name"],
-            "version": project_version,
-            "user_id": user_id
+    except Exception as e:
+        logger.error(f"Ошибка в generate_project: {e}")
+        return jsonify({
+            "success": False,
+            "error": f"Ошибка генерации: {str(e)}",
+            "message": "Произошла ошибка при создании проекта."
         })
 
-        archive_url = f"/api/download/{project_id}"
-        result['download_url'] = archive_url
-        result['project_id'] = project_id
-        result['version'] = project_version
-        result['message'] = f"Проект '{project_details['name']}' (v{project_version}) успешно создан!"
-    else:
-        interaction_logger.log_error("api_generate_project_failed", {"error": result.get('error'), "user_id": user_id})
-        result['message'] = f"Ошибка генерации проекта: {result.get('error', 'Неизвестная ошибка')}"
-
-    return jsonify(result)
+def log_project_creation(project_id: str, project_name: str, user_id: str):
+    """Асинхронное логирование создания проекта"""
+    try:
+        interaction_logger.log_event("project_creation_success", {
+            "project_id": project_id,
+            "project_name": project_name,
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Ошибка логирования: {e}")
 
 @app.route('/api/download/<project_id>')
 def download_project(project_id):
