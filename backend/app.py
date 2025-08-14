@@ -856,6 +856,9 @@ except Exception as e:
 
     ai_agent = EnhancedFallbackAI()
 
+# Инициализируем генератор проектов после определения класса
+generator = ProjectGenerator()
+
 nlp_processor = SmartNLP()
 version_control = ProjectVersionControl()
 interaction_logger = UserInteractionLogger()
@@ -3036,8 +3039,7 @@ cityInput.addEventListener('keypress', (e) => {
 Требуется API ключ OpenWeatherMap.
 """
 
-    # Инициализируем генератор проектов
-    generator = ProjectGenerator()
+    # Инициализируем генератор проектов (будет создан после определения класса)
 
     # Улучшенный AI-агент с диалоговым процессом
     class SmartAI:
