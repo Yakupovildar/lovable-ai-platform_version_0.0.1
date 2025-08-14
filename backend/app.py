@@ -21,6 +21,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import pickle
 import logging
+from functools import wraps
 # Базовые мониторинг и производительность
 class SimplePerformanceMonitor:
     def __init__(self):
@@ -107,6 +108,15 @@ except Exception as e:
     print("💡 Используем память для кэша")
     USE_REDIS = False
     redis_client = None
+
+def login_required(f):
+    """Декоратор для проверки авторизации"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({"error": "Требуется авторизация", "redirect": "/auth"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def serve_frontend():
@@ -377,15 +387,6 @@ def optimize_performance():
         "cleared_cache_entries": len(expired_keys),
         "active_cache_size": len(memory_cache)
     })
-
-def login_required(f):
-    """Декоратор для проверки авторизации"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return jsonify({"error": "Требуется авторизация", "redirect": "/auth"}), 401
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Конфигурация
 PROJECTS_DIR = "projects"
