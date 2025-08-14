@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, send_file, session, redirect, url_for
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask import request
 from functools import wraps
 import os
 import json

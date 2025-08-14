@@ -1,11 +1,18 @@
 
-run = "cd backend && python app.py"
+modules = ["python-3.12"]
 
 [nix]
-channel = "stable-23.11"
+channel = "stable-25_05"
+packages = ["iana-etc"]
+
+[workflows]
+[workflows.backend]
+language = "python3"
+start = ["cd", "backend", "&&", "python3", "app.py"]
 
 [deployment]
-run = ["sh", "-c", "cd backend && python app.py"]
+run = ["python3", "backend/app.py"]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 5000
