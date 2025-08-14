@@ -109,7 +109,7 @@ class PerformanceMonitor:
         self.request_times = deque(maxlen=100)
         self._lock = threading.Lock()
     
-    def record_request(self, response_time):
+    def record_request(self, response_time, success=True):
         """Записать время запроса"""
         with self._lock:
             self.stats["requests_count"] += 1
@@ -131,11 +131,42 @@ class PerformanceMonitor:
         with self._lock:
             self.stats["active_sessions"] = max(0, self.stats["active_sessions"] - 1)
 
-# Глобальный экземпляр
+    def record_cache_hit(self):
+        """Записать попадание в кэш"""
+        with self._lock:
+            self.stats["cache_hits"] += 1
+
+    def record_cache_miss(self):
+        """Записать промах кэша"""
+        with self._lock:
+            self.stats["cache_misses"] += 1
+
+    def get_performance_grade(self):
+        """Получить оценку производительности"""
+        avg_time = self.stats.get("average_response_time", 0)
+        if avg_time < 0.5:
+            return "A (Отлично)"
+        elif avg_time < 1.0:
+            return "B (Хорошо)"
+        else:
+            return "C (Требует оптимизации)"# Глобальный экземпляр
 performance_monitor = PerformanceMonitor()
 
 def monitor_performance(func):
-    """Декоратор для мониторинга производительности"""
+    """Декоратор для мониторинга производительности функций"""
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        success = True
+        try:
+            result = func(*args, **kwargs)
+            return result
+        except Exception as e:
+            success = False
+            raise e
+        finally:
+            duration = time.time() - start_time
+            performance_monitor.record_request(duration, success)
+    return wrapperности"""
     def wrapper(*args, **kwargs):
         start_time = time.time()
         try:

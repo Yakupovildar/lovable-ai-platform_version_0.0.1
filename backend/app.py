@@ -378,6 +378,15 @@ def optimize_performance():
         "active_cache_size": len(memory_cache)
     })
 
+def login_required(f):
+    """Декоратор для проверки авторизации"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({"error": "Требуется авторизация", "redirect": "/auth"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
 # Конфигурация
 PROJECTS_DIR = "projects"
 TEMP_DIR = "temp"
@@ -644,15 +653,6 @@ def update_user_requests(user_id, increment=1):
     ''', (increment, user_id))
     conn.commit()
     conn.close()
-
-def login_required(f):
-    """Декоратор для проверки авторизации"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return jsonify({"error": "Требуется авторизация", "redirect": "/auth"}), 401
-        return f(*args, **kwargs)
-    return decorated_function
 
 def save_chat_message(user_id, session_id, message, response, message_type='chat'):
     """Сохраняем сообщение в истории чата"""
