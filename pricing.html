@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тарифы - Vibecode AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html" class="logo-text">💻 Vibecode</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Главная</a></li>
+                <li><a href="about.html" class="nav-link">О нас</a></li>
+                <li><a href="pricing.html" class="nav-link active">Тарифы</a></li>
+                <li><a href="examples.html" class="nav-link">Примеры</a></li>
+                <li><a href="support.html" class="nav-link">Поддержка</a></li>
+                <li><button class="nav-btn" onclick="window.location.href='auth.html'">Войти</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="pricing-main">
+        <section class="pricing-hero">
+            <div class="container">
+                <h1>Выберите свой тариф</h1>
+                <p class="pricing-subtitle">Начните бесплатно, обновитесь когда будете готовы</p>
+                
+                <div class="billing-toggle">
+                    <span class="billing-option active" data-billing="monthly">Месяц</span>
+                    <span class="billing-option" data-billing="yearly">Год</span>
+                    <span class="save-badge">-20%</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="pricing-plans">
+            <div class="container">
+                <div class="plans-grid">
+                    <!-- Бесплатный тариф -->
+                    <div class="plan-card free">
+                        <div class="plan-header">
+                            <h3>Бесплатный</h3>
+                            <div class="plan-price">
+                                <span class="price">₽0</span>
+                                <span class="period">/навсегда</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li>✅ 15 запросов в месяц</li>
+                                <li>✅ Все типы приложений</li>
+                                <li>✅ Базовые шаблоны</li>
+                                <li>✅ Скачивание проектов</li>
+                                <li>❌ Приоритетная поддержка</li>
+                                <li>❌ Расширенные возможности</li>
+                            </ul>
+                        </div>
+                        <button class="plan-btn" onclick="selectPlan('free')">Начать бесплатно</button>
+                    </div>
+
+                    <!-- Персональный тариф -->
+                    <div class="plan-card personal popular">
+                        <div class="popular-badge">Популярный</div>
+                        <div class="plan-header">
+                            <h3>Персональный</h3>
+                            <div class="plan-price">
+                                <span class="price monthly">₽990</span>
+                                <span class="price yearly hidden">₽7,920</span>
+                                <span class="period monthly">/месяц</span>
+                                <span class="period yearly hidden">/год</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li>✅ Безлимитные запросы</li>
+                                <li>✅ Все типы приложений</li>
+                                <li>✅ Премиум шаблоны</li>
+                                <li>✅ Приоритетная поддержка</li>
+                                <li>✅ Расширенные возможности AI</li>
+                                <li>✅ Экспорт в различные форматы</li>
+                            </ul>
+                        </div>
+                        <button class="plan-btn primary" onclick="selectPlan('personal')">Выбрать план</button>
+                    </div>
+
+                    <!-- Командный тариф -->
+                    <div class="plan-card team">
+                        <div class="plan-header">
+                            <h3>Командный</h3>
+                            <div class="plan-price">
+                                <span class="price monthly">₽1,990</span>
+                                <span class="price yearly hidden">₽15,920</span>
+                                <span class="period monthly">/месяц</span>
+                                <span class="period yearly hidden">/год</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li>✅ Все из Персонального</li>
+                                <li>✅ Совместная работа над проектами</li>
+                                <li>✅ Управление командой</li>
+                                <li>✅ Корпоративная поддержка</li>
+                                <li>✅ API доступ</li>
+                                <li>✅ Белый лейбл</li>
+                            </ul>
+                        </div>
+                        <button class="plan-btn" onclick="selectPlan('team')">Выбрать план</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="faq-section">
+            <div class="container">
+                <h2>Часто задаваемые вопросы</h2>
+                <div class="faq-grid">
+                    <div class="faq-item">
+                        <h3>Можно ли сменить тариф в любое время?</h3>
+                        <p>Да, вы можете обновить или понизить тариф в любое время. При понижении тарифа изменения вступят в силу в следующем платежном периоде.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Есть ли скидки для студентов?</h3>
+                        <p>Да, мы предоставляем скидку 50% для студентов и образовательных учреждений. Свяжитесь с нами для получения промокода.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Что происходит с моими проектами при отмене подписки?</h3>
+                        <p>Все созданные проекты остаются у вас навсегда. Вы можете скачать их в любое время, даже после отмены подписки.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Поддерживаете ли вы российские карты?</h3>
+                        <p>Да, мы принимаем все российские банковские карты, а также другие способы оплаты, включая СБП.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>💻 Vibecode</h4>
+                    <p>AI платформа для создания приложений</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Продукт</h4>
+                    <ul>
+                        <li><a href="pricing.html">Тарифы</a></li>
+                        <li><a href="examples.html">Примеры</a></li>
+                        <li><a href="dashboard.html">Личный кабинет</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Поддержка</h4>
+                    <ul>
+                        <li><a href="support.html">Помощь</a></li>
+                        <li><a href="about.html">О нас</a></li>
+                        <li><a href="mailto:support@vibecode.ai">Контакты</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function selectPlan(plan) {
+            localStorage.setItem('selectedPlan', plan);
+            window.location.href = 'auth.html?plan=' + plan;
+        }
+
+        // Переключение месяц/год
+        document.querySelectorAll('.billing-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.billing-option').forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                
+                const billing = this.dataset.billing;
+                document.querySelectorAll('.monthly').forEach(el => {
+                    el.classList.toggle('hidden', billing === 'yearly');
+                });
+                document.querySelectorAll('.yearly').forEach(el => {
+                    el.classList.toggle('hidden', billing === 'monthly');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

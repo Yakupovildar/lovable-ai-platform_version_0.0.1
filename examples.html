@@ -1,0 +1,270 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Примеры проектов - Vibecode AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html" class="logo-text">💻 Vibecode</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Главная</a></li>
+                <li><a href="about.html" class="nav-link">О нас</a></li>
+                <li><a href="pricing.html" class="nav-link">Тарифы</a></li>
+                <li><a href="examples.html" class="nav-link active">Примеры</a></li>
+                <li><a href="support.html" class="nav-link">Поддержка</a></li>
+                <li><button class="nav-btn" onclick="window.location.href='auth.html'">Войти</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="examples-main">
+        <section class="examples-hero">
+            <div class="container">
+                <h1>Примеры созданных проектов</h1>
+                <p class="examples-subtitle">Посмотрите, что можно создать с Vibecode AI</p>
+                
+                <div class="examples-filters">
+                    <button class="filter-btn active" data-filter="all">Все</button>
+                    <button class="filter-btn" data-filter="games">Игры</button>
+                    <button class="filter-btn" data-filter="apps">Приложения</button>
+                    <button class="filter-btn" data-filter="websites">Сайты</button>
+                    <button class="filter-btn" data-filter="business">Бизнес</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="examples-grid-section">
+            <div class="container">
+                <div class="examples-grid">
+                    <!-- Игры -->
+                    <div class="example-card" data-category="games">
+                        <div class="example-preview">
+                            <div class="preview-placeholder">🐍</div>
+                        </div>
+                        <div class="example-info">
+                            <h3>Змейка 2024</h3>
+                            <p>Классическая игра змейка с современным дизайном</p>
+                            <div class="example-tags">
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">HTML5 Canvas</span>
+                            </div>
+                            <div class="example-actions">
+                                <button class="btn-preview" onclick="previewProject('snake')">Попробовать</button>
+                                <button class="btn-create" onclick="createSimilar('snake')">Создать похожий</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card" data-category="games">
+                        <div class="example-preview">
+                            <div class="preview-placeholder">🎮</div>
+                        </div>
+                        <div class="example-info">
+                            <h3>Космический шутер</h3>
+                            <p>Аркадная игра в космическом стиле с уровнями</p>
+                            <div class="example-tags">
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">Игра</span>
+                            </div>
+                            <div class="example-actions">
+                                <button class="btn-preview" onclick="previewProject('shooter')">Попробовать</button>
+                                <button class="btn-create" onclick="createSimilar('shooter')">Создать похожий</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Приложения -->
+                    <div class="example-card" data-category="apps">
+                        <div class="example-preview">
+                            <div class="preview-placeholder">📝</div>
+                        </div>
+                        <div class="example-info">
+                            <h3>Менеджер задач</h3>
+                            <p>Современное приложение для управления задачами</p>
+                            <div class="example-tags">
+                                <span class="tag">React</span>
+                                <span class="tag">PWA</span>
+                            </div>
+                            <div class="example-actions">
+                                <button class="btn-preview" onclick="previewProject('todo')">Попробовать</button>
+                                <button class="btn-create" onclick="createSimilar('todo')">Создать похожий</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card" data-category="apps">
+                        <div class="example-preview">
+                            <div class="preview-placeholder">🌤️</div>
+                        </div>
+                        <div class="example-info">
+                            <h3>Погодное приложение</h3>
+                            <p>Красивое приложение погоды с прогнозом</p>
+                            <div class="example-tags">
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">API</span>
+                            </div>
+                            <div class="example-actions">
+                                <button class="btn-preview" onclick="previewProject('weather')">Попробовать</button>
+                                <button class="btn-create" onclick="createSimilar('weather')">Создать похожий</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Сайты -->
+                    <div class="example-card" data-category="websites">
+                        <div class="example-preview">
+                            <div class="preview-placeholder">🎨</div>
+                        </div>
+                        <div class="example-info">
+                            <h3>Портфолио дизайнера</h3>
+                            <p>Стильный сайт-портфолио с галереей работ</p>
+                            <div class="example-tags">
+                                <span class="tag">HTML</span>
+                                <span class="tag">CSS</span>
+                            </div>
+                            <div class="example-actions">
+                                <button class="btn-preview" onclick="previewProject('portfolio')">Попробовать</button>
+                                <button class="btn-create" onclick="createSimilar('portfolio')">Создать похожий</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card" data-category="websites">
+                        <div class="example-preview">
+                            <div class="preview-placeholder">🍕</div>
+                        </div>
+                        <div class="example-info">
+                            <h3>Сайт ресторана</h3>
+                            <p>Лендинг для ресторана с меню и бронированием</p>
+                            <div class="example-tags">
+                                <span class="tag">Landing</span>
+                                <span class="tag">Бизнес</span>
+                            </div>
+                            <div class="example-actions">
+                                <button class="btn-preview" onclick="previewProject('restaurant')">Попробовать</button>
+                                <button class="btn-create" onclick="createSimilar('restaurant')">Создать похожий</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Бизнес -->
+                    <div class="example-card" data-category="business">
+                        <div class="example-preview">
+                            <div class="preview-placeholder">💼</div>
+                        </div>
+                        <div class="example-info">
+                            <h3>CRM система</h3>
+                            <p>Система управления клиентами для малого бизнеса</p>
+                            <div class="example-tags">
+                                <span class="tag">React</span>
+                                <span class="tag">Node.js</span>
+                            </div>
+                            <div class="example-actions">
+                                <button class="btn-preview" onclick="previewProject('crm')">Попробовать</button>
+                                <button class="btn-create" onclick="createSimilar('crm')">Создать похожий</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card" data-category="business">
+                        <div class="example-preview">
+                            <div class="preview-placeholder">📊</div>
+                        </div>
+                        <div class="example-info">
+                            <h3>Аналитический дашборд</h3>
+                            <p>Панель аналитики с графиками и отчетами</p>
+                            <div class="example-tags">
+                                <span class="tag">Vue.js</span>
+                                <span class="tag">Charts</span>
+                            </div>
+                            <div class="example-actions">
+                                <button class="btn-preview" onclick="previewProject('dashboard')">Попробовать</button>
+                                <button class="btn-create" onclick="createSimilar('dashboard')">Создать похожий</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="create-section">
+            <div class="container">
+                <div class="create-cta">
+                    <h2>Готовы создать свой проект?</h2>
+                    <p>Опишите вашу идею, и AI создаст уникальный проект за несколько минут</p>
+                    <button class="btn-primary large" onclick="startCreating()">Начать создание</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>💻 Vibecode</h4>
+                    <p>AI платформа для создания приложений</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Продукт</h4>
+                    <ul>
+                        <li><a href="pricing.html">Тарифы</a></li>
+                        <li><a href="examples.html">Примеры</a></li>
+                        <li><a href="dashboard.html">Личный кабинет</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Поддержка</h4>
+                    <ul>
+                        <li><a href="support.html">Помощь</a></li>
+                        <li><a href="about.html">О нас</a></li>
+                        <li><a href="mailto:support@vibecode.ai">Контакты</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Фильтры
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                document.querySelectorAll('.example-card').forEach(card => {
+                    if (filter === 'all' || card.dataset.category === filter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        function previewProject(type) {
+            // Открыть превью проекта
+            window.open(`/api/preview/${type}`, '_blank');
+        }
+
+        function createSimilar(type) {
+            localStorage.setItem('projectTemplate', type);
+            window.location.href = 'dashboard.html?template=' + type;
+        }
+
+        function startCreating() {
+            window.location.href = 'auth.html?action=create';
+        }
+    </script>
+</body>
+</html>

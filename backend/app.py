@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file, session, redirect, url_for
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit, join_room, leave_room, request
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask import request
 from functools import wraps
 import os
 import json
@@ -4454,10 +4455,11 @@ def create_project_archive(project_id):
         raise
 
 if __name__ == '__main__':
-    print("🚀 Запускаю Lovable AI Platform...")
+    print("🚀 Запускаю Vibecode AI Platform...")
     print("📍 Backend: http://0.0.0.0:5000")
-    print("🔌 WebSocket: ws://0.0.0.0:5000")
+    print("🔌 WebSocket: ws://0.0.0.0:5000") 
+    print("🌐 Внешний доступ доступен через URL репла")
     print("💡 Для остановки нажмите Ctrl+C")
     print("=" * 50)
 
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
