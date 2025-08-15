@@ -3039,12 +3039,12 @@ cityInput.addEventListener('keypress', (e) => {
 # Create generator instance
 generator = ProjectGenerator()
 
-    # --- API Routes ---
+# --- API Routes ---
 
-    @app.route('/api/chat', methods=['POST'])
-    @login_required
-    @monitor_performance
-    def chat():
+@app.route('/api/chat', methods=['POST'])
+@login_required
+@monitor_performance
+def chat():
         """Обработка сообщений чата с проверкой лимитов"""
         data = request.json
         message = data.get('message', '')
@@ -3118,7 +3118,9 @@ generator = ProjectGenerator()
                 "suggestions": ["Создать приложение", "Получить совет", "Повторить запрос"]
             })
 
-    def generate_project_method(self, project_type, description, project_name, style="modern"):
+    @app.route('/api/generate-project', methods=['POST'])
+@monitor_performance
+def generate_project():
         """Генерация проекта (из UI) с кэшированием"""
         data = request.json
         description = data.get('description', '')
