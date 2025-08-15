@@ -3166,17 +3166,17 @@ def generate_project():
             "message": "Произошла ошибка при создании проекта."
         })
 
-    def log_project_creation(project_id: str, project_name: str, user_id: str):
-        """Асинхронное логирование создания проекта"""
-        try:        
-            interaction_logger.log_event("project_creation_success", {
-                "project_id": project_id,
-                "project_name": project_name,
-                "user_id": user_id,
-                "timestamp": datetime.now().isoformat()
+def log_project_creation(project_id: str, project_name: str, user_id: str):
+    """Асинхронное логирование создания проекта"""
+    try:        
+        interaction_logger.log_event("project_creation_success", {
+            "project_id": project_id,
+            "project_name": project_name,
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat()
         })
-        except Exception as e:
-            logger.error(f"Ошибка логирования: {e}")
+    except Exception as e:
+        logger.error(f"Ошибка логирования: {e}")
 
 @app.route('/api/download/<project_id>')
 def download_project(project_id):
