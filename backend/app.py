@@ -3191,29 +3191,29 @@ class SmartAI:
                 "project_creation_in_progress": False
             }
 
-            session = self.user_session[session_id]
-            session["conversation"].append({"user": message, "timestamp": time.time()})
+        session = self.user_session[session_id]
+        session["conversation"].append({"user": message, "timestamp": time.time()})
 
-            # Обработка сообщений с опечатками и синонимами
-            processed_message = nlp_processor.correct_and_normalize(message)
-            message_type = self.analyze_message(processed_message)
+        # Обработка сообщений с опечатками и синонимами
+        processed_message = nlp_processor.correct_and_normalize(message)
+        message_type = self.analyze_message(processed_message)
 
-            # Логирование взаимодействия
-            interaction_logger.log_interaction(session_id, message, processed_message, message_type)
+        # Логирование взаимодействия
+        interaction_logger.log_interaction(session_id, message, processed_message, message_type)
 
-            # Управление состоянием диалога
-            if session["stage"] == "initial":
-                return self.handle_initial_stage(processed_message, message_type, session_id)
-            elif session["stage"] == "clarifying":
-                return self.handle_clarifying_stage(processed_message, session_id)
-            elif session["stage"] == "confirming":
-                return self.handle_confirming_stage(processed_message, session_id)
-            elif session["stage"] == "creating":
-                return self.handle_creating_stage(processed_message, session_id)
-            elif session["stage"] == "editing":
-                return self.handle_editing_stage(processed_message, session_id)
-            else: # Общий случай или если этап не определен
-                return self.handle_general_stage(processed_message, session_id)
+        # Управление состоянием диалога
+        if session["stage"] == "initial":
+            return self.handle_initial_stage(processed_message, message_type, session_id)
+        elif session["stage"] == "clarifying":
+            return self.handle_clarifying_stage(processed_message, session_id)
+        elif session["stage"] == "confirming":
+            return self.handle_confirming_stage(processed_message, session_id)
+        elif session["stage"] == "creating":
+            return self.handle_creating_stage(processed_message, session_id)
+        elif session["stage"] == "editing":
+            return self.handle_editing_stage(processed_message, session_id)
+        else: # Общий случай или если этап не определен
+            return self.handle_general_stage(processed_message, session_id)
 
         def analyze_message(self, message):
             """Анализирует сообщение пользователя"""
