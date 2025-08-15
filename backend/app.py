@@ -3118,68 +3118,68 @@ def chat():
                 "suggestions": ["Создать приложение", "Получить совет", "Повторить запрос"]
             })
 
-    @app.route('/api/generate-project', methods=['POST'])
+@app.route('/api/generate-project', methods=['POST'])
 @monitor_performance
 def generate_project():
-        """Генерация проекта (из UI) с кэшированием"""
-        data = request.json
-        description = data.get('description', '')
+    """Генерация проекта (из UI) с кэшированием"""
+    data = request.json
+    description = data.get('description', '')
         project_name = data.get('project_name', 'Мой проект')
-        project_type = data.get('project_type', 'snake_game')
-        style = data.get('style', 'modern')
-        user_preferences = data.get('preferences', {})
-        user_id = session.get('user_id', 'anonymous')
+    project_type = data.get('project_type', 'snake_game')
+    style = data.get('style', 'modern')
+    user_preferences = data.get('preferences', {})
+    user_id = session.get('user_id', 'anonymous')
 
+    try:
+        # Асинхронно генерируем проект
+        future = executor.submit(async_project_generation, project_type, description, project_name, user_id)
+
+        # Ждем результат максимум 15 секунд
         try:
-            # Асинхронно генерируем проект
-            future = executor.submit(async_project_generation, project_type, description, project_name, user_id)
-
-            # Ждем результат максимум 15 секунд
-            try:
-                result = future.result(timeout=15)
-            except:
-                return jsonify({
-                    "success": False,
-                    "error": "Генерация проекта займет больше времени. Попробуйте упростить описание.",
-                    "message": "⏱️ Тайм-аут генерации. Попробуйте создать более простой проект."
-                })
-
-            if result['success']:
-                project_id = result['project_id']
-
-                # Асинхронно логируем и сохраняем версии
-                executor.submit(log_project_creation, project_id, project_name, user_id)
-
-                archive_url = f"/api/download/{project_id}"
-                result['download_url'] = archive_url
-                result['project_id'] = project_id
-                result['message'] = f"Проект '{project_name}' успешно создан!"
-                result['generation_time'] = result.get('generation_time', 'быстро')
-
-            return jsonify(result)
-
-        except Exception as e:
-            logger.error(f"Ошибка в generate_project: {e}")
+            result = future.result(timeout=15)
+        except:
             return jsonify({
                 "success": False,
-                "error": f"Ошибка генерации: {str(e)}",
-                "message": "Произошла ошибка при создании проекта."
+                "error": "Генерация проекта займет больше времени. Попробуйте упростить описание.",
+                "message": "⏱️ Тайм-аут генерации. Попробуйте создать более простой проект."
             })
+
+        if result['success']:
+            project_id = result['project_id']
+
+            # Асинхронно логируем и сохраняем версии
+            executor.submit(log_project_creation, project_id, project_name, user_id)
+
+            archive_url = f"/api/download/{project_id}"
+            result['download_url'] = archive_url
+            result['project_id'] = project_id
+            result['message'] = f"Проект '{project_name}' успешно создан!"
+            result['generation_time'] = result.get('generation_time', 'быстро')
+
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Ошибка в generate_project: {e}")
+        return jsonify({
+            "success": False,
+            "error": f"Ошибка генерации: {str(e)}",
+            "message": "Произошла ошибка при создании проекта."
+        })
 
     def log_project_creation(project_id: str, project_name: str, user_id: str):
-        """Асинхронное логирование создания проекта"""
-        try:
-            interaction_logger.log_event("project_creation_success", {
-                "project_id": project_id,
-                "project_name": project_name,
-                "user_id": user_id,
-                "timestamp": datetime.now().isoformat()
-            })
-        except Exception as e:
-            logger.error(f"Ошибка логирования: {e}")
+    """Асинхронное логирование создания проекта"""
+    try:
+        interaction_logger.log_event("project_creation_success", {
+            "project_id": project_id,
+            "project_name": project_name,
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Ошибка логирования: {e}")
 
-    @app.route('/api/download/<project_id>')
-    def download_project(project_id):
+@app.route('/api/download/<project_id>')
+def download_project(project_id):
         """Скачивание проекта"""
         project_path = os.path.join(PROJECTS_DIR, project_id)
         archive_path = os.path.join(TEMP_DIR, f"{project_id}.zip")
