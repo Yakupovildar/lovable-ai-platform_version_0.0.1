@@ -3179,17 +3179,17 @@ class SmartAI:
             }
 
         def generate_personalized_response(self, message, session_id="default"):
-            """Генерирует умный ответ с учетом контекста и сессии"""
-            if session_id not in self.user_session:
-                self.user_session[session_id] = {
-                    "stage": "initial",
-                    "project_type": None,
-                    "preferences": {},
-                    "questions_asked": [],
-                    "conversation": [],
-                    "current_project_id": None,
-                    "project_creation_in_progress": False
-                }
+        """Генерирует умный ответ с учетом контекста и сессии"""
+        if session_id not in self.user_session:
+            self.user_session[session_id] = {
+                "stage": "initial",
+                "project_type": None,
+                "preferences": {},
+                "questions_asked": [],
+                "conversation": [],
+                "current_project_id": None,
+                "project_creation_in_progress": False
+            }
 
             session = self.user_session[session_id]
             session["conversation"].append({"user": message, "timestamp": time.time()})
