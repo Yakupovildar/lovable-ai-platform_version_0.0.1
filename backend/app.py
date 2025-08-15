@@ -3189,7 +3189,7 @@ def download_project(project_id):
             return jsonify({"error": "Проект не найден"}), 404
 
         # Создаём архив если его нет
-        if not os.path.exists(archive_path):
+    if not os.path.exists(archive_path):
             try:
                 create_project_archive(project_id)
                 interaction_logger.log_event("archive_created_on_demand", {"project_id": project_id})
@@ -3197,262 +3197,268 @@ def download_project(project_id):
                 interaction_logger.log_error("archive_creation_failed_on_demand", {"project_id": project_id, "error": str(e)})
                 return jsonify({"error": "Не удалось создать архив"}), 500
 
-        interaction_logger.log_event("project_downloaded", {"project_id": project_id})
-        return send_file(archive_path, as_attachment=True, download_name=f"project_{project_id}.zip")
+    interaction_logger.log_event("project_downloaded", {"project_id": project_id})
+    return send_file(archive_path, as_attachment=True, download_name=f"project_{project_id}.zip")
 
-    @app.route('/api/projects')
-    def list_projects():
-        """Список проектов пользователя"""
-        user_id = request.args.get('user_id', 'anonymous')
-        projects = []
+@app.route('/api/projects')
+def list_projects():
+    """Список проектов пользователя"""
+    # API для получения списка проектов конкретного пользователя
+    user_id = request.args.get('user_id', 'anonymous')
+    projects = []
 
-        user_projects_dir = os.path.join(USER_DATA_DIR, user_id, PROJECTS_DIR)
-        os.makedirs(user_projects_dir, exist_ok=True)
+    user_projects_dir = os.path.join(USER_DATA_DIR, user_id, PROJECTS_DIR)
+    os.makedirs(user_projects_dir, exist_ok=True)
 
-        for project_id in os.listdir(user_projects_dir):
-            project_path = os.path.join(user_projects_dir, project_id)
-            if os.path.isdir(project_path):
-                try:
-                    project_info_path = os.path.join(project_path, "project_info.json")
-                    if os.path.exists(project_info_path):
-                        with open(project_info_path, 'r') as f:
-                            info = json.load(f)
-                            projects.append({
-                                "id": project_id,
-                                "name": info.get("name", f"Проект {project_id[:8]}"),
-                                "type": info.get("type", "unknown"),
-                                "created_at": info.get("created_at", datetime.fromtimestamp(os.path.getctime(project_path)).isoformat())
-                            })
-                    else: # Fallback, если info нет
+    # Сканируем директорию проектов пользователя
+    for project_id in os.listdir(user_projects_dir):
+        project_path = os.path.join(user_projects_dir, project_id)
+        if os.path.isdir(project_path):
+            try:
+                project_info_path = os.path.join(project_path, "project_info.json")
+                if os.path.exists(project_info_path):
+                    with open(project_info_path, 'r') as f:
+                        info = json.load(f)
                         projects.append({
                             "id": project_id,
-                            "name": f"Проект {project_id[:8]}",
-                            "type": "unknown",
-                            "created_at": datetime.fromtimestamp(os.path.getctime(project_path)).isoformat()
+                            "name": info.get("name", f"Проект {project_id[:8]}"),
+                            "type": info.get("type", "unknown"),
+                            "created_at": info.get("created_at", datetime.fromtimestamp(os.path.getctime(project_path)).isoformat())
                         })
-                except Exception as e:
-                    print(f"Ошибка чтения информации о проекте {project_id}: {e}")
-                    interaction_logger.log_error("api_list_projects_read_error", {"project_id": project_id, "error": str(e)})
+                else: # Fallback, если info нет
+                    projects.append({
+                        "id": project_id,
+                        "name": f"Проект {project_id[:8]}",
+                        "type": "unknown",
+                        "created_at": datetime.fromtimestamp(os.path.getctime(project_path)).isoformat()
+                    })
+            except Exception as e:
+                print(f"Ошибка чтения информации о проекте {project_id}: {e}")
+                interaction_logger.log_error("api_list_projects_read_error", {"project_id": project_id, "error": str(e)})
 
-        interaction_logger.log_event("api_projects_list_requested", {"user_id": user_id, "count": len(projects)})
-        return jsonify({"projects": projects})
+    interaction_logger.log_event("api_projects_list_requested", {"user_id": user_id, "count": len(projects)})
+    return jsonify({"projects": projects})
 
-    @app.route('/api/project/versions/<project_id>')
-    def get_project_versions(project_id):
-        """Получить историю версий проекта"""
-        versions = version_control.get_project_versions(project_id)
-        if versions is None:
-            interaction_logger.log_error("api_get_versions_not_found", {"project_id": project_id})
-            return jsonify({"error": "Проект или его версии не найдены"}), 404
+@app.route('/api/project/versions/<project_id>')
+def get_project_versions(project_id):
+    """Получить историю версий проекта"""
+    versions = version_control.get_project_versions(project_id)
+    if versions is None:
+        interaction_logger.log_error("api_get_versions_not_found", {"project_id": project_id})
+        return jsonify({"error": "Проект или его версии не найдены"}), 404
 
-        interaction_logger.log_event("api_get_project_versions", {"project_id": project_id, "count": len(versions)})
-        return jsonify({"versions": versions})
+    interaction_logger.log_event("api_get_project_versions", {"project_id": project_id, "count": len(versions)})
+    return jsonify({"versions": versions})
 
-    @app.route('/api/project/revert/<project_id>', methods=['POST'])
-    def revert_project_version(project_id):
-        """Откатить проект к предыдущей версии"""
-        data = request.json
-        target_version = data.get('version') # Номер версии для отката
+@app.route('/api/project/revert/<project_id>', methods=['POST'])
+def revert_project_version(project_id):
+    """Откатить проект к предыдущей версии"""
+    data = request.json
+    target_version = data.get('version') # Номер версии для отката
 
-        if not target_version:
-            return jsonify({"error": "Не указана версия для отката"}), 400
+    if not target_version:
+        return jsonify({"error": "Не указана версия для отката"}), 400
 
-        # Логика отката через version_control
-        success = version_control.revert_project(project_id, target_version)
+    # Логика отката через version_control
+    success = version_control.revert_project(project_id, target_version)
 
-        if success:
-            interaction_logger.log_event("project_reverted", {"project_id": project_id, "version": target_version})
-            return jsonify({"success": True, "message": f"Проект успешно откачен до версии {target_version}"})
-        else:
-            interaction_logger.log_error("api_revert_project_failed", {"project_id": project_id, "version": target_version})
-            return jsonify({"success": False, "error": "Не удалось откатить проект"}), 500
+    if success:
+        interaction_logger.log_event("project_reverted", {"project_id": project_id, "version": target_version})
+        return jsonify({"success": True, "message": f"Проект успешно откачен до версии {target_version}"})
+    else:
+        interaction_logger.log_error("api_revert_project_failed", {"project_id": project_id, "version": target_version})
+        return jsonify({"success": False, "error": "Не удалось откатить проект"}), 500
 
-    @app.route('/api/ai/status')
-    def get_ai_status():
-        """Получить статус AI сервисов"""
-        return jsonify({
-            "available_services": [
-                {
-                    "name": "SuperSmartAI",
-                    "enabled": True,
-                    "configured": True
-                },
-                {
-                    "name": "SmartNLP",
-                    "enabled": True,
-                    "configured": True
-                },
-                {
-                    "name": "ProjectVersionControl",
-                    "enabled": True,
-                    "configured": True
-                },
-                {
-                    "name": "UserInteractionLogger",
-                    "enabled": True,
-                    "configured": True
-                },
-                {
-                    "name": "AdvancedProjectGenerator",
-                    "enabled": True,
-                    "configured": True
-                }
-            ],
-            "current_ai": "SuperSmartAI",
-            "configured": True
-        })
+@app.route('/api/ai/status')
+def get_ai_status():
+    """Получить статус AI сервисов"""
+    # API для проверки состояния AI компонентов системы
+    return jsonify({
+        "available_services": [
+            {
+                "name": "SuperSmartAI",
+                "enabled": True,
+                "configured": True
+            },
+            {
+                "name": "SmartNLP",
+                "enabled": True,
+                "configured": True
+            },
+            {
+                "name": "ProjectVersionControl",
+                "enabled": True,
+                "configured": True
+            },
+            {
+                "name": "UserInteractionLogger",
+                "enabled": True,
+                "configured": True
+            },
+            {
+                "name": "AdvancedProjectGenerator",
+                "enabled": True,
+                "configured": True
+            }
+        ],
+        "current_ai": "SuperSmartAI",
+        "configured": True
+    })
 
-    @app.route('/api/logs/interaction', methods=['POST'])
-    def log_interaction_api():
-        """API для логирования пользовательских взаимодействий"""
-        data = request.json
-        session_id = data.get('session_id')
-        event_type = data.get('event_type')
-        payload = data.get('payload')
+@app.route('/api/logs/interaction', methods=['POST'])
+def log_interaction_api():
+    """API для логирования пользовательских взаимодействий"""
+    data = request.json
+    session_id = data.get('session_id')
+    event_type = data.get('event_type')
+    payload = data.get('payload')
 
-        if not session_id or not event_type:
-            return jsonify({"error": "Отсутствуют обязательные поля: session_id, event_type"}), 400
+    if not session_id or not event_type:
+        return jsonify({"error": "Отсутствуют обязательные поля: session_id, event_type"}), 400
 
-        interaction_logger.log_event(event_type, payload, session_id)
-        return jsonify({"success": True, "message": "Событие залогировано"})
+    interaction_logger.log_event(event_type, payload, session_id)
+    return jsonify({"success": True, "message": "Событие залогировано"})
 
-    # --- WebSocket ---
-    # === WebSocket для множественных пользователей ===
-    @socketio.on('connect')
-    def handle_connect():
-        user_id = session.get('user_id')
-        if user_id:
-            join_room(f'user_{user_id}')
-            print(f'Пользователь {user_id} подключился')
+# --- WebSocket ---
+# === WebSocket для множественных пользователей ===
+@socketio.on('connect')
+def handle_connect():
+    """Обработка подключения пользователя к WebSocket"""
+    # Функция вызывается при подключении клиента к WebSocket
+    user_id = session.get('user_id')
+    if user_id:
+        join_room(f'user_{user_id}')
+        print(f'Пользователь {user_id} подключился')
 
-            # Обновляем активные сессии
-            session_id = request.sid
-            update_active_session(user_id, session_id)
-        else:
-            print('Неавторизованный пользователь подключился')
+        # Обновляем активные сессии
+        session_id = request.sid
+        update_active_session(user_id, session_id)
+    else:
+        print('Неавторизованный пользователь подключился')
 
-    @socketio.on('disconnect')
-    def handle_disconnect():
-        user_id = session.get('user_id')
-        if user_id:
-            leave_room(f'user_{user_id}')
-            print(f'Пользователь {user_id} отключился')
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Обработка отключения пользователя от WebSocket"""
+    user_id = session.get('user_id')
+    if user_id:
+        leave_room(f'user_{user_id}')
+        print(f'Пользователь {user_id} отключился')
 
-            # Удаляем из активных сессий
-            cleanup_user_session(user_id, request.sid)
+        # Удаляем из активных сессий
+        cleanup_user_session(user_id, request.sid)
 
-    @socketio.on('join_project')
-    def handle_join_project(data):
-        """Пользователь присоединяется к проекту для совместной работы"""
-        user_id = session.get('user_id')
-        project_id = data.get('project_id')
+@socketio.on('join_project')
+def handle_join_project(data):
+    """Пользователь присоединяется к проекту для совместной работы"""
+    user_id = session.get('user_id')
+    project_id = data.get('project_id')
 
-        if user_id and project_id and is_user_project_owner(user_id, project_id):
-            join_room(f'project_{project_id}')
-            emit('project_joined', {'project_id': project_id}, room=request.sid)
+    if user_id and project_id and is_user_project_owner(user_id, project_id):
+        join_room(f'project_{project_id}')
+        emit('project_joined', {'project_id': project_id}, room=request.sid)
 
-    @socketio.on('leave_project')
-    def handle_leave_project(data):
-        """Пользователь покидает проект"""
-        project_id = data.get('project_id')
-        if project_id:
-            leave_room(f'project_{project_id}')
+@socketio.on('leave_project')
+def handle_leave_project(data):
+    """Пользователь покидает проект"""
+    project_id = data.get('project_id')
+    if project_id:
+        leave_room(f'project_{project_id}')
 
-    @socketio.on('file_changed')
-    def handle_file_change(data):
-        """Обработка изменений файлов в реальном времени"""
-        user_id = session.get('user_id')
-        project_id = data.get('project_id')
-        file_path = data.get('file_path')
-        content = data.get('content')
+@socketio.on('file_changed')
+def handle_file_change(data):
+    """Обработка изменений файлов в реальном времени"""
+    user_id = session.get('user_id')
+    project_id = data.get('project_id')
+    file_path = data.get('file_path')
+    content = data.get('content')
 
-        if user_id and project_id and is_user_project_owner(user_id, project_id):
-            # Сохраняем изменения
-            save_project_file(project_id, file_path, content)
+    if user_id and project_id and is_user_project_owner(user_id, project_id):
+        # Сохраняем изменения
+        save_project_file(project_id, file_path, content)
 
-            # Уведомляем других пользователей в проекте (если будет совместная работа)
-            emit('file_updated', {
-                'project_id': project_id,
-                'file_path': file_path,
-                'updated_by': user_id
-            }, room=f'project_{project_id}', include_self=False)
+        # Уведомляем других пользователей в проекте (если будет совместная работа)
+        emit('file_updated', {
+            'project_id': project_id,
+            'file_path': file_path,
+            'updated_by': user_id
+        }, room=f'project_{project_id}', include_self=False)
 
-    def update_active_session(user_id, session_id):
-        """Обновляем активную сессию пользователя"""
-        conn = sqlite3.connect('users.db', check_same_thread=False)
-        cursor = conn.cursor()
+def update_active_session(user_id, session_id):
+    """Обновляем активную сессию пользователя"""
+    conn = sqlite3.connect('users.db', check_same_thread=False)
+    cursor = conn.cursor()
 
-        try:
-            cursor.execute('''
-                INSERT OR REPLACE INTO active_sessions 
-                (user_id, session_id, last_activity, ip_address, user_agent)
-                VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)
-            ''', (user_id, session_id, request.environ.get('REMOTE_ADDR'), 
-                  request.environ.get('HTTP_USER_AGENT')))
-            conn.commit()
-        except Exception as e:
-            print(f"Ошибка обновления сессии: {e}")
-        finally:
-            conn.close()
-
-    def cleanup_user_session(user_id, session_id):
-        """Очищаем сессию пользователя"""
-        conn = sqlite3.connect('users.db', check_same_thread=False)
-        cursor = conn.cursor()
-
-        try:
-            cursor.execute('''
-                DELETE FROM active_sessions 
-                WHERE user_id = ? AND session_id = ?
-            ''', (user_id, session_id))
-            conn.commit()
-        except Exception as e:
-            print(f"Ошибка очистки сессии: {e}")
-        finally:
-            conn.close()
-
-    def is_user_project_owner(user_id, project_id):
-        """Проверяет, является ли пользователь владельцем проекта (для WebSocket)"""
-        conn = sqlite3.connect('users.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT user_id FROM user_projects WHERE project_id = ?', (project_id,))
-        owner_id = cursor.fetchone()
+    try:
+        cursor.execute('''
+            INSERT OR REPLACE INTO active_sessions 
+            (user_id, session_id, last_activity, ip_address, user_agent)
+            VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)
+        ''', (user_id, session_id, request.environ.get('REMOTE_ADDR'), 
+              request.environ.get('HTTP_USER_AGENT')))
+        conn.commit()
+    except Exception as e:
+        print(f"Ошибка обновления сессии: {e}")
+    finally:
         conn.close()
-        return owner_id is not None and owner_id[0] == user_id
 
-    def save_project_file(project_id, file_path, content):
-        """Сохраняет содержимое файла проекта (имитация)"""
-        print(f"Сохранение файла: {file_path} для проекта {project_id}")
-        # В реальной системе здесь будет логика сохранения файла в файловой системе проекта
-        pass
+def cleanup_user_session(user_id, session_id):
+    """Очищаем сессию пользователя"""
+    conn = sqlite3.connect('users.db', check_same_thread=False)
+    cursor = conn.cursor()
 
-    # --- Вспомогательные функции ---
-    def create_project_archive(project_id):
-        """Создаёт zip-архив проекта"""
-        project_path = os.path.join(PROJECTS_DIR, project_id)
-        archive_path = os.path.join(TEMP_DIR, f"{project_id}.zip")
+    try:
+        cursor.execute('''
+            DELETE FROM active_sessions 
+            WHERE user_id = ? AND session_id = ?
+        ''', (user_id, session_id))
+        conn.commit()
+    except Exception as e:
+        print(f"Ошибка очистки сессии: {e}")
+    finally:
+        conn.close()
 
-        if not os.path.exists(project_path):
-            raise FileNotFoundError(f"Директория проекта не найдена: {project_path}")
+def is_user_project_owner(user_id, project_id):
+    """Проверяет, является ли пользователь владельцем проекта (для WebSocket)"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT user_id FROM user_projects WHERE project_id = ?', (project_id,))
+    owner_id = cursor.fetchone()
+    conn.close()
+    return owner_id is not None and owner_id[0] == user_id
 
-        try:
-            with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for root, dirs, files in os.walk(project_path):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, project_path)
-                        zipf.write(file_path, arcname)
-            return archive_path
-        except Exception as e:
-            interaction_logger.log_error("create_project_archive_failed", {"project_id": project_id, "error": str(e)})
-            raise
+def save_project_file(project_id, file_path, content):
+    """Сохраняет содержимое файла проекта (имитация)"""
+    print(f"Сохранение файла: {file_path} для проекта {project_id}")
+    # В реальной системе здесь будет логика сохранения файла в файловой системе проекта
+    pass
 
-    if __name__ == '__main__':
-        print("🚀 Запускаю Vibecode AI Platform...")
-        print("📍 Backend: http://0.0.0.0:5000")
-        print("🔌 WebSocket: ws://0.0.0.0:5000") 
-        print("🌐 Внешний доступ доступен через URL репла")
-        print("💡 Для остановки нажмите Ctrl+C")
-        print("=" * 50)
+# --- Вспомогательные функции ---
+def create_project_archive(project_id):
+    """Создаёт zip-архив проекта"""
+    project_path = os.path.join(PROJECTS_DIR, project_id)
+    archive_path = os.path.join(TEMP_DIR, f"{project_id}.zip")
 
-        socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
+    if not os.path.exists(project_path):
+        raise FileNotFoundError(f"Директория проекта не найдена: {project_path}")
+
+    try:
+        with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(project_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    arcname = os.path.relpath(file_path, project_path)
+                    zipf.write(file_path, arcname)
+        return archive_path
+    except Exception as e:
+        interaction_logger.log_error("create_project_archive_failed", {"project_id": project_id, "error": str(e)})
+        raise
+
+if __name__ == '__main__':
+    print("🚀 Запускаю Vibecode AI Platform...")
+    print("📍 Backend: http://0.0.0.0:5000")
+    print("🔌 WebSocket: ws://0.0.0.0:5000") 
+    print("🌐 Внешний доступ доступен через URL репла")
+    print("💡 Для остановки нажмите Ctrl+C")
+    print("=" * 50)
+
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
