@@ -3043,7 +3043,7 @@ generator = ProjectGenerator()
 
 # Улучшенный AI-агент с диалоговым процессом
 class SmartAI:
-        def __init__(self):
+    def __init__(self):
             self.conversation_history = {}
             self.user_preferences = {}
             self.project_context = {}
