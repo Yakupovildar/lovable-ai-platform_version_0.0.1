@@ -3167,16 +3167,16 @@ def generate_project():
         })
 
     def log_project_creation(project_id: str, project_name: str, user_id: str):
-    """Асинхронное логирование создания проекта"""
-    try:
-        interaction_logger.log_event("project_creation_success", {
-            "project_id": project_id,
-            "project_name": project_name,
-            "user_id": user_id,
-            "timestamp": datetime.now().isoformat()
+        """Асинхронное логирование создания проекта"""
+        try:        
+            interaction_logger.log_event("project_creation_success", {
+                "project_id": project_id,
+                "project_name": project_name,
+                "user_id": user_id,
+                "timestamp": datetime.now().isoformat()
         })
-    except Exception as e:
-        logger.error(f"Ошибка логирования: {e}")
+        except Exception as e:
+            logger.error(f"Ошибка логирования: {e}")
 
 @app.route('/api/download/<project_id>')
 def download_project(project_id):
@@ -3184,7 +3184,7 @@ def download_project(project_id):
     project_path = os.path.join(PROJECTS_DIR, project_id)
     archive_path = os.path.join(TEMP_DIR, f"{project_id}.zip")
 
-        if not os.path.exists(project_path):
+    if not os.path.exists(project_path):
             interaction_logger.log_error("download_project_not_found", {"project_id": project_id})
             return jsonify({"error": "Проект не найден"}), 404
 
