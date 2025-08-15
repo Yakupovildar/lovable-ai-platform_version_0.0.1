@@ -3041,8 +3041,8 @@ cityInput.addEventListener('keypress', (e) => {
 # Инициализируем генератор проектов после определения класса
 generator = ProjectGenerator()
 
-    # Улучшенный AI-агент с диалоговым процессом
-    class SmartAI:
+# Улучшенный AI-агент с диалоговым процессом
+class SmartAI:
         def __init__(self):
             self.conversation_history = {}
             self.user_preferences = {}
