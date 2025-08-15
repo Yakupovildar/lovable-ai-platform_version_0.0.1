@@ -3036,6 +3036,9 @@ cityInput.addEventListener('keypress', (e) => {
 Требуется API ключ OpenWeatherMap.
 """
 
+# Create generator instance
+generator = ProjectGenerator()
+
     # --- API Routes ---
 
     @app.route('/api/chat', methods=['POST'])
@@ -3115,9 +3118,7 @@ cityInput.addEventListener('keypress', (e) => {
                 "suggestions": ["Создать приложение", "Получить совет", "Повторить запрос"]
             })
 
-    @app.route('/api/generate-project', methods=['POST'])
-    @monitor_performance
-    def generate_project():
+    def generate_project_method(self, project_type, description, project_name, style="modern"):
         """Генерация проекта (из UI) с кэшированием"""
         data = request.json
         description = data.get('description', '')
