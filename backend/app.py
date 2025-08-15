@@ -3124,7 +3124,7 @@ def generate_project():
     """Генерация проекта (из UI) с кэшированием"""
     data = request.json
     description = data.get('description', '')
-        project_name = data.get('project_name', 'Мой проект')
+    project_name = data.get('project_name', 'Мой проект')
     project_type = data.get('project_type', 'snake_game')
     style = data.get('style', 'modern')
     user_preferences = data.get('preferences', {})
@@ -3180,9 +3180,9 @@ def generate_project():
 
 @app.route('/api/download/<project_id>')
 def download_project(project_id):
-        """Скачивание проекта"""
-        project_path = os.path.join(PROJECTS_DIR, project_id)
-        archive_path = os.path.join(TEMP_DIR, f"{project_id}.zip")
+    """Скачивание проекта"""
+    project_path = os.path.join(PROJECTS_DIR, project_id)
+    archive_path = os.path.join(TEMP_DIR, f"{project_id}.zip")
 
         if not os.path.exists(project_path):
             interaction_logger.log_error("download_project_not_found", {"project_id": project_id})
