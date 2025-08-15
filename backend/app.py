@@ -3168,7 +3168,6 @@ def generate_project():
 
     def log_project_creation(project_id: str, project_name: str, user_id: str):
     """Асинхронное логирование создания проекта"""
-    # Ассинхронное логирование - выполняется в фоновом режиме для улучшения производительности
     try:
         interaction_logger.log_event("project_creation_success", {
             "project_id": project_id,
