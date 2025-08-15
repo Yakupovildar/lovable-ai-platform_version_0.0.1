@@ -3119,7 +3119,6 @@ def chat():
             })
 
 @app.route('/api/generate-project', methods=['POST'])
-@monitor_performance
 def generate_project():
     """Генерация проекта (из UI) с кэшированием"""
     data = request.json
