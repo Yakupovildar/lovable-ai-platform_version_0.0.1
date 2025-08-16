@@ -1,5 +1,5 @@
 // Lovable AI Platform - Enhanced JavaScript with Backend Integration
-console.log('💻 Lovable AI Platform loaded!');
+console.log('💻 Vibecode AI Platform loaded!');
 
 // Конфигурация для Replit
 const API_BASE_URL = window.location.origin;  // Используем текущий домен
@@ -41,7 +41,7 @@ function initializeApp() {
 // Функция для начала создания (перенаправление в личный кабинет)
 window.startCreating = function() {
     console.log('🚀 Перенаправляем в личный кабинет...');
-    
+
     // Проверяем, авторизован ли пользователь
     checkAuthAndRedirect();
 };
@@ -64,10 +64,10 @@ async function checkAuthAndRedirect() {
 
 window.startFreeTrial = function() {
     console.log('🚀 Начинаем бесплатную пробу...');
-    
+
     // Теперь startFreeTrial тоже перенаправляет в личный кабинет
     checkAuthAndRedirect();
-    
+
     // Создаем модальное окно для регистрации с российской спецификой
     const modal = document.createElement('div');
     modal.className = 'signup-modal';
@@ -75,7 +75,7 @@ window.startFreeTrial = function() {
         <div class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>🇷🇺 Регистрация в Lovable</h2>
+                    <h2>🇷🇺 Регистрация в Vibecode</h2>
                     <button class="modal-close" onclick="closeModal()">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -87,7 +87,7 @@ window.startFreeTrial = function() {
                             ✅ Поддержка на русском языке
                         </div>
                     </div>
-                    
+
                     <form id="signupForm" class="signup-form">
                         <div class="form-group">
                             <label for="email">📧 Email или телефон</label>
@@ -114,7 +114,7 @@ window.startFreeTrial = function() {
                                 <option value="personal">Личные проекты</option>
                             </select>
                         </div>
-                        
+
                         <!-- Согласие на обработку данных -->
                         <div class="form-group checkbox-group">
                             <label class="checkbox-label">
@@ -123,7 +123,7 @@ window.startFreeTrial = function() {
                                 Согласен на <a href="#" onclick="showPrivacyPolicy()">обработку персональных данных</a> согласно 152-ФЗ
                             </label>
                         </div>
-                        
+
                         <div class="form-group checkbox-group">
                             <label class="checkbox-label">
                                 <input type="checkbox" id="marketing">
@@ -131,12 +131,12 @@ window.startFreeTrial = function() {
                                 Хочу получать полезные материалы о разработке (не чаще 1 раза в неделю)
                             </label>
                         </div>
-                        
+
                         <button type="submit" class="btn-primary" id="submitBtn">
                             <span>🚀 Начать бесплатно</span>
                             <div class="btn-glow"></div>
                         </button>
-                        
+
                         <!-- Индикаторы доверия -->
                         <div class="trust-indicators">
                             <div class="trust-item">🔒 SSL шифрование</div>
@@ -144,7 +144,7 @@ window.startFreeTrial = function() {
                             <div class="trust-item">⚡ Мгновенная активация</div>
                         </div>
                     </form>
-                    
+
                     <div class="modal-footer">
                         <p>Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в систему</a></p>
                         <div class="payment-methods">
@@ -155,7 +155,7 @@ window.startFreeTrial = function() {
             </div>
         </div>
     `;
-    
+
     // Добавляем стили для модального окна
     const style = document.createElement('style');
     style.textContent = `
@@ -267,42 +267,42 @@ window.startFreeTrial = function() {
             text-decoration: underline;
         }
     `;
-    
+
     document.head.appendChild(style);
     document.body.appendChild(modal);
-    
+
     // Валидация пароля в реальном времени
     const passwordInput = document.getElementById('password');
     const strengthIndicator = document.getElementById('passwordStrength');
-    
+
     passwordInput.addEventListener('input', function() {
         const password = this.value;
         let strength = 0;
         let feedback = [];
-        
+
         if (password.length >= 8) strength++;
         else feedback.push('минимум 8 символов');
-        
+
         if (/[A-Z]/.test(password)) strength++;
         else feedback.push('заглавная буква');
-        
+
         if (/[0-9]/.test(password)) strength++;
         else feedback.push('цифра');
-        
+
         if (/[^A-Za-z0-9]/.test(password)) strength++;
         else feedback.push('специальный символ');
-        
+
         const colors = ['#ef4444', '#f59e0b', '#eab308', '#22c55e'];
         const texts = ['Слабый', 'Средний', 'Хороший', 'Отличный'];
-        
+
         strengthIndicator.style.color = colors[strength - 1] || '#ef4444';
         strengthIndicator.textContent = strength > 0 ? `${texts[strength - 1]} пароль` : '';
-        
+
         if (feedback.length > 0 && password.length > 0) {
             strengthIndicator.textContent += ` (нужно: ${feedback.join(', ')})`;
         }
     });
-    
+
     // Обработчик формы с валидацией
     document.getElementById('signupForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -312,44 +312,44 @@ window.startFreeTrial = function() {
         const name = document.getElementById('name').value;
         const businessType = document.getElementById('businessType').value;
         const dataProcessing = document.getElementById('dataProcessing').checked;
-        
+
         // Валидация
         if (!validateEmail(email) && !validatePhone(email)) {
             showNotification('❌ Введите корректный email или телефон', 'error');
             return;
         }
-        
+
         if (password.length < 8) {
             showNotification('❌ Пароль должен содержать минимум 8 символов', 'error');
             return;
         }
-        
+
         if (!businessType) {
             showNotification('❌ Выберите тип деятельности', 'error');
             return;
         }
-        
+
         if (!dataProcessing) {
             showNotification('❌ Необходимо согласие на обработку данных', 'error');
             return;
         }
-        
+
         // Анимация загрузки
         submitBtn.innerHTML = `
             <span>Создаем аккаунт...</span>
             <div class="loading-spinner"></div>
         `;
         submitBtn.disabled = true;
-        
+
         console.log('📝 Регистрация:', { email, name, businessType });
-        
+
         // Симуляция запроса к серверу
         setTimeout(() => {
-            showNotification('✅ Добро пожаловать в Lovable! Проверьте почту для подтверждения', 'success');
-            
+            showNotification('✅ Добро пожаловать в Vibecode! Проверьте почту для подтверждения', 'success');
+
             // Аналитика для определения аудитории
             trackUserRegistration(businessType, email);
-            
+
             setTimeout(() => {
                 closeModal();
                 // Показываем онбординг вместо формы входа
@@ -357,18 +357,18 @@ window.startFreeTrial = function() {
             }, 2000);
         }, 2000);
     });
-    
+
     // Функции валидации
     function validateEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
-    
+
     function validatePhone(phone) {
         const phoneRegex = /^\+?7[\s\-]?\(?9\d{2}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/;
         return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
     }
-    
+
     function trackUserRegistration(businessType, contact) {
         // Отправляем данные для анализа аудитории
         console.log('📊 Аналитика пользователя:', {
@@ -385,7 +385,7 @@ window.showDemo = function() {
     const demoSection = document.getElementById('demo');
     if (demoSection) {
         demoSection.scrollIntoView({ behavior: 'smooth' });
-        
+
         // Запускаем демо анимацию через небольшую задержку
         setTimeout(() => {
             startDemoAnimation();
@@ -396,7 +396,7 @@ window.showDemo = function() {
 window.closeModal = function() {
     const signupModal = document.querySelector('.signup-modal');
     const loginModal = document.querySelector('.login-modal');
-    
+
     if (signupModal) {
         signupModal.remove();
     }
@@ -407,7 +407,7 @@ window.closeModal = function() {
 
 window.showLogin = function() {
     console.log('🔐 Показываем форму входа...');
-    
+
     // Создаем модальное окно для входа
     const modal = document.createElement('div');
     modal.className = 'login-modal';
@@ -440,7 +440,7 @@ window.showLogin = function() {
             </div>
         </div>
     `;
-    
+
     // Добавляем стили для модального окна входа
     const style = document.createElement('style');
     style.textContent = `
@@ -463,21 +463,21 @@ window.showLogin = function() {
             gap: 20px;
         }
     `;
-    
+
     document.head.appendChild(style);
     document.body.appendChild(modal);
-    
+
     // Обработчик формы входа
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        
+
         console.log('🔐 Вход:', { email });
-        
+
         // Здесь можно добавить реальную логику входа
         showNotification('✅ Вход выполнен успешно!', 'success');
-        
+
         setTimeout(() => {
             closeModal();
             // Перенаправляем на главную страницу или дашборд
@@ -508,15 +508,15 @@ window.showPrivacyPolicy = function() {
                 <div class="modal-body">
                     <div class="privacy-content">
                         <h3>Обработка персональных данных</h3>
-                        <p>ООО "Ловабл" (далее - Компания) обязуется обеспечить конфиденциальность персональных данных в соответствии с 152-ФЗ "О персональных данных".</p>
-                        
+                        <p>ООО "Vibecode" (далее - Компания) обязуется обеспечить конфиденциальность персональных данных в соответствии с 152-ФЗ "О персональных данных".</p>
+
                         <h4>Какие данные мы собираем:</h4>
                         <ul>
                             <li>Контактная информация (email, телефон)</li>
                             <li>Имя и тип деятельности</li>
                             <li>Техническая информация о использовании сервиса</li>
                         </ul>
-                        
+
                         <h4>Как мы используем данные:</h4>
                         <ul>
                             <li>Предоставление услуг платформы</li>
@@ -524,10 +524,10 @@ window.showPrivacyPolicy = function() {
                             <li>Улучшение сервиса</li>
                             <li>Информирование о новых возможностях (с вашего согласия)</li>
                         </ul>
-                        
+
                         <h4>Безопасность:</h4>
                         <p>Данные хранятся на серверах в России с применением современных методов шифрования. Доступ к данным имеют только уполномоченные сотрудники.</p>
-                        
+
                         <h4>Ваши права:</h4>
                         <ul>
                             <li>Получение информации об обработке ваших данных</li>
@@ -535,8 +535,8 @@ window.showPrivacyPolicy = function() {
                             <li>Удаление данных (право на забвение)</li>
                             <li>Ограничение обработки</li>
                         </ul>
-                        
-                        <p><strong>Контакты:</strong> privacy@lovable.ru, +7 (495) 123-45-67</p>
+
+                        <p><strong>Контакты:</strong> privacy@vibecode.ru, +7 (495) 123-45-67</p>
                     </div>
                 </div>
             </div>
@@ -569,7 +569,7 @@ window.showOnboarding = function(businessType) {
             ]
         },
         'corporate': {
-            title: '🏢 Добро пожаловать в Lovable Business!',
+            title: '🏢 Добро пожаловать в Vibecode Business!',
             description: 'Создавайте корпоративные решения быстро и безопасно',
             suggestions: [
                 'Корпоративный сайт',
@@ -579,9 +579,9 @@ window.showOnboarding = function(businessType) {
             ]
         }
     };
-    
+
     const data = onboardingData[businessType] || onboardingData['startup'];
-    
+
     const modal = document.createElement('div');
     modal.className = 'onboarding-modal';
     modal.innerHTML = `
@@ -592,7 +592,7 @@ window.showOnboarding = function(businessType) {
                 </div>
                 <div class="modal-body">
                     <p style="font-size: 1.2rem; text-align: center; margin-bottom: 2rem;">${data.description}</p>
-                    
+
                     <h3>Популярные проекты в вашей сфере:</h3>
                     <div class="suggestions-grid">
                         ${data.suggestions.map(suggestion => `
@@ -603,7 +603,7 @@ window.showOnboarding = function(businessType) {
                             </div>
                         `).join('')}
                     </div>
-                    
+
                     <div style="text-align: center; margin-top: 2rem;">
                         <button class="btn-secondary" onclick="closeModal()">
                             Спасибо, разберусь сам
@@ -647,41 +647,41 @@ window.goToChat = function() {
 window.initializeWebSocket = function() {
     try {
         console.log('🔄 Подключаюсь к WebSocket...', window.location.origin);
-        
+
         // Проверяем, что Socket.IO загружен
         if (typeof io === 'undefined') {
             console.log('⚠️ Socket.IO не загружен, пропускаем WebSocket');
             return;
         }
-        
+
         // Подключаемся к WebSocket серверу
         socket = io(API_BASE_URL, {
             transports: ['polling', 'websocket'],
             timeout: 5000,
             forceNew: true
         });
-        
+
         socket.on('connect', function() {
             console.log('🔌 WebSocket подключен!');
             showConnectionStatus('Подключено', 'success');
         });
-        
+
         socket.on('disconnect', function() {
             console.log('❌ WebSocket отключен!');
             showConnectionStatus('Отключено', 'error');
         });
-        
+
         socket.on('connect_error', function(error) {
             console.error('❌ Ошибка подключения WebSocket:', error);
             showConnectionStatus('Ошибка подключения', 'error');
             socket = null;
         });
-        
+
         socket.on('project_status', function(data) {
             console.log('📦 Получен статус проекта:', data);
             handleProjectStatus(data);
         });
-        
+
     } catch (error) {
         console.error('Ошибка подключения к WebSocket:', error);
         showConnectionStatus('Ошибка подключения', 'error');
@@ -706,9 +706,9 @@ function showConnectionStatus(message, type) {
         animation: slideInRight 0.3s ease;
         ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
     `;
-    
+
     document.body.appendChild(statusDiv);
-    
+
     setTimeout(() => {
         statusDiv.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => {
@@ -720,7 +720,7 @@ function showConnectionStatus(message, type) {
 // Обработка статуса проекта
 function handleProjectStatus(data) {
     const { status, message, project_id, download_url } = data;
-    
+
     if (status === 'completed') {
         showNotification('✅ Проект создан успешно!', 'success');
         showDownloadButton(download_url, project_id);
@@ -762,9 +762,9 @@ function showDownloadButton(downloadUrl, projectId) {
             ">📥 Скачать</button>
         </div>
     `;
-    
+
     document.body.appendChild(downloadDiv);
-    
+
     setTimeout(() => {
         downloadDiv.style.animation = 'slideOutDown 0.3s ease';
         setTimeout(() => {
@@ -786,7 +786,7 @@ function showAIStatus() {
             const status = data.available_services.map(service => 
                 `${service.name}: ${service.configured ? '✅' : '❌'}`
             ).join('\n');
-            
+
             alert(`🤖 Статус AI сервисов:\n\n${status}`);
         })
         .catch(error => {
@@ -799,14 +799,14 @@ function showAIStatus() {
 function setupNavigation() {
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.querySelector('.nav-menu');
-    
+
     if (hamburger && navMenu) {
         hamburger.addEventListener('click', () => {
             navMenu.classList.toggle('active');
             hamburger.classList.toggle('active');
         });
     }
-    
+
     // Плавная прокрутка для ссылок
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -826,7 +826,7 @@ function setupNavigation() {
 function setupChatInterface() {
     const chatInput = document.getElementById('chatInput');
     const sendButton = document.getElementById('sendMessage');
-    
+
     if (chatInput && sendButton) {
         sendButton.addEventListener('click', sendMessage);
         chatInput.addEventListener('keypress', function(e) {
@@ -841,16 +841,16 @@ function setupChatInterface() {
 async function sendMessage() {
     const chatInput = document.getElementById('chatInput');
     const message = chatInput.value.trim();
-    
+
     if (!message) return;
-    
+
     // Добавляем сообщение пользователя
     addMessage(message, 'user');
     chatInput.value = '';
-    
+
     // Показываем индикатор печати
     showTypingIndicator();
-    
+
     try {
         // Генерируем или получаем session_id
         let sessionId = localStorage.getItem('ai_session_id');
@@ -858,9 +858,9 @@ async function sendMessage() {
             sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('ai_session_id', sessionId);
         }
-        
+
         console.log('Отправляю запрос к:', `${API_BASE_URL}/api/chat`);
-        
+
         const response = await fetch(`${API_BASE_URL}/api/chat`, {
             method: 'POST',
             headers: {
@@ -871,35 +871,35 @@ async function sendMessage() {
                 session_id: sessionId
             })
         });
-        
+
         console.log('Статус ответа:', response.status);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('Получен ответ:', data);
-        
+
         // Скрываем индикатор печати
         hideTypingIndicator();
-        
+
         // Добавляем ответ AI
         if (data.message) {
             addMessage(data.message, 'ai', data);
         } else {
             addMessage('🤖 Привет! Отлично, что вы обратились ко мне! Я готов помочь вам создать любое приложение. Что вас интересует?', 'ai');
         }
-        
+
         // Показываем предложения если есть
         if (data.suggestions && data.suggestions.length > 0) {
             showSuggestions(data.suggestions);
         }
-        
+
     } catch (error) {
         console.error('Ошибка отправки сообщения:', error);
         hideTypingIndicator();
-        
+
         // Более дружелюбная обработка ошибок
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             addMessage('🔌 Не удалось подключиться к серверу. Пожалуйста, проверьте подключение.', 'ai');
@@ -913,7 +913,7 @@ async function sendMessage() {
                 addMessage('🤖 Извините, у меня технические проблемы, но я понял ваш запрос! Могу предложить создать приложение на основе вашей идеи. Что скажете?', 'ai');
             }
         }
-        
+
         // Показываем предложения по умолчанию
         showSuggestions([
             'Создать игру',
@@ -929,12 +929,12 @@ function addMessage(text, sender, data = null) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}-message`;
-    
+
     const avatar = sender === 'ai' ? '🤖' : '👤';
     const avatarClass = sender === 'ai' ? 'ai-avatar' : 'user-avatar';
-    
+
     let messageContent = `<p>${text}</p>`;
-    
+
     // Если это проект, добавляем кнопку скачивания
     if (data && data.type === 'project_created' && data.download_url) {
         messageContent += `
@@ -948,14 +948,14 @@ function addMessage(text, sender, data = null) {
             </div>
         `;
     }
-    
+
     messageDiv.innerHTML = `
         <div class="message-avatar ${avatarClass}">${avatar}</div>
         <div class="message-content">
             ${messageContent}
         </div>
     `;
-    
+
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -966,7 +966,7 @@ function showTypingIndicator() {
     const typingDiv = document.createElement('div');
     typingDiv.className = 'message ai-message typing-indicator';
     typingDiv.id = 'typingIndicator';
-    
+
     typingDiv.innerHTML = `
         <div class="message-avatar">🤖</div>
         <div class="message-content">
@@ -977,7 +977,7 @@ function showTypingIndicator() {
             </div>
         </div>
     `;
-    
+
     chatMessages.appendChild(typingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -993,7 +993,7 @@ function hideTypingIndicator() {
 // Функции для работы с проектами
 window.downloadProject = function(downloadUrl, projectId) {
     console.log('📦 Скачиваем проект:', projectId);
-    
+
     // Создаем временную ссылку для скачивания
     const link = document.createElement('a');
     link.href = downloadUrl;
@@ -1001,7 +1001,7 @@ window.downloadProject = function(downloadUrl, projectId) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     showNotification('📦 Проект загружается...', 'info');
 };
 
@@ -1015,17 +1015,17 @@ function showSuggestions(suggestions) {
     const chatMessages = document.getElementById('chatMessages');
     const suggestionsDiv = document.createElement('div');
     suggestionsDiv.className = 'suggestions';
-    
+
     const buttons = suggestions.map(suggestion => 
         `<button onclick="sendSuggestion('${suggestion}')" class="suggestion-btn">${suggestion}</button>`
     ).join('');
-    
+
     suggestionsDiv.innerHTML = `
         <div class="suggestions-container">
             ${buttons}
         </div>
     `;
-    
+
     chatMessages.appendChild(suggestionsDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -1035,7 +1035,7 @@ function sendSuggestion(suggestion) {
     const chatInput = document.getElementById('chatInput');
     chatInput.value = suggestion;
     sendMessage();
-    
+
     // Удаляем предложения
     const suggestions = document.querySelector('.suggestions');
     if (suggestions) {
@@ -1062,9 +1062,9 @@ function showNotification(message, type = 'info') {
           type === 'error' ? 'background: #ef4444;' : 
           'background: #3b82f6;'}
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => {
@@ -1080,7 +1080,7 @@ function setupAnimations() {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
     };
-    
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -1088,7 +1088,7 @@ function setupAnimations() {
             }
         });
     }, observerOptions);
-    
+
     // Наблюдаем за карточками функций
     document.querySelectorAll('.feature-card').forEach(card => {
         observer.observe(card);
@@ -1100,7 +1100,7 @@ function setupScrollEffects() {
     window.addEventListener('scroll', () => {
         const scrolled = window.pageYOffset;
         const parallax = document.querySelector('.hero-background');
-        
+
         if (parallax) {
             const speed = scrolled * 0.5;
             parallax.style.transform = `translateY(${speed}px)`;
@@ -1121,32 +1121,32 @@ style.textContent = `
         from { transform: translateX(100%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
-    
+
     @keyframes slideOutRight {
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
     }
-    
+
     @keyframes slideInUp {
         from { transform: translateY(30px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
     }
-    
+
     @keyframes slideOutDown {
         from { transform: translateY(0); opacity: 1; }
         to { transform: translateY(30px); opacity: 0; }
     }
-    
+
     @keyframes fadeInUp {
         from { transform: translateY(30px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
     }
-    
+
     .typing-dots {
         display: flex;
         gap: 4px;
     }
-    
+
     .typing-dots span {
         width: 8px;
         height: 8px;
@@ -1154,27 +1154,27 @@ style.textContent = `
         border-radius: 50%;
         animation: typingDot 1.4s ease-in-out infinite;
     }
-    
+
     .typing-dots span:nth-child(2) {
         animation-delay: 0.2s;
     }
-    
+
     .typing-dots span:nth-child(3) {
         animation-delay: 0.4s;
     }
-    
+
     @keyframes typingDot {
         0%, 60%, 100% { transform: scale(1); opacity: 0.7; }
         30% { transform: scale(1.2); opacity: 1; }
     }
-    
+
     .suggestions-container {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         margin-top: 1rem;
     }
-    
+
     .suggestion-btn {
         background: rgba(139, 92, 246, 0.2);
         border: 1px solid rgba(139, 92, 246, 0.3);
@@ -1185,12 +1185,12 @@ style.textContent = `
         font-size: 0.9rem;
         transition: all 0.3s ease;
     }
-    
+
     .suggestion-btn:hover {
         background: rgba(139, 92, 246, 0.3);
         transform: translateY(-1px);
     }
-    
+
     .user-avatar {
         background: linear-gradient(45deg, #10b981, #06b6d4) !important;
     }
@@ -1204,18 +1204,18 @@ let demoAnimationTimeout = null;
 
 function startDemoAnimation() {
     if (demoAnimationRunning) return;
-    
+
     demoAnimationRunning = true;
     console.log('🎬 Запускаю демо анимацию...');
-    
+
     // Сбрасываем все шаги
     const steps = document.querySelectorAll('.demo-step');
     steps.forEach(step => step.classList.remove('active'));
-    
+
     // Сбрасываем таймлайн
     const timelineItems = document.querySelectorAll('.timeline-item');
     timelineItems.forEach(item => item.classList.remove('active'));
-    
+
     // Запускаем анимацию по шагам
     setTimeout(() => activateStep(1), 500);
     setTimeout(() => activateStep(2), 3000);
@@ -1227,7 +1227,7 @@ function startDemoAnimation() {
     setTimeout(() => activateTimelineItem(2), 6000);
     setTimeout(() => activateTimelineItem(3), 9000);
     setTimeout(() => activateTimelineItem(4), 12000);
-    
+
     // Сбрасываем флаг через 15 секунд
     demoAnimationTimeout = setTimeout(() => {
         demoAnimationRunning = false;
@@ -1238,7 +1238,7 @@ function activateStep(stepNumber) {
     const step = document.querySelector(`[data-step="${stepNumber}"]`);
     if (step) {
         step.classList.add('active');
-        
+
         // Специальные эффекты для каждого шага
         if (stepNumber === 1) {
             typeInInput();
@@ -1253,7 +1253,7 @@ function activateStep(stepNumber) {
 function activateTimelineItem(index) {
     const timelineItems = document.querySelectorAll('.timeline-item');
     timelineItems.forEach(item => item.classList.remove('active'));
-    
+
     if (timelineItems[index]) {
         timelineItems[index].classList.add('active');
     }
@@ -1262,12 +1262,12 @@ function activateTimelineItem(index) {
 function typeInInput() {
     const inputSimulation = document.querySelector('.input-simulation');
     const text = 'Создай интернет-магазин с корзиной';
-    
+
     if (!inputSimulation) return;
-    
+
     let i = 0;
     inputSimulation.innerHTML = '<span class="typing-cursor">|</span>';
-    
+
     const typeInterval = setInterval(() => {
         if (i < text.length) {
             inputSimulation.innerHTML = text.substring(0, i + 1) + '<span class="typing-cursor">|</span>';
@@ -1286,9 +1286,9 @@ function showThinking() {
         'Подбираю технологии...',
         'Готовлю шаблоны...'
     ];
-    
+
     if (!thinkingText) return;
-    
+
     let currentIndex = 0;
     const thinkingInterval = setInterval(() => {
         if (currentIndex < texts.length) {
@@ -1325,16 +1325,16 @@ function showSuccess() {
 function showEmotions() {
     const emotionFace = document.querySelector('.emotion-face');
     const emotionText = document.querySelector('.emotion-text p');
-    
+
     if (!emotionFace || !emotionText) return;
-    
+
     const emotions = [
         { face: '😊', text: '"Вау! Это работает!"' },
         { face: '🤩', text: '"Невероятно быстро!"' },
         { face: '💰', text: '"Уже получил заказы!"' },
         { face: '🎉', text: '"Бизнес процветает!"' }
     ];
-    
+
     let currentEmotion = 0;
     const emotionInterval = setInterval(() => {
         if (currentEmotion < emotions.length) {
@@ -1350,15 +1350,15 @@ function showEmotions() {
 // Функция воспроизведения демо видео
 window.playDemoVideo = function() {
     console.log('🎥 Воспроизводим демо видео...');
-    
+
     // Создаем полноэкранное видео демонстрацию
     const videoModal = document.createElement('div');
     videoModal.className = 'video-demo-modal';
     videoModal.innerHTML = `
         <div class="video-modal-overlay" onclick="closeDemoVideo()">
-            <div class="video-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-content" onclick="event.stopPropagation()">
                 <div class="video-modal-header">
-                    <h3>🎬 Демонстрация Lovable AI</h3>
+                    <h3>🎬 Демонстрация Vibecode AI</h3>
                     <button onclick="closeDemoVideo()" class="modal-close">&times;</button>
                 </div>
                 <div class="video-demo-container">
@@ -1375,7 +1375,7 @@ window.playDemoVideo = function() {
                         </div>
                         <div class="demo-stage" id="stage2">
                             <h4>🤖 ИИ анализирует запрос</h4>
-                            <p>Lovable AI понимает требования и планирует архитектуру</p>
+                            <p>Vibecode AI понимает требования и планирует архитектуру</p>
                             <div class="stage-visual">
                                 <div class="ai-analysis">
                                     <div class="analysis-item">✓ Определена структура БД</div>
@@ -1429,7 +1429,7 @@ window.playDemoVideo = function() {
             </div>
         </div>
     `;
-    
+
     // Добавляем стили для видео модального окна
     const videoStyle = document.createElement('style');
     videoStyle.textContent = `
@@ -1446,7 +1446,7 @@ window.playDemoVideo = function() {
             background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
         }
-        
+
         .video-modal-content {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border-radius: 20px;
@@ -1458,7 +1458,7 @@ window.playDemoVideo = function() {
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .video-modal-header {
             display: flex;
             justify-content: space-between;
@@ -1467,13 +1467,13 @@ window.playDemoVideo = function() {
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-bottom: 1rem;
         }
-        
+
         .video-modal-header h3 {
             color: white;
             margin: 0;
             font-size: 1.5rem;
         }
-        
+
         .demo-progress {
             width: 100%;
             height: 4px;
@@ -1482,7 +1482,7 @@ window.playDemoVideo = function() {
             margin-bottom: 2rem;
             overflow: hidden;
         }
-        
+
         .progress-bar {
             height: 100%;
             background: linear-gradient(45deg, #8b5cf6, #06b6d4);
@@ -1490,35 +1490,35 @@ window.playDemoVideo = function() {
             transition: width 0.5s ease;
             border-radius: 2px;
         }
-        
+
         .demo-stage {
             display: none;
             text-align: center;
             padding: 2rem;
             animation: stageAppear 0.5s ease;
         }
-        
+
         .demo-stage.active {
             display: block;
         }
-        
+
         @keyframes stageAppear {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         .demo-stage h4 {
             color: white;
             font-size: 1.5rem;
             margin-bottom: 1rem;
         }
-        
+
         .demo-stage p {
             color: rgba(255, 255, 255, 0.8);
             margin-bottom: 2rem;
             font-size: 1.1rem;
         }
-        
+
         .stage-visual {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
@@ -1526,14 +1526,14 @@ window.playDemoVideo = function() {
             margin: 2rem 0;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .typing-demo {
             font-family: 'Courier New', monospace;
             font-size: 1.2rem;
             color: #10b981;
             animation: typewriter 2s steps(30) infinite;
         }
-        
+
         .analysis-item, .progress-item, .feature, .metric {
             background: rgba(139, 92, 246, 0.2);
             border: 1px solid rgba(139, 92, 246, 0.3);
@@ -1543,19 +1543,19 @@ window.playDemoVideo = function() {
             color: white;
             animation: itemAppear 0.5s ease;
         }
-        
+
         @keyframes itemAppear {
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
         }
-        
+
         .video-controls {
             display: flex;
             gap: 1rem;
             justify-content: center;
             margin-top: 2rem;
         }
-        
+
         .control-btn {
             padding: 1rem 2rem;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1566,21 +1566,21 @@ window.playDemoVideo = function() {
             font-weight: 600;
             transition: all 0.3s ease;
         }
-        
+
         .control-btn.primary {
             background: linear-gradient(45deg, #8b5cf6, #06b6d4);
             border-color: transparent;
         }
-        
+
         .control-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
         }
     `;
-    
+
     document.head.appendChild(videoStyle);
     document.body.appendChild(videoModal);
-    
+
     // Запускаем демонстрацию
     startVideoDemo();
 };
@@ -1589,28 +1589,28 @@ function startVideoDemo() {
     let currentStage = 1;
     const totalStages = 5;
     const progressBar = document.getElementById('demoProgress');
-    
+
     const stageInterval = setInterval(() => {
         // Обновляем прогресс
         const progress = (currentStage / totalStages) * 100;
         if (progressBar) {
             progressBar.style.width = progress + '%';
         }
-        
+
         // Скрываем предыдущий этап
         const prevStage = document.getElementById(`stage${currentStage - 1}`);
         if (prevStage) {
             prevStage.classList.remove('active');
         }
-        
+
         // Показываем текущий этап
         const currentStageElement = document.getElementById(`stage${currentStage}`);
         if (currentStageElement) {
             currentStageElement.classList.add('active');
         }
-        
+
         currentStage++;
-        
+
         if (currentStage > totalStages) {
             clearInterval(stageInterval);
         }
@@ -1629,13 +1629,13 @@ window.restartDemo = function() {
     document.querySelectorAll('.demo-stage').forEach(stage => {
         stage.classList.remove('active');
     });
-    
+
     // Показываем первый этап
     const firstStage = document.getElementById('stage1');
     if (firstStage) {
         firstStage.classList.add('active');
     }
-    
+
     // Перезапускаем демонстрацию
     startVideoDemo();
 };
@@ -1644,7 +1644,7 @@ window.restartDemo = function() {
 function setupDemoScrollTrigger() {
     const demoSection = document.getElementById('demo');
     if (!demoSection) return;
-    
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && !demoAnimationRunning) {
@@ -1654,7 +1654,7 @@ function setupDemoScrollTrigger() {
             }
         });
     }, { threshold: 0.3 });
-    
+
     observer.observe(demoSection);
 }
 
@@ -1663,4 +1663,4 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupDemoScrollTrigger);
 } else {
     setupDemoScrollTrigger();
-} 
+}
