@@ -330,10 +330,56 @@ def serve_static_files(filename):
     except FileNotFoundError:
         return jsonify({"error": "File not found"}), 404
 
-@app.route('/api/health')
+@app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
-    return jsonify({"status": "ok", "message": "Backend is running"})
+    return jsonify({
+        "status": "ok",
+        "message": "Backend is running"
+    })
+
+@app.route('/api/pre-registration', methods=['POST'])
+def save_pre_registration():
+    """Сохранение данных предварительной регистрации для аналитики"""
+    try:
+        data = request.get_json()
+
+        # Получаем дополнительную информацию
+        data['ip_address'] = request.remote_addr
+        data['user_agent'] = request.headers.get('User-Agent', '')
+        data['referrer'] = request.headers.get('Referer', '')
+
+        # Логируем в файл аналитики
+        analytics_logger.log_event("pre_registration", data)
+
+        # Также можно сохранить в базу данных
+        cursor = get_db_cursor()
+        cursor.execute('''
+            INSERT INTO pre_registration_analytics 
+            (user_role, experience_level, project_type, team_size, hear_about, ip_address, user_agent, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data.get('userRole'),
+            data.get('experienceLevel'), 
+            data.get('projectType'),
+            data.get('teamSize'),
+            data.get('hearAbout'),
+            data.get('ip_address'),
+            data.get('user_agent'),
+            data.get('timestamp')
+        ))
+        conn.commit() # Commit the transaction
+
+        return jsonify({
+            "success": True,
+            "message": "Данные сохранены"
+        })
+
+    except Exception as e:
+        print(f"Ошибка сохранения данных предварительной регистрации: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Ошибка сохранения данных"
+        }), 500
 
 @app.route('/api/status')
 def status_check():
@@ -588,6 +634,22 @@ def init_database():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             files TEXT, -- JSON string of files and their content
             FOREIGN KEY (project_id) REFERENCES user_projects (project_id)
+        )
+    ''')
+
+    # Создание таблицы для аналитики предварительной регистрации
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS pre_registration_analytics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_role TEXT,
+            experience_level TEXT,
+            project_type TEXT,
+            team_size TEXT,
+            hear_about TEXT,
+            ip_address TEXT,
+            user_agent TEXT,
+            timestamp TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 

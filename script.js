@@ -65,9 +65,140 @@ async function checkAuthAndRedirect() {
 window.startFreeTrial = function() {
     console.log('🚀 Начинаем бесплатную пробу...');
 
-    // Теперь startFreeTrial тоже перенаправляет в личный кабинет
-    checkAuthAndRedirect();
+    // Сначала показываем форму предварительного сбора данных
+    showPreRegistrationForm();
+};
 
+// Форма предварительного сбора данных как у Lovable
+function showPreRegistrationForm() {
+    const modal = document.createElement('div');
+    modal.className = 'pre-registration-modal';
+    modal.innerHTML = `
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🚀 Расскажите о себе</h2>
+                    <p style="color: rgba(255, 255, 255, 0.8); margin: 0;">Помогите нам создать лучший опыт для вас</p>
+                </div>
+                <div class="modal-body">
+                    <form id="preRegistrationForm" class="pre-registration-form">
+                        <div class="form-group">
+                            <label for="userRole">Кто вы? *</label>
+                            <select id="userRole" required>
+                                <option value="">Выберите роль</option>
+                                <option value="developer">Разработчик</option>
+                                <option value="designer">Дизайнер</option>
+                                <option value="entrepreneur">Предприниматель</option>
+                                <option value="student">Студент</option>
+                                <option value="freelancer">Фрилансер</option>
+                                <option value="manager">Менеджер продукта</option>
+                                <option value="other">Другое</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="experienceLevel">Уровень опыта в разработке? *</label>
+                            <select id="experienceLevel" required>
+                                <option value="">Выберите уровень</option>
+                                <option value="beginner">Новичок (без опыта)</option>
+                                <option value="intermediate">Средний (1-3 года)</option>
+                                <option value="advanced">Продвинутый (3+ лет)</option>
+                                <option value="expert">Эксперт (5+ лет)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="projectType">Что планируете создавать? *</label>
+                            <select id="projectType" required>
+                                <option value="">Выберите тип проекта</option>
+                                <option value="landing">Лендинги</option>
+                                <option value="ecommerce">Интернет-магазины</option>
+                                <option value="webapp">Веб-приложения</option>
+                                <option value="portfolio">Портфолио</option>
+                                <option value="blog">Блоги</option>
+                                <option value="business">Корпоративные сайты</option>
+                                <option value="startup">Стартап MVP</option>
+                                <option value="other">Другое</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="teamSize">Размер команды? *</label>
+                            <select id="teamSize" required>
+                                <option value="">Выберите размер</option>
+                                <option value="solo">Работаю один</option>
+                                <option value="small">2-5 человек</option>
+                                <option value="medium">6-20 человек</option>
+                                <option value="large">20+ человек</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="hearAbout">Как узнали о нас?</label>
+                            <select id="hearAbout">
+                                <option value="">Выберите источник</option>
+                                <option value="search">Поиск Google</option>
+                                <option value="social">Социальные сети</option>
+                                <option value="youtube">YouTube</option>
+                                <option value="friend">Рекомендация друга</option>
+                                <option value="blog">Блог/статья</option>
+                                <option value="ads">Реклама</option>
+                                <option value="other">Другое</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="preRegisterBtn">
+                            <span>Продолжить регистрацию</span>
+                            <div class="btn-glow"></div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Обработчик формы предварительной регистрации
+    document.getElementById('preRegistrationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            userRole: document.getElementById('userRole').value,
+            experienceLevel: document.getElementById('experienceLevel').value,
+            projectType: document.getElementById('projectType').value,
+            teamSize: document.getElementById('teamSize').value,
+            hearAbout: document.getElementById('hearAbout').value,
+            timestamp: new Date().toISOString()
+        };
+
+        // Сохраняем данные для аналитики
+        savePreRegistrationData(formData);
+        
+        // Закрываем модальное окно и показываем форму регистрации
+        modal.remove();
+        showRegistrationForm();
+    });
+}
+
+// Сохранение данных предварительной регистрации
+async function savePreRegistrationData(data) {
+    try {
+        await fetch('/api/pre-registration', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        console.log('📊 Данные предварительной регистрации сохранены:', data);
+    } catch (error) {
+        console.error('Ошибка сохранения данных:', error);
+    }
+}
+
+// Показать основную форму регистрации
+function showRegistrationForm() {
     // Создаем модальное окно для регистрации с российской спецификой
     const modal = document.createElement('div');
     modal.className = 'signup-modal';
@@ -663,12 +794,10 @@ window.initializeWebSocket = function() {
 
         socket.on('connect', function() {
             console.log('🔌 WebSocket подключен!');
-            showConnectionStatus('Подключено', 'success');
         });
 
         socket.on('disconnect', function() {
             console.log('❌ WebSocket отключен!');
-            showConnectionStatus('Отключено', 'error');
         });
 
         socket.on('connect_error', function(error) {
@@ -689,33 +818,7 @@ window.initializeWebSocket = function() {
     }
 };
 
-// Показать статус подключения
-function showConnectionStatus(message, type) {
-    const statusDiv = document.createElement('div');
-    statusDiv.className = `connection-status ${type}`;
-    statusDiv.textContent = message;
-    statusDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 10px 20px;
-        border-radius: 10px;
-        color: white;
-        font-weight: 600;
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-        ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-    `;
-
-    document.body.appendChild(statusDiv);
-
-    setTimeout(() => {
-        statusDiv.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => {
-            document.body.removeChild(statusDiv);
-        }, 300);
-    }, 3000);
-}
+// Функция showConnectionStatus удалена - уведомления о подключении больше не показываются
 
 // Обработка статуса проекта
 function handleProjectStatus(data) {
