@@ -74,11 +74,12 @@ function showPreRegistrationForm() {
     const modal = document.createElement('div');
     modal.className = 'pre-registration-modal';
     modal.innerHTML = `
-        <div class="modal-overlay">
-            <div class="modal-content">
+        <div class="modal-overlay" onclick="closePreRegistrationModal()">
+            <div class="modal-content" onclick="event.stopPropagation()">
                 <div class="modal-header">
                     <h2>🚀 Расскажите о себе</h2>
-                    <p style="color: rgba(255, 255, 255, 0.8); margin: 0;">Помогите нам создать лучший опыт для вас</p>
+                    <button class="modal-close" onclick="closePreRegistrationModal()">&times;</button>
+                    <p style="color: rgba(255, 255, 255, 0.8); margin: 10px 0 0 0;">Помогите нам создать лучший опыт для вас</p>
                 </div>
                 <div class="modal-body">
                     <form id="preRegistrationForm" class="pre-registration-form">
@@ -527,12 +528,23 @@ window.showDemo = function() {
 window.closeModal = function() {
     const signupModal = document.querySelector('.signup-modal');
     const loginModal = document.querySelector('.login-modal');
+    const preRegModal = document.querySelector('.pre-registration-modal');
 
     if (signupModal) {
         signupModal.remove();
     }
     if (loginModal) {
         loginModal.remove();
+    }
+    if (preRegModal) {
+        preRegModal.remove();
+    }
+};
+
+window.closePreRegistrationModal = function() {
+    const preRegModal = document.querySelector('.pre-registration-modal');
+    if (preRegModal) {
+        preRegModal.remove();
     }
 };
 

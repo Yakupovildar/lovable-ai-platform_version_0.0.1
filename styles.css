@@ -1449,6 +1449,69 @@ body::before {
     backdrop-filter: blur(10px);
 }
 
+.pre-registration-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.pre-registration-modal .modal-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 10001;
+}
+
+.pre-registration-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-direction: column;
+}
+
+.pre-registration-modal .modal-header h2 {
+    color: white;
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    width: 100%;
+    position: relative;
+}
+
+.pre-registration-modal .modal-close {
+    position: absolute;
+    top: -5px;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.pre-registration-modal .modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
 .pre-registration-form {
     display: flex;
     flex-direction: column;
