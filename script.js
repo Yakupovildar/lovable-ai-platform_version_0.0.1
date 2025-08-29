@@ -176,7 +176,7 @@ function showPreRegistrationForm() {
         // Сохраняем данные для аналитики
         savePreRegistrationData(formData);
         
-        // Закрываем модальное окно и показываем форму регистрации
+        // Сразу закрываем предварительную форму и показываем регистрацию
         modal.remove();
         showRegistrationForm();
     });
@@ -482,11 +482,8 @@ function showRegistrationForm() {
             // Аналитика для определения аудитории
             trackUserRegistration(businessType, email);
 
-            setTimeout(() => {
-                closeModal();
-                // Показываем онбординг вместо формы входа
-                showOnboarding(businessType);
-            }, 2000);
+            // Показываем онбординг БЕЗ автозакрытия модального окна
+            showOnboarding(businessType);
         }, 2000);
     });
 
@@ -880,12 +877,7 @@ function showDownloadButton(downloadUrl, projectId) {
 
     document.body.appendChild(downloadDiv);
 
-    setTimeout(() => {
-        downloadDiv.style.animation = 'slideOutDown 0.3s ease';
-        setTimeout(() => {
-            document.body.removeChild(downloadDiv);
-        }, 300);
-    }, 10000);
+    // Убираем автозакрытие - пользователь сам решит когда закрыть
 }
 
 // Скачать проект

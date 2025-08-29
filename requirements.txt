@@ -1,0 +1,6 @@
+flask==3.1.0
+requests==2.32.3
+openai==1.35.13
+python-socketio==5.13.0
+gunicorn==23.0.0
+Werkzeug==3.1.3
