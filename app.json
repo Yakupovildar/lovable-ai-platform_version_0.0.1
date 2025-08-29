@@ -1,0 +1,45 @@
+{
+  "name": "Vibecode AI Platform",
+  "description": "Full-stack AI application generator competing with Lovable.dev",
+  "repository": "https://github.com/YOUR_USERNAME/vibecode-ai-platform",
+  "logo": "https://via.placeholder.com/128x128.png?text=AI",
+  "keywords": [
+    "ai",
+    "full-stack", 
+    "code-generation",
+    "react",
+    "nextjs",
+    "supabase",
+    "vercel"
+  ],
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    },
+    "OPENAI_API_KEY": {
+      "description": "OpenAI API Key for AI features",
+      "required": false
+    },
+    "SUPABASE_ACCESS_TOKEN": {
+      "description": "Supabase access token",
+      "required": false
+    },
+    "GITHUB_TOKEN": {
+      "description": "GitHub token for integrations", 
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  }
+}

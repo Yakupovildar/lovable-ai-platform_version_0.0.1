@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibecode AI - Advanced Full-Stack Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            height: 100vh;
+            background: white;
+            margin: 10px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        /* Левая панель - улучшенный чат */
+        .chat-panel {
+            width: 380px;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+        }
+        
+        .chat-panel.expanded {
+            width: 450px;
+        }
+        
+        .chat-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            position: relative;
+        }
+        
+        .chat-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+        
+        .chat-header-controls {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .header-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+        
+        .header-btn.active {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Режимы панели */
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .panel-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* AI Chat режим */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            max-width: 90%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message.ai {
+            align-self: flex-start;
+            background: white;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .message.ai .ai-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .ai-action-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .ai-action-btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+        
+        /* GitHub режим */
+        .github-content {
+            padding: 20px;
+        }
+        
+        .github-status {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .github-connected {
+            color: #059669;
+        }
+        
+        .github-disconnected {
+            color: #dc2626;
+        }
+        
+        .repo-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .repo-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .repo-item:hover {
+            border-color: #4f46e5;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+        }
+        
+        .repo-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .repo-info {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+        
+        /* Device Preview режим */
+        .device-preview {
+            padding: 20px;
+        }
+        
+        .device-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .device-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #374151;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 70px;
+        }
+        
+        .device-btn.active {
+            border-color: #4f46e5;
+            background: #4f46e5;
+            color: white;
+        }
+        
+        .device-btn:hover {
+            border-color: #4f46e5;
+        }
+        
+        .device-info {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+        
+        /* History режим */
+        .history-content {
+            padding: 20px;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .history-time {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+        
+        .history-action {
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .history-details {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+        
+        /* Правая панель - preview с новыми возможностями */
+        .preview-panel {
+            flex: 1;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .preview-header {
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .preview-title {
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .preview-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .preview-btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+        
+        .preview-btn.secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        
+        .preview-btn.secondary:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+        
+        /* Улучшенный preview контент */
+        .preview-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .empty-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .empty-preview-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        
+        .empty-preview h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .empty-preview p {
+            color: #6b7280;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-width: 500px;
+            margin-bottom: 30px;
+        }
+        
+        /* Улучшенный режим селектор */
+        .project-mode-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+        
+        .mode-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #374151;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 160px;
+            justify-content: center;
+        }
+        
+        .mode-btn:hover {
+            border-color: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+        
+        .mode-btn.active {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        
+        /* Новый блок конкурентных возможностей */
+        .competitive-features {
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .competitive-features::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+        
+        .competitive-features h4 {
+            margin: 0 0 15px 0;
+            color: #4f46e5;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        
+        .feature-item {
+            background: white;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        
+        .feature-item:hover {
+            border-color: #4f46e5;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+        }
+        
+        /* Улучшенные примеры промптов */
+        .example-prompts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .example-prompt {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .example-prompt::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+        
+        .example-prompt:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .example-prompt:hover {
+            border-color: #4f46e5;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.15);
+        }
+        
+        /* Чат ввод */
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 8px;
+            transition: all 0.2s;
+        }
+        
+        .input-container:focus-within {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        #messageInput {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            outline: none;
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+        }
+        
+        #messageInput::placeholder {
+            color: #9ca3af;
+        }
+        
+        #sendBtn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        #sendBtn:hover {
+            background: #4338ca;
+            transform: scale(1.05);
+        }
+        
+        #sendBtn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Loading состояния */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 100;
+        }
+        
+        .loading-overlay.show {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-bar {
+            width: 250px;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        /* Preview iframe */
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .chat-panel {
+                width: 320px;
+            }
+            
+            .chat-panel.expanded {
+                width: 380px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                margin: 5px;
+                border-radius: 12px;
+            }
+            
+            .chat-panel {
+                width: 100%;
+                height: 50vh;
+            }
+            
+            .preview-panel {
+                height: 50vh;
+            }
+            
+            .example-prompts {
+                grid-template-columns: 1fr;
+            }
+            
+            .project-mode-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Левая панель - улучшенный интерфейс -->
+        <div class="chat-panel" id="chatPanel">
+            <div class="chat-header">
+                <h1>🚀 Vibecode AI</h1>
+                <p>Создаю full-stack приложения с AI, GitHub и mobile-first</p>
+                <div class="chat-header-controls">
+                    <button class="header-btn active" id="chatModeBtn">💬 AI Chat</button>
+                    <button class="header-btn" id="githubBtn">📂 GitHub</button>
+                    <button class="header-btn" id="deviceBtn">📱 Devices</button>
+                    <button class="header-btn" id="historyBtn">📊 History</button>
+                </div>
+            </div>
+            
+            <!-- AI Chat режим -->
+            <div class="panel-content active" id="chatContent">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        <strong>🚀 Добро пожаловать в Vibecode AI!</strong><br><br>
+                        Я создаю полноценные full-stack приложения с:<br>
+                        • Реальными базами данных (Supabase)<br>
+                        • Автоматическим развертыванием (Vercel/Netlify)<br>
+                        • AI диалоговой доработкой<br>
+                        • GitHub интеграцией<br>
+                        • Mobile-first дизайном<br><br>
+                        Опишите что хотите создать! 🎯
+                        <div class="ai-actions">
+                            <button class="ai-action-btn" onclick="app.showExamples()">📝 Примеры</button>
+                            <button class="ai-action-btn" onclick="app.showFeatures()">⚡ Возможности</button>
+                            <button class="ai-action-btn" onclick="app.connectGithub()">🔗 GitHub</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <div class="input-container">
+                        <textarea id="messageInput" placeholder="Опишите ваше приложение... Например: 'Создай интернет-магазин одежды с корзиной и оплатой'"></textarea>
+                        <button id="sendBtn">
+                            <span>Создать</span>
+                            <span>🚀</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- GitHub режим -->
+            <div class="panel-content" id="githubContent">
+                <div class="github-content">
+                    <div class="github-status">
+                        <div class="github-disconnected" id="githubStatus">
+                            <strong>📂 GitHub не подключен</strong><br>
+                            <small>Подключите GitHub для автоматической синхронизации кода</small>
+                        </div>
+                        <button class="preview-btn" onclick="app.connectGithub()" style="margin-top: 10px;">
+                            🔗 Подключить GitHub
+                        </button>
+                    </div>
+                    
+                    <div id="repositoryList" style="display: none;">
+                        <h4 style="margin-bottom: 10px;">📋 Ваши репозитории:</h4>
+                        <div class="repo-list" id="repoList"></div>
+                        
+                        <button class="preview-btn secondary" onclick="app.syncCurrentProject()" style="margin-top: 15px;">
+                            🔄 Синхронизировать проект
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Device Preview режим -->
+            <div class="panel-content" id="deviceContent">
+                <div class="device-preview">
+                    <h4 style="margin-bottom: 15px;">📱 Multi-Device Preview</h4>
+                    
+                    <div class="device-selector">
+                        <button class="device-btn active" data-device="mobile">📱</button>
+                        <button class="device-btn" data-device="tablet">📟</button>
+                        <button class="device-btn" data-device="desktop">🖥️</button>
+                        <button class="device-btn" data-device="wide">📺</button>
+                    </div>
+                    
+                    <div class="device-info" id="deviceInfo">
+                        <strong>📱 Mobile View</strong> (375×667)<br>
+                        Оптимизировано для мобильных устройств
+                    </div>
+                    
+                    <button class="preview-btn" onclick="app.generateResponsiveComponents()" style="margin-top: 15px; width: 100%;">
+                        ✨ Генерировать Responsive компоненты
+                    </button>
+                </div>
+            </div>
+            
+            <!-- History режим -->
+            <div class="panel-content" id="historyContent">
+                <div class="history-content">
+                    <h4 style="margin-bottom: 15px;">📊 История проектов</h4>
+                    <div id="projectHistory">
+                        <div class="history-item">
+                            <div class="history-time">2 минуты назад</div>
+                            <div class="history-action">🚀 Создан E-commerce проект</div>
+                            <div class="history-details">Next.js + Supabase + Vercel</div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-time">5 минут назад</div>
+                            <div class="history-action">🔄 Синхронизация с GitHub</div>
+                            <div class="history-details">Загружено 15 файлов</div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-time">10 минут назад</div>
+                            <div class="history-action">📱 Мобильная оптимизация</div>
+                            <div class="history-details">Добавлены responsive компоненты</div>
+                        </div>
+                    </div>
+                    
+                    <button class="preview-btn secondary" onclick="app.clearHistory()" style="margin-top: 15px; width: 100%;">
+                        🗑️ Очистить историю
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Правая панель - улучшенный preview -->
+        <div class="preview-panel">
+            <div class="preview-header">
+                <div class="preview-title" id="previewTitle">
+                    <span>🎨</span>
+                    <span>Готов к созданию</span>
+                </div>
+                <div class="preview-actions">
+                    <button class="preview-btn secondary" id="editBtn" style="display: none;">
+                        ✏️ Редактировать
+                    </button>
+                    <button class="preview-btn secondary" id="downloadBtn" style="display: none;">
+                        💾 Скачать
+                    </button>
+                    <button class="preview-btn" id="deployBtn" style="display: none;">
+                        🚀 Развернуть
+                    </button>
+                </div>
+            </div>
+            
+            <div class="preview-content">
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div id="loadingText">Создаю ваше приложение...</div>
+                </div>
+                
+                <div class="empty-preview" id="emptyPreview">
+                    <div class="empty-preview-icon">🚀</div>
+                    <h3>Создавайте приложения будущего!</h3>
+                    <p>Описывайте идеи, а Vibecode AI создаст полноценные full-stack приложения с базами данных, развертыванием и всеми современными возможностями</p>
+                    
+                    <div class="project-mode-selector">
+                        <button class="mode-btn active" data-mode="fullstack">
+                            🚀 Full-Stack + AI Chat
+                        </button>
+                        <button class="mode-btn" data-mode="prototype">
+                            🎨 Быстрый прототип
+                        </button>
+                    </div>
+                    
+                    <div class="competitive-features">
+                        <h4>🆕 Новые возможности Vibecode AI:</h4>
+                        <div class="features-grid">
+                            <div class="feature-item">💬 AI диалоговая разработка</div>
+                            <div class="feature-item">📂 GitHub интеграция</div>
+                            <div class="feature-item">📱 Mobile-first дизайн</div>
+                            <div class="feature-item">🔄 Итеративная доработка</div>
+                            <div class="feature-item">🖥️ Multi-device preview</div>
+                            <div class="feature-item">⚡ Реальное развертывание</div>
+                        </div>
+                    </div>
+                    
+                    <div class="example-prompts">
+                        <div class="example-prompt" data-prompt="Создай сервис по аренде премиальных автомобилей в Казани с каталогом, бронированием и оплатой">
+                            <strong>🚗 Сервис аренды премиальных авто</strong><br>
+                            <small>С каталогом, бронированием и Stripe оплатой</small>
+                        </div>
+                        <div class="example-prompt" data-prompt="Сделай интернет-магазин одежды с корзиной, фильтрами и красивым дизайном">
+                            <strong>👕 Интернет-магазин одежды</strong><br>
+                            <small>С корзиной, фильтрами и современным UI</small>
+                        </div>
+                        <div class="example-prompt" data-prompt="Построй приложение для фитнес-тренировок с трекером прогресса и календарем">
+                            <strong>💪 Фитнес-трекер</strong><br>
+                            <small>С трекером прогресса и календарем тренировок</small>
+                        </div>
+                        <div class="example-prompt" data-prompt="Создай портфолио для веб-дизайнера с галереей работ и формой контактов">
+                            <strong>🎨 Портфолио дизайнера</strong><br>
+                            <small>С галереей работ и контактной формой</small>
+                        </div>
+                        <div class="example-prompt" data-prompt="Разработай CRM систему для управления клиентами и продажами">
+                            <strong>📊 CRM система</strong><br>
+                            <small>Управление клиентами и аналитика продаж</small>
+                        </div>
+                        <div class="example-prompt" data-prompt="Построй блог с возможностью публикации статей и комментариев">
+                            <strong>📝 Личный блог</strong><br>
+                            <small>С публикацией статей и комментариями</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <iframe class="preview-iframe" id="previewIframe" style="display: none;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AdvancedNoCodeApp {
+            constructor() {
+                this.initElements();
+                this.initEventListeners();
+                this.currentProject = null;
+                this.selectedMode = 'fullstack';
+                this.currentDevice = 'mobile';
+                this.currentSession = null;
+                this.githubConnected = false;
+                this.currentPanel = 'chat';
+            }
+            
+            initElements() {
+                // Основные элементы
+                this.messageInput = document.getElementById('messageInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.chatMessages = document.getElementById('chatMessages');
+                this.emptyPreview = document.getElementById('emptyPreview');
+                this.previewIframe = document.getElementById('previewIframe');
+                this.loadingOverlay = document.getElementById('loadingOverlay');
+                this.progressFill = document.getElementById('progressFill');
+                this.loadingText = document.getElementById('loadingText');
+                this.previewTitle = document.getElementById('previewTitle');
+                
+                // Панели контента
+                this.chatContent = document.getElementById('chatContent');
+                this.githubContent = document.getElementById('githubContent');
+                this.deviceContent = document.getElementById('deviceContent');
+                this.historyContent = document.getElementById('historyContent');
+                
+                // Кнопки панелей
+                this.chatModeBtn = document.getElementById('chatModeBtn');
+                this.githubBtn = document.getElementById('githubBtn');
+                this.deviceBtn = document.getElementById('deviceBtn');
+                this.historyBtn = document.getElementById('historyBtn');
+            }
+            
+            initEventListeners() {
+                // Основной функционал
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                // Примеры промптов
+                document.querySelectorAll('.example-prompt').forEach(prompt => {
+                    prompt.addEventListener('click', () => {
+                        const text = prompt.dataset.prompt;
+                        this.messageInput.value = text;
+                        this.sendMessage();
+                    });
+                });
+                
+                // Переключатели режима
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.selectedMode = btn.dataset.mode;
+                        
+                        if (this.selectedMode === 'fullstack') {
+                            this.addMessage('ai', '🚀 Выбран Full-Stack режим! Создам настоящее приложение с AI чатом, базой данных и автоматическим развертыванием.');
+                        } else {
+                            this.addMessage('ai', '🎨 Выбран режим быстрого прототипа. Создам HTML/CSS/JS прототип за секунды.');
+                        }
+                    });
+                });
+                
+                // Панели управления
+                this.chatModeBtn.addEventListener('click', () => this.switchPanel('chat'));
+                this.githubBtn.addEventListener('click', () => this.switchPanel('github'));
+                this.deviceBtn.addEventListener('click', () => this.switchPanel('device'));
+                this.historyBtn.addEventListener('click', () => this.switchPanel('history'));
+                
+                // Device селектор
+                document.querySelectorAll('.device-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentDevice = btn.dataset.device;
+                        this.updateDeviceInfo();
+                    });
+                });
+            }
+            
+            switchPanel(panel) {
+                // Обновляем кнопки
+                document.querySelectorAll('.header-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(panel + (panel === 'chat' ? 'ModeBtn' : 'Btn')).classList.add('active');
+                
+                // Обновляем панели контента
+                document.querySelectorAll('.panel-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(panel + 'Content').classList.add('active');
+                
+                this.currentPanel = panel;
+                
+                // Специальные действия для панелей
+                if (panel === 'device' && this.currentProject) {
+                    this.updateDevicePreview();
+                } else if (panel === 'history') {
+                    this.loadProjectHistory();
+                }
+            }
+            
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+                
+                // Добавляем сообщение пользователя
+                this.addMessage('user', message);
+                this.messageInput.value = '';
+                
+                // Показываем индикатор набора
+                this.showTyping();
+                
+                try {
+                    if (this.selectedMode === 'fullstack') {
+                        await this.createFullStackProject(message);
+                    } else {
+                        await this.createPrototype(message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.addMessage('ai', `❌ Произошла ошибка: ${error.message}. Попробуйте еще раз.`);
+                } finally {
+                    this.hideTyping();
+                }
+            }
+            
+            async createFullStackProject(description) {
+                this.showLoading('Создаю full-stack проект...');
+                
+                try {
+                    // 1. Создаем проект
+                    const response = await fetch('http://localhost:5002/api/create-fullstack-project', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            description: description,
+                            project_name: this.extractProjectName(description),
+                            project_type: 'auto',
+                            deploy: true
+                        })
+                    });
+                    
+                    if (!response.ok) throw new Error('Ошибка создания проекта');
+                    
+                    const result = await response.json();
+                    this.currentProject = result;
+                    
+                    // 2. Создаем AI чат сессию
+                    await this.createChatSession(result.project_id);
+                    
+                    // 3. Показываем результат
+                    this.showProjectResult(result);
+                    
+                    // 4. Обновляем историю
+                    this.addToHistory('🚀 Создан проект', result.project_name);
+                    
+                } catch (error) {
+                    throw error;
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            async createChatSession(projectId) {
+                try {
+                    const response = await fetch('http://localhost:5002/api/ai-chat/create-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ project_id: projectId })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.currentSession = result.session_id;
+                        console.log('AI Chat session created:', result.session_id);
+                    }
+                } catch (error) {
+                    console.error('Failed to create chat session:', error);
+                }
+            }
+            
+            async sendChatMessage(message) {
+                if (!this.currentSession) return null;
+                
+                try {
+                    const response = await fetch('http://localhost:5002/api/ai-chat/send-message', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: this.currentSession,
+                            message: message
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                } catch (error) {
+                    console.error('Chat message error:', error);
+                }
+                return null;
+            }
+            
+            showProjectResult(result) {
+                let message = `✅ **${result.project_name}** готов!\n\n`;
+                message += `🎯 **Тип:** ${result.project_type}\n`;
+                message += `⚡ **Фреймворк:** ${result.framework}\n`;
+                message += `📁 **Файлов:** ${result.files_count}\n\n`;
+                
+                if (result.database_url) {
+                    message += `🗄️ **База данных:** ${result.database_url}\n`;
+                }
+                
+                if (result.deployment_url) {
+                    message += `🚀 **Развернуто:** [${result.deployment_url}](${result.deployment_url})\n`;
+                }
+                
+                message += `\n💬 **Теперь вы можете:**`;
+                
+                this.addMessage('ai', message, [
+                    { text: '✏️ Доработать через AI', action: 'iterate' },
+                    { text: '📂 Синхронизировать с GitHub', action: 'github' },
+                    { text: '📱 Посмотреть на устройствах', action: 'devices' },
+                    { text: '💾 Скачать код', action: 'download' }
+                ]);
+                
+                // Показываем preview
+                this.showPreview(result);
+                
+                // Обновляем заголовок
+                this.previewTitle.innerHTML = `
+                    <span>🚀</span>
+                    <span>${result.project_name}</span>
+                `;
+                
+                // Показываем кнопки действий
+                document.getElementById('editBtn').style.display = 'block';
+                document.getElementById('downloadBtn').style.display = 'block';
+                document.getElementById('deployBtn').style.display = 'block';
+            }
+            
+            showPreview(project) {
+                this.emptyPreview.style.display = 'none';
+                
+                if (this.selectedMode === 'fullstack') {
+                    // Для full-stack проектов используем специальный endpoint
+                    this.previewIframe.src = project.preview_url || `http://localhost:5002/fullstack/${project.project_id}`;
+                } else {
+                    // Для прототипов используем обычный preview
+                    this.previewIframe.src = project.preview_url || `http://localhost:5002/preview/${project.project_id}`;
+                }
+                
+                this.previewIframe.style.display = 'block';
+            }
+            
+            addMessage(role, content, actions = []) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+                
+                // Форматируем markdown
+                const formattedContent = this.formatMarkdown(content);
+                messageDiv.innerHTML = formattedContent;
+                
+                // Добавляем действия для AI сообщений
+                if (role === 'ai' && actions.length > 0) {
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'ai-actions';
+                    
+                    actions.forEach(action => {
+                        const btn = document.createElement('button');
+                        btn.className = 'ai-action-btn';
+                        btn.textContent = action.text;
+                        btn.onclick = () => this.handleAIAction(action.action);
+                        actionsDiv.appendChild(btn);
+                    });
+                    
+                    messageDiv.appendChild(actionsDiv);
+                }
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            formatMarkdown(text) {
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                    .replace(/\n/g, '<br>');
+            }
+            
+            handleAIAction(action) {
+                switch (action) {
+                    case 'iterate':
+                        this.switchPanel('chat');
+                        this.messageInput.placeholder = 'Что хотите изменить или добавить в проект?';
+                        this.messageInput.focus();
+                        break;
+                    case 'github':
+                        this.switchPanel('github');
+                        break;
+                    case 'devices':
+                        this.switchPanel('device');
+                        break;
+                    case 'download':
+                        this.downloadProject();
+                        break;
+                }
+            }
+            
+            updateDeviceInfo() {
+                const deviceInfo = {
+                    mobile: { name: 'Mobile View', size: '375×667', desc: 'Оптимизировано для мобильных устройств' },
+                    tablet: { name: 'Tablet View', size: '768×1024', desc: 'Планшетная версия с адаптивным дизайном' },
+                    desktop: { name: 'Desktop View', size: '1200×800', desc: 'Полная десктопная версия' },
+                    wide: { name: 'Wide Screen', size: '1440×900', desc: 'Широкоэкранные мониторы' }
+                };
+                
+                const info = deviceInfo[this.currentDevice];
+                const deviceInfoEl = document.getElementById('deviceInfo');
+                
+                deviceInfoEl.innerHTML = `
+                    <strong>${info.name}</strong> (${info.size})<br>
+                    ${info.desc}
+                `;
+            }
+            
+            showLoading(text) {
+                this.loadingText.textContent = text;
+                this.loadingOverlay.classList.add('show');
+                this.progressFill.style.width = '0%';
+                
+                // Анимация прогресс бара
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    this.progressFill.style.width = progress + '%';
+                }, 200);
+                
+                this.progressInterval = interval;
+            }
+            
+            hideLoading() {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                }
+                this.progressFill.style.width = '100%';
+                
+                setTimeout(() => {
+                    this.loadingOverlay.classList.remove('show');
+                }, 300);
+            }
+            
+            showTyping() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message ai typing';
+                typingDiv.id = 'typingIndicator';
+                typingDiv.innerHTML = '💭 Обдумываю ваш запрос...';
+                this.chatMessages.appendChild(typingDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            hideTyping() {
+                const typing = document.getElementById('typingIndicator');
+                if (typing) typing.remove();
+            }
+            
+            extractProjectName(description) {
+                // Простая логика извлечения названия проекта
+                const words = description.toLowerCase().split(' ');
+                const projectTypes = ['сайт', 'приложение', 'магазин', 'сервис', 'блог', 'портфолио'];
+                
+                for (let type of projectTypes) {
+                    if (words.includes(type)) {
+                        const index = words.indexOf(type);
+                        if (index > 0) {
+                            return words.slice(0, index + 1).join(' ');
+                        }
+                    }
+                }
+                
+                return 'Мой проект';
+            }
+            
+            addToHistory(action, details) {
+                const historyContainer = document.getElementById('projectHistory');
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('ru-RU', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                historyItem.innerHTML = `
+                    <div class="history-time">Только что</div>
+                    <div class="history-action">${action}</div>
+                    <div class="history-details">${details}</div>
+                `;
+                
+                historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+            }
+            
+            // Публичные методы для использования из HTML
+            showExamples() {
+                this.addMessage('ai', '📝 **Примеры проектов которые я могу создать:**\n\n• E-commerce магазин с корзиной и оплатой\n• Портфолио дизайнера с галереей\n• Фитнес-трекер с календарем тренировок\n• CRM система для клиентов\n• Блог с комментариями\n• Сервис аренды автомобилей\n\nПросто опишите что хотите создать! 🚀');
+            }
+            
+            showFeatures() {
+                this.addMessage('ai', '⚡ **Мои возможности:**\n\n🚀 **Full-Stack разработка**\n• Создание React/Next.js приложений\n• Настройка Supabase базы данных\n• Автоматическое развертывание\n\n💬 **AI диалог**\n• Итеративная доработка проектов\n• Исправление ошибок через чат\n• Добавление новых функций\n\n📂 **GitHub интеграция**\n• Автоматическая синхронизация кода\n• Version control\n• Командная работа\n\n📱 **Mobile-first**\n• Responsive дизайн\n• Multi-device preview\n• Touch-friendly интерфейсы');
+            }
+            
+            connectGithub() {
+                this.switchPanel('github');
+                this.addMessage('ai', '📂 **GitHub интеграция**\n\nДля подключения GitHub:\n1. Перейдите во вкладку GitHub\n2. Нажмите "Подключить GitHub"\n3. Авторизуйтесь через OAuth\n4. Выберите репозиторий для синхронизации\n\nПосле подключения ваши проекты будут автоматически синхронизироваться с GitHub! 🔗');
+            }
+            
+            async generateResponsiveComponents() {
+                if (!this.currentProject) {
+                    this.addMessage('ai', '❌ Сначала создайте проект, чтобы генерировать responsive компоненты');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('http://localhost:5002/api/mobile/generate-responsive', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            component_name: 'ResponsiveComponent',
+                            component_type: 'general'
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.addMessage('ai', '✨ **Responsive компоненты созданы!**\n\nТеперь ваше приложение оптимизировано для всех устройств:\n• 📱 Mobile-first дизайн\n• 📟 Планшетная версия\n• 🖥️ Десктоп интерфейс\n• 📺 Широкие экраны');
+                        this.addToHistory('📱 Мобильная оптимизация', 'Добавлены responsive компоненты');
+                    }
+                } catch (error) {
+                    console.error('Error generating responsive components:', error);
+                }
+            }
+            
+            syncCurrentProject() {
+                if (!this.currentProject) {
+                    this.addMessage('ai', '❌ Сначала создайте проект для синхронизации с GitHub');
+                    return;
+                }
+                
+                this.addMessage('ai', '🔄 **Синхронизация с GitHub...**\n\nВаш проект будет загружен в выбранный репозиторий. Это может занять несколько секунд.');
+                this.addToHistory('🔄 GitHub синхронизация', this.currentProject.project_name);
+            }
+            
+            clearHistory() {
+                document.getElementById('projectHistory').innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px;">История очищена</div>';
+            }
+        }
+        
+        // Инициализация приложения
+        const app = new AdvancedNoCodeApp();
+    </script>
+</body>
+</html>

@@ -18,7 +18,8 @@ class SmartAI:
         project_templates = {
             "website": self._generate_website_template,
             "game": self._generate_game_template, 
-            "app": self._generate_app_template,
+            "webapp": self._generate_default_template,
+            "app": self._generate_default_template,
             "calculator": self._generate_calculator_template,
             "timer": self._generate_timer_template
         }

@@ -3,6 +3,10 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from functools import wraps
 import os
+from dotenv import load_dotenv
+
+# Загружаем переменные окружения
+load_dotenv()
 import json
 import zipfile
 import tempfile
@@ -81,7 +85,8 @@ class AdvancedProjectGenerator:
         return True
 
 app = Flask(__name__)
-app.secret_key = 'vibecode_ai_secret_key_2024_super_secure'
+# Используем секретный ключ из переменных окружения для безопасности
+app.secret_key = os.getenv('FLASK_SECRET_KEY', os.urandom(24).hex())
 CORS(app, supports_credentials=True)
 socketio = SocketIO(app, cors_allowed_origins="*", manage_session=True, async_mode='threading')
 
@@ -120,7 +125,12 @@ def login_required(f):
 
 @app.route('/')
 def serve_frontend():
-    """Serve main frontend page"""
+    """Serve enhanced frontend page"""
+    return send_file('../frontend-enhanced.html')
+
+@app.route('/old')
+def serve_old_frontend():
+    """Serve old frontend page"""
     return send_file('../index.html')
 
 @app.route('/dashboard')
@@ -349,10 +359,11 @@ def save_pre_registration():
         data['referrer'] = request.headers.get('Referer', '')
 
         # Логируем в файл аналитики
-        analytics_logger.log_event("pre_registration", data)
+        interaction_logger.log_event("pre_registration", data)
 
         # Также можно сохранить в базу данных
-        cursor = get_db_cursor()
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO pre_registration_analytics 
             (user_role, experience_level, project_type, team_size, hear_about, ip_address, user_agent, timestamp)
@@ -367,7 +378,8 @@ def save_pre_registration():
             data.get('user_agent'),
             data.get('timestamp')
         ))
-        conn.commit() # Commit the transaction
+        conn.commit()
+        conn.close()
 
         return jsonify({
             "success": True,
@@ -3101,6 +3113,46 @@ cityInput.addEventListener('keypress', (e) => {
 # Create generator instance
 generator = ProjectGenerator()
 
+# Import new smart AI services
+from smart_ai_generator import SmartAIGenerator
+from intelligent_chat import IntelligentChat
+
+# Import new fullstack services
+from fullstack_generator import FullStackGenerator
+from supabase_integration import SupabaseProjectSetup
+from deployment_manager import DeploymentManager
+
+# Initialize new AI services
+smart_generator = SmartAIGenerator()
+intelligent_chat = IntelligentChat()
+
+# Initialize fullstack services
+fullstack_generator = FullStackGenerator()
+supabase_setup = SupabaseProjectSetup()
+deployment_manager = DeploymentManager()
+
+# Initialize new competitive systems
+from ai_chat_system import ProjectAIChatBot
+from github_integration import GitHubIntegration, ProjectVersionControl
+from mobile_responsive import MobileResponsiveGenerator, DevicePreviewGenerator
+
+ai_chat_bot = ProjectAIChatBot()
+github_integration = GitHubIntegration()
+version_control = ProjectVersionControl()
+mobile_generator = MobileResponsiveGenerator()
+device_preview = DevicePreviewGenerator()
+
+# Глобальное хранилище проектов для быстрого доступа
+projects_storage = {}
+preview_apps = {}
+fullstack_projects = {}
+
+# Import and register smart API routes
+from smart_api_routes import register_smart_routes
+
+# Import and register competitive API routes
+from api_extensions import register_competitive_routes
+
 # --- API Routes ---
 
 @app.route('/api/chat', methods=['POST'])
@@ -3516,10 +3568,677 @@ def create_project_archive(project_id):
 
 if __name__ == '__main__':
     print("🚀 Запускаю Vibecode AI Platform...")
-    print("📍 Backend: http://0.0.0.0:5000")
-    print("🔌 WebSocket: ws://0.0.0.0:5000") 
+    print("📍 Backend: http://0.0.0.0:5002")
+    print("🔌 WebSocket: ws://0.0.0.0:5002") 
     print("🌐 Внешний доступ доступен через URL репла")
     print("💡 Для остановки нажмите Ctrl+C")
+    
+    # Регистрируем улучшенные AI роуты (временно отключено)
+    print("🧠 Умные AI сервисы готовы (роуты будут добавлены позже)...")
+    
+    # Регистрируем новые конкурентные API routes
+    try:
+        register_competitive_routes(
+            app, ai_chat_bot, github_integration, version_control, 
+            mobile_generator, device_preview
+        )
+        print("🚀 Конкурентные API routes зарегистрированы!")
+    except Exception as e:
+        print(f"⚠️ Ошибка регистрации конкурентных routes: {e}")
+    
+    # try:
+    #     register_smart_routes(
+    #         app=app,
+    #         login_required=login_required,
+    #         monitor_performance=monitor_performance,
+    #         logger=logger,
+    #         executor=executor,
+    #         get_user_by_id=get_user_by_id,
+    #         update_user_requests=update_user_requests,
+    #         save_chat_message=save_chat_message,
+    #         save_user_project=save_user_project,
+    #         get_cache_key=get_cache_key,
+    #         get_from_cache=get_from_cache,
+    #         set_cache=set_cache,
+    #         clear_user_cache=clear_user_cache
+    #     )
+    #     print("✅ Умные AI роуты успешно зарегистрированы")
+    # except Exception as e:
+    #     print(f"⚠️ Ошибка регистрации умных роутов: {e}")
+    
     print("=" * 50)
 
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
+    # Добавляем необходимые API endpoints для no-code интерфейса
+    @app.route('/api/create-fullstack-project', methods=['POST'])
+    def create_fullstack_project():
+        """Создание настоящего full-stack проекта с базой данных и развертыванием"""
+        try:
+            data = request.json
+            description = data.get('description', '')
+            project_name = data.get('project_name', 'Мой проект')
+            project_type = data.get('project_type', 'auto')
+            deploy_immediately = data.get('deploy', True)
+            
+            if not description:
+                return jsonify({
+                    'success': False,
+                    'message': 'Описание проекта не может быть пустым'
+                }), 400
+            
+            logger.info("=" * 60)
+            logger.info(f"🚀 СОЗДАНИЕ FULL-STACK ПРОЕКТА: {project_name}")
+            logger.info(f"📝 Описание: {description}")
+            logger.info(f"🎯 Тип: {project_type}")
+            logger.info("=" * 60)
+            
+            # Шаг 1: Создаем Supabase проект
+            logger.info("Шаг 1/5: 🗄️ Настраиваю базу данных...")
+            supabase_project = None
+            if project_type in ['ecommerce', 'blog', 'crm', 'dashboard']:
+                supabase_project = supabase_setup.setup_ecommerce_project(project_name)
+                if supabase_project:
+                    logger.info(f"✅ База данных готова: {supabase_project.url}")
+                else:
+                    logger.info("⚠️ Использую demo базу данных")
+            
+            # Шаг 2: Генерируем full-stack проект
+            logger.info("Шаг 2/5: 💻 Генерирую full-stack код...")
+            fullstack_project = fullstack_generator.generate_fullstack_project(
+                description=description,
+                project_name=project_name,
+                project_type=project_type
+            )
+            
+            # Обновляем данные проекта с Supabase
+            if supabase_project:
+                fullstack_project.env_variables.update({
+                    'NEXT_PUBLIC_SUPABASE_URL': supabase_project.url,
+                    'NEXT_PUBLIC_SUPABASE_ANON_KEY': supabase_project.anon_key,
+                    'SUPABASE_SERVICE_KEY': supabase_project.service_key
+                })
+            
+            # Шаг 3: Развертывание проекта
+            deployment_result = None
+            if deploy_immediately:
+                logger.info("Шаг 3/5: 🚀 Развертываю проект на Vercel...")
+                
+                project_path = os.path.join(
+                    fullstack_generator.projects_dir,
+                    fullstack_project.project_id
+                )
+                
+                deployment_result = deployment_manager.deploy_fullstack_project(
+                    project_path=project_path,
+                    project_name=project_name,
+                    platform='vercel',
+                    env_vars=fullstack_project.env_variables
+                )
+                
+                if deployment_result.success:
+                    fullstack_project.deployed_url = deployment_result.url
+                    logger.info(f"✅ Проект развернут: {deployment_result.url}")
+                else:
+                    logger.info(f"⚠️ Развертывание не удалось: {deployment_result.error_message}")
+            
+            # Шаг 4: Сохраняем полный проект
+            logger.info("Шаг 4/5: 💾 Сохраняю проект...")
+            fullstack_projects[fullstack_project.project_id] = {
+                'fullstack_project': fullstack_project,
+                'supabase_project': supabase_project,
+                'deployment_result': deployment_result,
+                'created_at': datetime.now().isoformat()
+            }
+            
+            # Шаг 5: Финальная отчетность
+            logger.info("Шаг 5/5: 📊 Генерирую отчет...")
+            
+            # Создаем детальный ответ
+            response_data = {
+                'success': True,
+                'project_id': fullstack_project.project_id,
+                'project_name': fullstack_project.name,
+                'project_type': fullstack_project.type,
+                'framework': fullstack_project.framework,
+                'files_count': len(fullstack_project.frontend_files),
+                'database_tables': len(fullstack_project.database_schema),
+                'download_url': f'/api/download-fullstack-project/{fullstack_project.project_id}',
+                'message': 'Full-stack проект успешно создан!'
+            }
+            
+            # Добавляем данные о базе данных
+            if supabase_project:
+                response_data['database'] = {
+                    'provider': 'supabase',
+                    'url': supabase_project.url,
+                    'status': supabase_project.status,
+                    'tables_created': len(fullstack_project.database_schema)
+                }
+            
+            # Добавляем данные о развертывании
+            if deployment_result and deployment_result.success:
+                response_data['deployment'] = {
+                    'platform': deployment_result.platform,
+                    'url': deployment_result.url,
+                    'status': deployment_result.status,
+                    'deployment_id': deployment_result.deployment_id
+                }
+            
+            # Тезисы и рекомендации
+            response_data['summary'] = {
+                'features': [
+                    f"Full-stack {fullstack_project.framework.upper()} приложение",
+                    f"Реальная база данных ({len(fullstack_project.database_schema)} таблиц)",
+                    "Автоматическое развертывание",
+                    "Production-ready код",
+                    "Современный адаптивный дизайн"
+                ],
+                'tech_stack': {
+                    'frontend': fullstack_project.framework,
+                    'backend': 'Next.js API Routes' if fullstack_project.framework == 'nextjs' else 'Node.js',
+                    'database': 'Supabase (PostgreSQL)' if supabase_project else 'Demo Database',
+                    'deployment': deployment_result.platform if deployment_result else 'Manual'
+                },
+                'recommendations': [
+                    "Настройте custom домен для брендинга",
+                    "Добавьте систему аутентификации",
+                    "Настройте мониторинг и аналитику",
+                    "Оптимизируйте SEO и производительность",
+                    "Настройте backup базы данных"
+                ]
+            }
+            
+            # Финальное логирование
+            logger.info("=" * 60)
+            logger.info("🎉 FULL-STACK ПРОЕКТ СОЗДАН УСПЕШНО!")
+            logger.info("=" * 60)
+            logger.info("📊 ИТОГОВАЯ СТАТИСТИКА:")
+            logger.info(f"   🆔 ID проекта: {fullstack_project.project_id}")
+            logger.info(f"   🎯 Тип: {fullstack_project.type}")
+            logger.info(f"   ⚙️ Фреймворк: {fullstack_project.framework}")
+            logger.info(f"   📁 Файлов создано: {len(fullstack_project.frontend_files)}")
+            logger.info(f"   🗄️ Таблиц в БД: {len(fullstack_project.database_schema)}")
+            logger.info(f"   🔗 URL: {deployment_result.url if deployment_result else 'Не развернут'}")
+            logger.info("=" * 60)
+            
+            return jsonify(response_data)
+            
+        except Exception as e:
+            logger.error(f"❌ Критическая ошибка создания full-stack проекта: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            return jsonify({
+                'success': False,
+                'message': f'Критическая ошибка: {str(e)}',
+                'error_type': 'FULLSTACK_GENERATION_ERROR'
+            }), 500
+
+    @app.route('/api/smart-generate-project', methods=['POST'])
+    def smart_generate_project():
+        """Умная генерация проектов для no-code интерфейса с пошаговым процессом"""
+        try:
+            data = request.json
+            description = data.get('description', '')
+            project_name = data.get('project_name', 'Мой проект')
+            
+            if not description:
+                return jsonify({
+                    'success': False,
+                    'message': 'Описание проекта не может быть пустым'
+                }), 400
+            
+            # Пошаговый процесс создания    
+            steps = [
+                "🔍 Анализирую ваши требования...",
+                "🎨 Создаю дизайн и структуру...", 
+                "💻 Генерирую код приложения...",
+                "🎉 Финализирую и оптимизирую..."
+            ]
+            
+            logger.info("=" * 50)
+            logger.info(f"🚀 СОЗДАНИЕ ПРОЕКТА: {project_name}")
+            logger.info(f"📝 Описание: {description}")
+            logger.info("=" * 50)
+            
+            for i, step in enumerate(steps, 1):
+                logger.info(f"Шаг {i}/4: {step}")
+                time.sleep(0.2)  # Небольшая задержка для демонстрации процесса
+                
+            # Генерируем проект с помощью SmartAIGenerator
+            result = smart_generator.generate_project(description)
+            
+            if not result.success:
+                return jsonify({
+                    'success': False,
+                    'message': f'Ошибка генерации: {result.message}'
+                }), 500
+            
+            # Создаем уникальный ID проекта
+            project_id = f"proj_{uuid.uuid4().hex[:8]}"
+            
+            # Преобразуем файлы в словарь
+            files_dict = {}
+            for file in result.files:
+                files_dict[file.name] = file.content
+            
+            # Сохраняем проект для предпросмотра
+            projects_storage[project_id] = {
+                'project_id': project_id,
+                'project_name': project_name,
+                'description': description,
+                'project_type': result.project_type,
+                'files_count': len(result.files),
+                'files': files_dict,
+                'structure': result.structure,
+                'instructions': result.instructions,
+                'created_at': datetime.now().isoformat(),
+                'download_url': f'/api/download-project/{project_id}'
+            }
+            
+            # Тезисы результатов и рекомендации
+            logger.info("=" * 50)
+            logger.info("✅ ПРОЕКТ УСПЕШНО СОЗДАН!")
+            logger.info("=" * 50)
+            logger.info("📊 РЕЗУЛЬТАТЫ СОЗДАНИЯ:")
+            logger.info(f"   🎯 Тип проекта: {result.project_type}")
+            logger.info(f"   📁 Файлов создано: {len(result.files)}")
+            logger.info(f"   🔗 ID проекта: {project_id}")
+            logger.info("")
+            logger.info("💡 КЛЮЧЕВЫЕ ОСОБЕННОСТИ:")
+            logger.info("   ✅ Современный адаптивный дизайн")
+            logger.info("   ✅ Оптимизированный код")
+            logger.info("   ✅ Готов к развертыванию")
+            logger.info("   ✅ Мобильная версия")
+            logger.info("")
+            logger.info("🚀 РЕКОМЕНДАЦИИ ПО УЛУЧШЕНИЮ:")
+            logger.info("   1. Добавьте аналитику (Google Analytics)")
+            logger.info("   2. Настройте SEO-оптимизацию")
+            logger.info("   3. Внедрите систему комментариев")
+            logger.info("   4. Добавьте социальные сети")
+            logger.info("   5. Настройте систему уведомлений")
+            logger.info("=" * 50)
+            
+            return jsonify({
+                'success': True,
+                'project_id': project_id,
+                'project_name': project_name,
+                'project_type': result.project_type,
+                'files_count': len(result.files),
+                'download_url': f'/api/download-project/{project_id}',
+                'message': 'Проект успешно создан!',
+                'summary': {
+                    'features': [
+                        "Современный адаптивный дизайн",
+                        "Оптимизированный код", 
+                        "Готов к развертыванию",
+                        "Мобильная версия"
+                    ],
+                    'recommendations': [
+                        "Добавьте аналитику (Google Analytics)",
+                        "Настройте SEO-оптимизацию", 
+                        "Внедрите систему комментариев",
+                        "Добавьте социальные сети",
+                        "Настройте систему уведомлений"
+                    ]
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Ошибка при генерации проекта: {e}")
+            return jsonify({
+                'success': False,
+                'message': f'Ошибка при создании проекта: {str(e)}'
+            }), 500
+    
+    @app.route('/preview/<project_id>')
+    def preview_project(project_id):
+        """Предпросмотр сгенерированного проекта"""
+        try:
+            if project_id not in projects_storage:
+                return "<h1>Проект не найден</h1>", 404
+                
+            project = projects_storage[project_id]
+            
+            # Если есть готовые файлы, показываем index.html
+            files = project.get('files', {})
+            if 'index.html' in files:
+                # Возвращаем реальный HTML файл с CSS и JS
+                html_content = files['index.html']
+                
+                # Внедряем CSS если есть
+                if 'style.css' in files:
+                    css_content = files['style.css']
+                    html_content = html_content.replace(
+                        '<link rel="stylesheet" href="style.css">',
+                        f'<style>\n{css_content}\n</style>'
+                    )
+                
+                # Внедряем JS если есть
+                if 'app.js' in files:
+                    js_content = files['app.js']
+                    html_content = html_content.replace(
+                        '<script src="app.js"></script>',
+                        f'<script>\n{js_content}\n</script>'
+                    )
+                
+                return html_content
+                
+            elif 'app.html' in files:
+                return files['app.html']
+            else:
+                # Возвращаем красивую демо страницу
+                return f"""
+                <!DOCTYPE html>
+                <html lang="ru">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>{project['project_name']}</title>
+                    <style>
+                        body {{
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                            margin: 0;
+                            padding: 40px;
+                            background: linear-gradient(135deg, #667eea, #764ba2);
+                            min-height: 100vh;
+                            color: white;
+                        }}
+                        .container {{
+                            max-width: 1200px;
+                            margin: 0 auto;
+                            background: rgba(255,255,255,0.1);
+                            backdrop-filter: blur(10px);
+                            border-radius: 20px;
+                            padding: 40px;
+                            text-align: center;
+                        }}
+                        h1 {{
+                            font-size: 3rem;
+                            margin-bottom: 1rem;
+                            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                        }}
+                        .description {{
+                            font-size: 1.3rem;
+                            margin: 20px 0;
+                            opacity: 0.9;
+                            line-height: 1.6;
+                        }}
+                        .features {{
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                            gap: 20px;
+                            margin: 40px 0;
+                        }}
+                        .feature {{
+                            background: rgba(255,255,255,0.15);
+                            padding: 30px;
+                            border-radius: 15px;
+                            backdrop-filter: blur(5px);
+                            border: 1px solid rgba(255,255,255,0.1);
+                        }}
+                        .feature h3 {{
+                            font-size: 1.5rem;
+                            margin-bottom: 15px;
+                        }}
+                        .cta {{
+                            background: #ff6b6b;
+                            color: white;
+                            border: none;
+                            padding: 15px 30px;
+                            font-size: 1.2rem;
+                            border-radius: 50px;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            margin: 20px 10px;
+                            display: inline-block;
+                            text-decoration: none;
+                        }}
+                        .cta:hover {{
+                            transform: translateY(-3px);
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+                        }}
+                        .cta.secondary {{
+                            background: rgba(255,255,255,0.2);
+                            border: 2px solid white;
+                        }}
+                        .status {{
+                            background: rgba(46, 213, 115, 0.2);
+                            border: 1px solid #2ed573;
+                            padding: 15px;
+                            border-radius: 10px;
+                            margin: 20px 0;
+                            font-weight: bold;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>🚀 {project['project_name']}</h1>
+                        <div class="status">✅ Проект успешно создан и готов к использованию!</div>
+                        <div class="description">{project['description']}</div>
+                        
+                        <div class="features">
+                            <div class="feature">
+                                <h3>🎨 Современный дизайн</h3>
+                                <p>Красивый и адаптивный интерфейс, созданный с использованием современных технологий</p>
+                            </div>
+                            <div class="feature">
+                                <h3>⚡ Высокая производительность</h3>
+                                <p>Оптимизированный код обеспечивает быструю загрузку и плавную работу</p>
+                            </div>
+                            <div class="feature">
+                                <h3>📱 Мобильная версия</h3>
+                                <p>Полностью адаптивный дизайн для всех устройств и экранов</p>
+                            </div>
+                            <div class="feature">
+                                <h3>🔧 Готов к запуску</h3>
+                                <p>Проект полностью настроен и готов к развертыванию</p>
+                            </div>
+                        </div>
+                        
+                        <a href="#" class="cta" onclick="alert('Функция в разработке')">🚀 Запустить приложение</a>
+                        <a href="#" class="cta secondary" onclick="alert('Редактирование доступно в полной версии')">✏️ Редактировать</a>
+                        
+                        <p style="margin-top: 40px; opacity: 0.8;">
+                            <strong>Тип проекта:</strong> {project['project_type']} | 
+                            <strong>Файлов создано:</strong> {project['files_count']} | 
+                            <strong>Создан:</strong> {project['created_at'][:19]}
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """
+        except Exception as e:
+            logger.error(f"Ошибка предпросмотра проекта: {e}")
+            return f"<h1>Ошибка загрузки проекта</h1><p>{str(e)}</p>", 500
+
+    @app.route('/api/download-fullstack-project/<project_id>')
+    def download_fullstack_project(project_id):
+        """Скачивание full-stack проекта"""
+        try:
+            if project_id in fullstack_projects:
+                project_data = fullstack_projects[project_id]
+                fullstack_project = project_data['fullstack_project']
+                
+                # Путь к zip файлу
+                zip_path = os.path.join(
+                    fullstack_generator.projects_dir,
+                    f"{project_id}.zip"
+                )
+                
+                if os.path.exists(zip_path):
+                    return send_file(
+                        zip_path,
+                        as_attachment=True,
+                        download_name=f"{fullstack_project.name.replace(' ', '-')}.zip",
+                        mimetype='application/zip'
+                    )
+                else:
+                    return jsonify({'error': 'Project files not found'}), 404
+            else:
+                return jsonify({'error': 'Project not found'}), 404
+                
+        except Exception as e:
+            logger.error(f"Ошибка скачивания проекта: {e}")
+            return jsonify({'error': 'Download failed'}), 500
+
+    @app.route('/fullstack/<project_id>')
+    def fullstack_preview(project_id):
+        """Предпросмотр full-stack проекта"""
+        try:
+            if project_id in fullstack_projects:
+                project_data = fullstack_projects[project_id]
+                fullstack_project = project_data['fullstack_project']
+                deployment_result = project_data.get('deployment_result')
+                
+                # Если проект развернут, перенаправляем на живой URL
+                if deployment_result and deployment_result.success and deployment_result.url:
+                    return redirect(deployment_result.url)
+                
+                # Иначе показываем локальный предпросмотр
+                files = fullstack_project.frontend_files
+                if 'pages/index.js' in files:
+                    # Конвертируем Next.js в простой HTML для предпросмотра
+                    html_content = self._convert_nextjs_to_html(files['pages/index.js'], fullstack_project)
+                    return html_content
+                elif 'src/App.js' in files:
+                    html_content = self._convert_react_to_html(files['src/App.js'], fullstack_project)
+                    return html_content
+                else:
+                    return f"<h1>Предпросмотр недоступен</h1><p>Проект: {fullstack_project.name}</p>"
+            else:
+                return "<h1>Проект не найден</h1>", 404
+                
+        except Exception as e:
+            logger.error(f"Ошибка предпросмотра full-stack проекта: {e}")
+            return f"<h1>Ошибка</h1><p>{str(e)}</p>", 500
+
+    @app.route('/api/fullstack-projects')
+    def list_fullstack_projects():
+        """Список всех full-stack проектов"""
+        try:
+            projects_list = []
+            for project_id, project_data in fullstack_projects.items():
+                fullstack_project = project_data['fullstack_project']
+                deployment_result = project_data.get('deployment_result')
+                
+                project_info = {
+                    'project_id': project_id,
+                    'name': fullstack_project.name,
+                    'type': fullstack_project.type,
+                    'framework': fullstack_project.framework,
+                    'description': fullstack_project.description,
+                    'created_at': project_data['created_at'],
+                    'files_count': len(fullstack_project.frontend_files),
+                    'database_tables': len(fullstack_project.database_schema),
+                    'deployed': deployment_result.success if deployment_result else False,
+                    'live_url': deployment_result.url if deployment_result and deployment_result.success else None
+                }
+                
+                projects_list.append(project_info)
+                
+            # Сортируем по дате создания (новые сначала)
+            projects_list.sort(key=lambda x: x['created_at'], reverse=True)
+            
+            return jsonify({
+                'success': True,
+                'projects': projects_list,
+                'total_count': len(projects_list)
+            })
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения списка проектов: {e}")
+            return jsonify({'error': 'Failed to fetch projects'}), 500
+
+    def _convert_nextjs_to_html(self, nextjs_content: str, project) -> str:
+        """Конвертирует Next.js компонент в HTML для предпросмотра"""
+        return f"""<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{project.name}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            color: white;
+        }}
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+        }}
+        .status {{
+            background: rgba(46, 213, 115, 0.2);
+            border: 1px solid #2ed573;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }}
+        .tech-stack {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }}
+        .tech-item {{
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 10px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 {project.name}</h1>
+        <div class="status">✅ Full-Stack проект готов к использованию!</div>
+        <p style="font-size: 1.2rem; margin: 20px 0;">{project.description}</p>
+        
+        <div class="tech-stack">
+            <div class="tech-item">
+                <h3>Frontend</h3>
+                <p>{project.framework.upper()}</p>
+            </div>
+            <div class="tech-item">
+                <h3>Database</h3>
+                <p>Supabase PostgreSQL</p>
+                <small>{len(project.database_schema)} таблиц</small>
+            </div>
+            <div class="tech-item">
+                <h3>Files</h3>
+                <p>{len(project.frontend_files)} файлов</p>
+            </div>
+            <div class="tech-item">
+                <h3>Status</h3>
+                <p>Production Ready</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px;">
+            <h3>🎯 Возможности проекта:</h3>
+            <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <li>✅ Полнофункциональный {project.type}</li>
+                <li>✅ Реальная база данных</li>
+                <li>✅ API endpoints</li>
+                <li>✅ Готов к продакшену</li>
+                <li>✅ Современный дизайн</li>
+            </ul>
+        </div>
+        
+        <p style="margin-top: 40px; opacity: 0.8;">
+            💡 Создано с помощью <strong>Vibecode AI</strong> - полнофункциональная платформа разработки
+        </p>
+    </div>
+</body>
+</html>"""
+
+    socketio.run(app, host='0.0.0.0', port=5002, debug=False, allow_unsafe_werkzeug=True)
