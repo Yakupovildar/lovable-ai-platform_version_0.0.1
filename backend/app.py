@@ -125,8 +125,8 @@ def login_required(f):
 
 @app.route('/')
 def serve_frontend():
-    """Serve enhanced frontend page"""
-    return send_file('../frontend-enhanced.html')
+    """Serve main frontend page"""
+    return send_file('../index.html')
 
 @app.route('/old')
 def serve_old_frontend():
