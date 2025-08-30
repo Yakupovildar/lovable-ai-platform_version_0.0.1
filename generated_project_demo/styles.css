@@ -1,0 +1,502 @@
+/* 🚀 CYBORG CLICKER - Футуристичный idle RPG стиль */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Orbitron', 'Courier New', monospace;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    color: #00ff88;
+    min-height: 100vh;
+    overflow-x: auto;
+}
+
+.game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #00ff88;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+    animation: pulse-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+    from { box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); }
+    to { box-shadow: 0 0 50px rgba(0, 255, 136, 0.5); }
+}
+
+/* Header Stats */
+.header-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+    border: 1px solid #00ffff;
+    border-radius: 10px;
+    box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.player-info h2 {
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+    margin-bottom: 10px;
+}
+
+.level-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.xp-bar {
+    width: 200px;
+    height: 20px;
+    background: #333;
+    border: 2px solid #00ff88;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff88, #00ffff);
+    width: 0%;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 10px #00ff88;
+}
+
+.resources {
+    display: flex;
+    gap: 20px;
+}
+
+.resource {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 15px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid #00ff88;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.resource-icon {
+    font-size: 18px;
+}
+
+/* Main Game Area */
+.main-game {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.enemy-area {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, #2a0a0a, #3a1a1a);
+    border: 2px solid #ff4444;
+    border-radius: 15px;
+    position: relative;
+}
+
+.enemy-info h3 {
+    color: #ff6666;
+    font-size: 24px;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px #ff4444;
+}
+
+.enemy-health-bar {
+    width: 100%;
+    height: 25px;
+    background: #333;
+    border: 2px solid #ff4444;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.health-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4444, #ff6666);
+    transition: width 0.3s ease;
+    box-shadow: 0 0 15px #ff4444;
+}
+
+.enemy-sprite {
+    font-size: 120px;
+    margin: 30px 0;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    position: relative;
+    user-select: none;
+}
+
+.enemy-sprite:hover {
+    transform: scale(1.1);
+}
+
+.enemy-sprite:active {
+    transform: scale(0.95);
+    filter: brightness(1.5);
+}
+
+.damage-numbers {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.damage-number {
+    position: absolute;
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffff00;
+    text-shadow: 0 0 10px #ffff00;
+    animation: damage-float 1s ease-out forwards;
+}
+
+@keyframes damage-float {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-50px); }
+}
+
+.crit-damage {
+    color: #ff0080 !important;
+    font-size: 32px !important;
+    text-shadow: 0 0 15px #ff0080 !important;
+}
+
+.player-stats {
+    padding: 20px;
+    background: linear-gradient(135deg, #0a2a0a, #1a3a1a);
+    border: 2px solid #00ff88;
+    border-radius: 15px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 8px;
+}
+
+.stat-label {
+    font-weight: bold;
+}
+
+/* Inventory & Equipment */
+.inventory-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.equipment-slots, .inventory-bag {
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a3a, #2a2a4a);
+    border: 2px solid #4444ff;
+    border-radius: 15px;
+}
+
+.equipment-slots h3, .inventory-bag h3 {
+    color: #66aaff;
+    margin-bottom: 20px;
+    text-align: center;
+    text-shadow: 0 0 10px #4444ff;
+}
+
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.equipment-slot {
+    text-align: center;
+    padding: 20px;
+    background: rgba(68, 68, 255, 0.1);
+    border: 2px dashed #4444ff;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.equipment-slot:hover {
+    background: rgba(68, 68, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.slot-icon {
+    font-size: 30px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.equipped-item {
+    font-size: 12px;
+    color: #aaccff;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.inventory-item {
+    aspect-ratio: 1;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid #00ff88;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+.inventory-item:hover {
+    background: rgba(0, 255, 136, 0.3);
+    transform: scale(1.1);
+}
+
+.inventory-item.rare { border-color: #0080ff; box-shadow: 0 0 10px #0080ff; }
+.inventory-item.epic { border-color: #8000ff; box-shadow: 0 0 10px #8000ff; }
+.inventory-item.legendary { border-color: #ff8000; box-shadow: 0 0 10px #ff8000; }
+
+/* Upgrades */
+.upgrades-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #3a1a0a, #4a2a1a);
+    border: 2px solid #ff8800;
+    border-radius: 15px;
+}
+
+.upgrades-section h3 {
+    color: #ffaa44;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #ff8800;
+}
+
+.upgrade-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.upgrade-category h4 {
+    color: #ffcc66;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.upgrade-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(255, 136, 0, 0.1);
+    border-radius: 8px;
+}
+
+.upgrade-btn {
+    background: linear-gradient(45deg, #ff8800, #ffaa00);
+    color: #000;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.upgrade-btn:hover {
+    background: linear-gradient(45deg, #ffaa00, #ffcc00);
+    transform: scale(1.05);
+}
+
+.upgrade-btn:disabled {
+    background: #666;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Dungeons */
+.dungeons-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #2a0a2a, #3a1a3a);
+    border: 2px solid #aa44ff;
+    border-radius: 15px;
+}
+
+.dungeons-section h3 {
+    color: #cc66ff;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #aa44ff;
+}
+
+.dungeon-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.dungeon-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(170, 68, 255, 0.1);
+    border: 2px solid #aa44ff;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dungeon-item:hover {
+    background: rgba(170, 68, 255, 0.2);
+    transform: scale(1.02);
+}
+
+.dungeon-item.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dungeon-icon {
+    font-size: 40px;
+}
+
+.dungeon-info h4 {
+    color: #eeff88;
+    margin-bottom: 5px;
+}
+
+.dungeon-info p {
+    font-size: 12px;
+    color: #cccccc;
+    margin-bottom: 3px;
+}
+
+/* Game Log */
+.game-log {
+    height: 150px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #00ff88;
+    border-radius: 10px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.log-entry {
+    margin-bottom: 5px;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+    margin: 15% auto;
+    padding: 20px;
+    border: 2px solid #00ffff;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #00ffff;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    .header-stats {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .main-game {
+        grid-template-columns: 1fr;
+    }
+    
+    .inventory-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .upgrade-categories {
+        grid-template-columns: 1fr;
+    }
+    
+    .dungeon-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .resources {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .enemy-sprite {
+        font-size: 80px;
+    }
+    
+    .xp-bar {
+        width: 150px;
+    }
+}
