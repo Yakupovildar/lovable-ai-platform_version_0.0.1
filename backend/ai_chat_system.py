@@ -10,7 +10,6 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
-import openai
 from intelligent_chat import IntelligentChat
 
 @dataclass
@@ -39,7 +38,7 @@ class ProjectAIChatBot:
     """AI бот для интерактивной разработки проектов"""
     
     def __init__(self):
-        self.openai_key = os.getenv('OPENAI_API_KEY')
+        # Используем только бесплатные AI сервисы (GigaChat, Yandex GPT)
         self.intelligent_chat = IntelligentChat()
         self.active_sessions = {}  # session_id -> conversation
         
