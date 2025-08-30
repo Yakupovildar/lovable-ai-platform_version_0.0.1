@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🧠 ИИ Наставник Миллиардеров</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- 3D Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    
+    <!-- Database -->
+    <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+    
+    <!-- Audio for TTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.6.3/wavesurfer.min.js"></script>
+</head>
+<body>
+    <!-- Главная страница -->
+    <div id="main-screen" class="screen active">
+        <div class="nav-header">
+            <div class="logo">🧠 ИИ Наставник</div>
+            <button class="btn-secondary" onclick="showScreen('settings-screen')">⚙️</button>
+        </div>
+        <div class="main-content">
+            <h1>👑 Наставники Миллиардеры</h1>
+            <p class="subtitle">Получите персональные советы от самых богатых людей мира</p>
+            
+            <div class="mentor-preview">
+                <div class="mentor-avatar">🤖</div>
+                <div class="preview-text">
+                    <h3>Выберите своего наставника</h3>
+                    <p>Илон Маск, Билл Гейтс, Джеф Безос, Уоррен Баффет</p>
+                </div>
+            </div>
+            
+            <button class="btn-primary" onclick="showScreen('mentor-select-screen')">
+                🚀 Выбрать Наставника
+            </button>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-text">
+                        <h4>3D Аватары</h4>
+                        <p>Реалистичные 3D модели</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🗣️</div>
+                    <div class="feature-text">
+                        <h4>Голосовое общение</h4>
+                        <p>Говорите и слушайте</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🧠</div>
+                    <div class="feature-text">
+                        <h4>База знаний</h4>
+                        <p>Из последних интервью</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Выбор наставника -->
+    <div id="mentor-select-screen" class="screen">
+        <div class="nav-header">
+            <button class="btn-secondary" onclick="showScreen('main-screen')">← Назад</button>
+            <h2>Выберите наставника</h2>
+            <div></div>
+        </div>
+        <div class="main-content">
+            <div class="mentors-grid">
+                <div class="mentor-card" onclick="selectMentor('elon')">
+                    <div class="mentor-photo">🚀</div>
+                    <h3>Илон Маск</h3>
+                    <p class="mentor-title">CEO Tesla & SpaceX</p>
+                    <p class="mentor-specialty">Инновации • Технологии • Космос</p>
+                    <div class="mentor-stats">
+                        <span class="stat">💰 $240 млрд</span>
+                        <span class="stat">⭐ 4.9/5</span>
+                    </div>
+                </div>
+                
+                <div class="mentor-card" onclick="selectMentor('bill')">
+                    <div class="mentor-photo">💻</div>
+                    <h3>Билл Гейтс</h3>
+                    <p class="mentor-title">Основатель Microsoft</p>
+                    <p class="mentor-specialty">Бизнес • Филантропия • ИТ</p>
+                    <div class="mentor-stats">
+                        <span class="stat">💰 $130 млрд</span>
+                        <span class="stat">⭐ 4.8/5</span>
+                    </div>
+                </div>
+                
+                <div class="mentor-card" onclick="selectMentor('bezos')">
+                    <div class="mentor-photo">📦</div>
+                    <h3>Джефф Безос</h3>
+                    <p class="mentor-title">Основатель Amazon</p>
+                    <p class="mentor-specialty">E-commerce • Логистика • Космос</p>
+                    <div class="mentor-stats">
+                        <span class="stat">💰 $170 млрд</span>
+                        <span class="stat">⭐ 4.7/5</span>
+                    </div>
+                </div>
+                
+                <div class="mentor-card" onclick="selectMentor('buffett')">
+                    <div class="mentor-photo">📈</div>
+                    <h3>Уоррен Баффет</h3>
+                    <p class="mentor-title">Инвестор Berkshire</p>
+                    <p class="mentor-specialty">Инвестиции • Финансы • Стратегия</p>
+                    <div class="mentor-stats">
+                        <span class="stat">💰 $120 млрд</span>
+                        <span class="stat">⭐ 4.9/5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран общения с наставником -->
+    <div id="chat-screen" class="screen">
+        <div class="nav-header">
+            <button class="btn-secondary" onclick="showScreen('mentor-select-screen')">👑</button>
+            <div class="mentor-info">
+                <span id="currentMentorName">Илон Маск</span>
+                <div class="status-indicator online"></div>
+            </div>
+            <button class="btn-secondary" onclick="showScreen('settings-screen')">⚙️</button>
+        </div>
+        
+        <div class="main-content">
+            <!-- 3D Avatar Area -->
+            <div class="avatar-container">
+                <div id="avatar-canvas"></div>
+                <div class="avatar-controls">
+                    <button class="avatar-btn" onclick="toggleAvatarAnimation()">
+                        <span id="animationToggle">⏸️</span>
+                    </button>
+                    <div class="emotion-indicator">
+                        <span id="currentEmotion">😊 Дружелюбный</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chatMessages">
+                <div class="message mentor-message">
+                    <div class="message-avatar">🚀</div>
+                    <div class="message-content">
+                        <p>Привет! Я Илон Маск. Готов поделиться своим опытом создания компаний будущего. О чем хочешь поговорить?</p>
+                        <div class="message-time">только что</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-container">
+                    <button class="voice-btn" onclick="startVoiceInput()" id="voiceBtn">
+                        🎤
+                    </button>
+                    <input type="text" 
+                           id="messageInput" 
+                           placeholder="Задайте вопрос наставнику..." 
+                           onkeypress="handleInputKeypress(event)">
+                    <button class="send-btn" onclick="sendMessage()">
+                        ➤
+                    </button>
+                </div>
+                <div class="quick-questions">
+                    <button class="quick-btn" onclick="askQuickQuestion('Как начать бизнес?')">
+                        Как начать бизнес?
+                    </button>
+                    <button class="quick-btn" onclick="askQuickQuestion('Как мотивировать себя?')">
+                        Как мотивировать себя?
+                    </button>
+                    <button class="quick-btn" onclick="askQuickQuestion('Как принимать решения?')">
+                        Как принимать решения?
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Настройки -->
+    <div id="settings-screen" class="screen">
+        <div class="nav-header">
+            <button class="btn-secondary" onclick="goBackFromSettings()">← Назад</button>
+            <h2>Настройки</h2>
+            <div></div>
+        </div>
+        <div class="main-content">
+            <div class="settings-panel">
+                <div class="setting-group">
+                    <h3>🔊 Звук и голос</h3>
+                    <div class="setting-item">
+                        <span>Громкость голоса</span>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="70">
+                    </div>
+                    <div class="setting-item">
+                        <span>Скорость речи</span>
+                        <input type="range" id="speedSlider" min="0.5" max="2" value="1" step="0.1">
+                    </div>
+                    <div class="setting-item">
+                        <span>Голосовой ввод</span>
+                        <label class="switch">
+                            <input type="checkbox" id="voiceInputToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <h3>👤 3D Аватар</h3>
+                    <div class="setting-item">
+                        <span>Качество графики</span>
+                        <select id="graphicsQuality">
+                            <option value="low">Низкое</option>
+                            <option value="medium" selected>Среднее</option>
+                            <option value="high">Высокое</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <span>Эмоциональные анимации</span>
+                        <label class="switch">
+                            <input type="checkbox" id="emotionsToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <h3>💾 Данные</h3>
+                    <div class="setting-item">
+                        <span>Сохранить историю</span>
+                        <label class="switch">
+                            <input type="checkbox" id="saveHistoryToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Оффлайн режим</span>
+                        <button class="btn-secondary" onclick="downloadOfflineData()">
+                            📥 Скачать данные
+                        </button>
+                    </div>
+                    <div class="setting-item">
+                        <span>Очистить историю</span>
+                        <button class="btn-secondary warning" onclick="clearHistory()">
+                            🗑️ Очистить
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <h3>ℹ️ Информация</h3>
+                    <div class="setting-item">
+                        <span>Версия приложения</span>
+                        <span>v1.0.0</span>
+                    </div>
+                    <div class="setting-item">
+                        <span>База знаний</span>
+                        <span>Обновлено: сегодня</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-avatar">🤖</div>
+            <h3>Загрузка наставника...</h3>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loadingProgress"></div>
+            </div>
+            <p id="loadingText">Подготовка 3D модели...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

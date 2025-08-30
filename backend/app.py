@@ -3245,30 +3245,62 @@ def chat():
                     # Генерируем готовое приложение
                     generated_project = ai_processor.generate_project(request_analysis)
                     
+                    # Интегрируем с системой хостинга
+                    from project_hosting_system import ProjectHostingSystem
+                    hosting_system = ProjectHostingSystem()
+                    
+                    # Хостим проект и получаем уникальный URL
+                    hosting_result = hosting_system.host_project(
+                        project_id=generated_project.project_id,
+                        project_name=generated_project.name,
+                        files=generated_project.files,
+                        user_id=user_id,
+                        description=generated_project.description
+                    )
+                    
                     # Сохраняем проект
                     project_data = {
                         'id': generated_project.project_id,
                         'name': generated_project.name,
                         'files': generated_project.files,
                         'user_id': user_id,
-                        'created_at': time.time()
+                        'created_at': time.time(),
+                        'hosted_url': hosting_result['live_url'],
+                        'qr_code': hosting_result['qr_code']
                     }
                     executor.submit(save_generated_project, project_data)
                     
+                    # Генерируем превью для чата
+                    preview_generator = hosting_system.preview_generator
+                    preview_html = preview_generator.generate_chat_preview(project_data)
+                    
                     ai_response = {
                         "type": "project_generated",
-                        "message": f"🎉 Создал для вас приложение: **{generated_project.name}**!\n\n{generated_project.instructions}",
+                        "message": f"🎉 Создал для вас приложение: **{generated_project.name}**!\n\n{generated_project.instructions}\n\n🌐 **Прямая ссылка:** {hosting_result['live_url']}\n📱 **QR-код для телефона:** Доступен в превью",
                         "project": {
                             "id": generated_project.project_id,
                             "name": generated_project.name,
                             "description": generated_project.description,
+                            "live_url": hosting_result['live_url'],
+                            "qr_code": hosting_result['qr_code'],
                             "preview_url": generated_project.preview_url,
                             "download_url": f"/api/download/{generated_project.project_id}",
                             "technologies": generated_project.technologies,
-                            "features": generated_project.features
+                            "features": generated_project.features,
+                            "preview_html": preview_html
                         },
-                        "suggestions": ["Скачать проект", "Посмотреть код", "Доработать приложение", "Создать новое"]
+                        "suggestions": ["Открыть приложение", "Скачать проект", "Доработать приложение", "Создать новое"]
                     }
+                    
+                    # Генерируем рекомендации для улучшения проекта
+                    try:
+                        recommendations = ai_processor.generate_project_recommendations(
+                            generated_project.files, 
+                            request_analysis.project_type
+                        )
+                        ai_response['recommendations'] = recommendations
+                    except Exception as e:
+                        logger.warning(f"Failed to generate recommendations: {e}")
                 
                 elif request_analysis.request_type == RequestType.MODIFY_EXISTING:
                     ai_response = {
@@ -3292,6 +3324,13 @@ def chat():
                         },
                         "suggestions": ["Создать приложение", "Показать примеры", "Объяснить возможности"]
                     }
+                    
+                    # Добавляем контекстные предложения
+                    try:
+                        contextual_suggestions = ai_processor.get_contextual_suggestions(message)
+                        ai_response["contextual_suggestions"] = contextual_suggestions
+                    except Exception as e:
+                        logger.warning(f"Failed to generate contextual suggestions: {e}")
                     
             except Exception as e:
                 logger.error(f"Ошибка AI процессора: {e}")
@@ -3662,6 +3701,78 @@ def create_project_archive(project_id):
     except Exception as e:
         interaction_logger.log_error("create_project_archive_failed", {"project_id": project_id, "error": str(e)})
         raise
+
+# --- Project Hosting Routes ---
+
+@app.route('/hosted/<project_id>')
+def serve_hosted_project(project_id):
+    """Serve hosted project index.html"""
+    try:
+        from project_hosting_system import ProjectHostingSystem
+        hosting_system = ProjectHostingSystem()
+        
+        project_path = os.path.join(hosting_system.base_dir, project_id)
+        index_path = os.path.join(project_path, 'index.html')
+        
+        if os.path.exists(index_path):
+            return send_file(index_path)
+        else:
+            return jsonify({"error": "Project not found"}), 404
+            
+    except Exception as e:
+        logger.error(f"Error serving hosted project {project_id}: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/hosted/<project_id>/<path:filename>')
+def serve_hosted_project_file(project_id, filename):
+    """Serve hosted project static files"""
+    try:
+        from project_hosting_system import ProjectHostingSystem
+        hosting_system = ProjectHostingSystem()
+        
+        project_path = os.path.join(hosting_system.base_dir, project_id)
+        
+        if os.path.exists(project_path):
+            return send_from_directory(project_path, filename)
+        else:
+            return jsonify({"error": "File not found"}), 404
+            
+    except Exception as e:
+        logger.error(f"Error serving hosted project file {project_id}/{filename}: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/api/project/<project_id>/qr')
+def get_project_qr_code(project_id):
+    """Get QR code for hosted project"""
+    try:
+        from project_hosting_system import ProjectHostingSystem
+        hosting_system = ProjectHostingSystem()
+        
+        qr_path = os.path.join(hosting_system.base_dir, project_id, 'qr_code.png')
+        
+        if os.path.exists(qr_path):
+            return send_file(qr_path, mimetype='image/png')
+        else:
+            return jsonify({"error": "QR code not found"}), 404
+            
+    except Exception as e:
+        logger.error(f"Error serving QR code for {project_id}: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/api/project/<project_id>/stats')
+@login_required
+def get_project_stats(project_id):
+    """Get project statistics"""
+    try:
+        from project_hosting_system import ProjectHostingSystem
+        hosting_system = ProjectHostingSystem()
+        
+        stats = hosting_system.get_project_stats(project_id)
+        return jsonify(stats)
+        
+    except Exception as e:
+        logger.error(f"Error getting stats for {project_id}: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
     print("🚀 Запускаю Vibecode AI Platform...")

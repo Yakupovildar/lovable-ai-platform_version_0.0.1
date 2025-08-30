@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 CYBORG CLICKER: Future Idle RPG</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Audio Elements for Sound Effects -->
+    <audio id="attackSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSs=" type="audio/wav">
+    </audio>
+    
+    <audio id="upgradeSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAcBzuM1PCveSs=" type="audio/wav">
+    </audio>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header Stats -->
+        <div class="header-stats">
+            <div class="player-info">
+                <h2>🤖 Киборг-Воин</h2>
+                <div class="level-bar">
+                    <span>Ур. <span id="playerLevel">1</span></span>
+                    <div class="xp-bar">
+                        <div class="xp-fill" id="xpBar"></div>
+                    </div>
+                    <span><span id="currentXP">0</span>/<span id="maxXP">100</span> XP</span>
+                </div>
+            </div>
+            
+            <div class="resources">
+                <div class="resource">
+                    <span class="resource-icon">💰</span>
+                    <span id="credits">0</span> Кредитов
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">⚡</span>
+                    <span id="energy">100</span>/100 Энергии
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">🔧</span>
+                    <span id="nanobots">0</span> Нанороботов
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="main-game">
+            <!-- Enemy Area -->
+            <div class="enemy-area">
+                <div class="enemy-info">
+                    <h3 id="enemyName">Роботизированный Страж</h3>
+                    <div class="enemy-health-bar">
+                        <div class="health-fill" id="enemyHealthBar" style="width: 100%"></div>
+                    </div>
+                    <span><span id="enemyCurrentHP">1000</span>/<span id="enemyMaxHP">1000</span> HP</span>
+                </div>
+                
+                <div class="enemy-sprite" id="enemySprite" onclick="attackEnemy()">
+                    <div class="enemy-robot">🤖</div>
+                    <div class="damage-numbers" id="damageNumbers"></div>
+                </div>
+                
+                <div class="enemy-level">
+                    <span>Противник Ур. <span id="enemyLevel">1</span></span>
+                </div>
+            </div>
+
+            <!-- Player Stats -->
+            <div class="player-stats">
+                <div class="stat-item">
+                    <span class="stat-label">⚔️ Урон:</span>
+                    <span id="playerDamage">10-15</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">🛡️ Защита:</span>
+                    <span id="playerDefense">5</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">⚡ Скорость:</span>
+                    <span id="attackSpeed">1.0</span>/сек
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">💎 Крит. шанс:</span>
+                    <span id="critChance">5</span>%
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory & Equipment -->
+        <div class="inventory-section">
+            <div class="equipment-slots">
+                <h3>🛡️ Снаряжение</h3>
+                <div class="equipment-grid">
+                    <div class="equipment-slot" data-slot="weapon">
+                        <span class="slot-icon">⚔️</span>
+                        <div class="equipped-item" id="equippedWeapon">Базовый Плазменный Меч</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="armor">
+                        <span class="slot-icon">🛡️</span>
+                        <div class="equipped-item" id="equippedArmor">Кибер-броня Mk I</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="module">
+                        <span class="slot-icon">🔧</span>
+                        <div class="equipped-item" id="equippedModule">Нет модуля</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="inventory-bag">
+                <h3>🎒 Инвентарь</h3>
+                <div class="inventory-grid" id="inventoryGrid">
+                    <!-- Inventory items will be generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Upgrades -->
+        <div class="upgrades-section">
+            <h3>⬆️ Улучшения</h3>
+            <div class="upgrade-categories">
+                <div class="upgrade-category">
+                    <h4>🔥 Атака</h4>
+                    <div class="upgrade-item">
+                        <span>Нано-улучшение урона</span>
+                        <button class="upgrade-btn" onclick="buyUpgrade('damage')">
+                            Купить: <span id="damageCost">50</span>💰
+                        </button>
+                    </div>
+                    <div class="upgrade-item">
+                        <span>Ускоритель атак</span>
+                        <button class="upgrade-btn" onclick="buyUpgrade('speed')">
+                            Купить: <span id="speedCost">75</span>💰
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="upgrade-category">
+                    <h4>🤖 Автоматизация</h4>
+                    <div class="upgrade-item">
+                        <span>Авто-кликер</span>
+                        <button class="upgrade-btn" onclick="buyUpgrade('autoClicker')">
+                            Купить: <span id="autoClickerCost">200</span>💰
+                        </button>
+                    </div>
+                    <div class="upgrade-item">
+                        <span>Дроны-помощники</span>
+                        <button class="upgrade-btn" onclick="buyUpgrade('drones')">
+                            Купить: <span id="dronesCost">500</span>💰
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dungeons -->
+        <div class="dungeons-section">
+            <h3>🏰 Данжи</h3>
+            <div class="dungeon-list">
+                <div class="dungeon-item" onclick="enterDungeon(1)">
+                    <div class="dungeon-icon">🏭</div>
+                    <div class="dungeon-info">
+                        <h4>Заброшенная Фабрика</h4>
+                        <p>Рекомендуемый ур. 5+</p>
+                        <p>Награды: Редкое снаряжение, XP x2</p>
+                    </div>
+                </div>
+                
+                <div class="dungeon-item locked" onclick="enterDungeon(2)">
+                    <div class="dungeon-icon">🌆</div>
+                    <div class="dungeon-info">
+                        <h4>Неоновые Трущобы</h4>
+                        <p>Рекомендуемый ур. 15+</p>
+                        <p>Награды: Эпичное снаряжение, XP x3</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log/Events -->
+        <div class="game-log" id="gameLog">
+            <div class="log-entry">🎮 Добро пожаловать в Cyborg Clicker!</div>
+            <div class="log-entry">⚔️ Кликайте по врагам для атаки!</div>
+            <div class="log-entry">💾 Игра автоматически сохраняется</div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="lootModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>🎁 Получен лут!</h3>
+            <div id="lootContent"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
