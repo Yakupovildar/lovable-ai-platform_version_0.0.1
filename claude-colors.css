@@ -1,0 +1,140 @@
+/* Claude AI Color Scheme - единая палитра для всего сайта */
+:root {
+    /* Основные цвета фона */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #f1f5f9;
+    --bg-tertiary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-hover: #f3f4f6;
+    
+    /* Цвета текста */
+    --text-primary: #1f2937;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    
+    /* Акцентные цвета */
+    --accent-primary: #8b5cf6;
+    --accent-secondary: #06b6d4;
+    --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+    
+    /* Границы */
+    --border-light: #e5e7eb;
+    --border-medium: #d1d5db;
+    --border-dark: #9ca3af;
+    
+    /* Тени */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    
+    /* Состояния */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --info: #3b82f6;
+}
+
+/* Применяем цвета ко всем элементам с высоким приоритетом */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Принудительно исправляем белый текст, исключая preview */
+*:not(.project-preview *) {
+    color: var(--text-primary) !important;
+}
+
+/* Исключения для элементов которые должны быть белыми */
+.btn-primary, .auth-btn, .send-btn, .message.user-message {
+    color: white !important;
+}
+
+/* Карточки и контейнеры */
+.card, .auth-card, .chat-container, .project-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Навигация */
+.navbar, .dashboard-navbar {
+    background-color: rgba(248, 250, 252, 0.95);
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* Кнопки */
+.btn-primary, .auth-btn, .send-btn {
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+}
+
+.btn-secondary {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-medium);
+}
+
+/* Формы */
+input, textarea, select {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: var(--accent-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-light);
+}
+
+/* Меню */
+.menu-item {
+    color: var(--text-secondary);
+    background-color: transparent;
+}
+
+.menu-item.active {
+    background-color: var(--bg-card);
+    color: var(--accent-primary);
+    border-right: 2px solid var(--accent-primary);
+}
+
+/* Чат */
+.chat-messages {
+    background-color: var(--bg-tertiary);
+}
+
+.message.ai-message {
+    background-color: var(--bg-secondary);
+}
+
+.message.user-message {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+/* Модальные окна */
+.modal-content {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-light);
+}
+
+/* Проекты */
+.projects-grid .project-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-light);
+}
+
+.project-card:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--accent-primary);
+}

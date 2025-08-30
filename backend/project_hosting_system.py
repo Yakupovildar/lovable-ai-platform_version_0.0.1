@@ -84,7 +84,7 @@ class ProjectHostingSystem:
             user_id,
             project_data.get('name', 'Unnamed Project'),
             project_data.get('type', 'web_app'),
-            json.dumps(list(files.keys())),
+            json.dumps(files),
             datetime.now().timestamp(),
             datetime.now().timestamp(),
             qr_code_data,
@@ -343,27 +343,32 @@ class ProjectPreviewGenerator:
         
         preview_html = f'''
         <div class="project-preview-card" style="
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            border: 2px solid #00ff88;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             max-width: 500px;
-            font-family: 'Inter', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1f2937;
         ">
-            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                <img src="{thumbnail}" alt="Preview" style="
-                    width: 60px; 
-                    height: 40px; 
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div style="
+                    width: 48px; 
+                    height: 48px; 
                     border-radius: 8px;
-                    object-fit: cover;
-                ">
+                    background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 20px;
+                ">🎉</div>
                 <div>
-                    <h3 style="color: #00ffff; margin: 0; font-size: 18px;">
-                        🎉 {project_name}
+                    <h3 style="color: #1f2937; margin: 0; font-size: 16px; font-weight: 600;">
+                        {project_name}
                     </h3>
-                    <p style="color: #cccccc; margin: 5px 0 0 0; font-size: 14px;">
+                    <p style="color: #6b7280; margin: 4px 0 0 0; font-size: 14px;">
                         Приложение готово к использованию!
                     </p>
                 </div>
@@ -371,13 +376,13 @@ class ProjectPreviewGenerator:
             
             <div class="preview-actions" style="
                 display: flex; 
-                gap: 10px; 
+                gap: 8px; 
                 flex-wrap: wrap;
-                margin-top: 15px;
+                margin-top: 12px;
             ">
                 <a href="{live_url}" target="_blank" style="
-                    background: linear-gradient(45deg, #00ff88, #00ffff);
-                    color: #000000;
+                    background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+                    color: white;
                     padding: 10px 20px;
                     border-radius: 25px;
                     text-decoration: none;
@@ -392,11 +397,11 @@ class ProjectPreviewGenerator:
                 </a>
                 
                 <button onclick="showQRCode('{project_id}')" style="
-                    background: rgba(255, 255, 255, 0.1);
-                    color: #ffffff;
-                    border: 1px solid #00ff88;
-                    padding: 10px 15px;
-                    border-radius: 20px;
+                    background: #f1f5f9;
+                    color: #374151;
+                    border: 1px solid #d1d5db;
+                    padding: 8px 12px;
+                    border-radius: 6px;
                     cursor: pointer;
                     font-size: 14px;
                     display: inline-flex;
@@ -407,11 +412,11 @@ class ProjectPreviewGenerator:
                 </button>
                 
                 <button onclick="shareProject('{live_url}')" style="
-                    background: rgba(255, 255, 255, 0.1);
-                    color: #ffffff;
-                    border: 1px solid #00ff88;
-                    padding: 10px 15px;
-                    border-radius: 20px;
+                    background: #f1f5f9;
+                    color: #374151;
+                    border: 1px solid #d1d5db;
+                    padding: 8px 12px;
+                    border-radius: 6px;
                     cursor: pointer;
                     font-size: 14px;
                     display: inline-flex;
@@ -423,11 +428,11 @@ class ProjectPreviewGenerator:
             </div>
             
             <div style="
-                margin-top: 15px;
-                padding-top: 15px;
-                border-top: 1px solid rgba(0, 255, 136, 0.3);
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid #e5e7eb;
                 font-size: 12px;
-                color: #999999;
+                color: #9ca3af;
             ">
                 💡 Приложение размещено в облаке и доступно по ссылке
             </div>

@@ -3250,12 +3250,16 @@ def chat():
                     hosting_system = ProjectHostingSystem()
                     
                     # Хостим проект и получаем уникальный URL
+                    project_data = {
+                        'name': generated_project.name,
+                        'files': generated_project.files,
+                        'description': generated_project.description,
+                        'technologies': generated_project.technologies,
+                        'features': generated_project.features
+                    }
                     hosting_result = hosting_system.host_project(
-                        project_id=generated_project.project_id,
-                        project_name=generated_project.name,
-                        files=generated_project.files,
-                        user_id=user_id,
-                        description=generated_project.description
+                        project_data=project_data,
+                        user_id=user_id
                     )
                     
                     # Сохраняем проект
@@ -3271,7 +3275,8 @@ def chat():
                     executor.submit(save_generated_project, project_data)
                     
                     # Генерируем превью для чата
-                    preview_generator = hosting_system.preview_generator
+                    from project_hosting_system import ProjectPreviewGenerator
+                    preview_generator = ProjectPreviewGenerator(hosting_system)
                     preview_html = preview_generator.generate_chat_preview(project_data)
                     
                     ai_response = {
@@ -3704,20 +3709,53 @@ def create_project_archive(project_id):
 
 # --- Project Hosting Routes ---
 
-@app.route('/hosted/<project_id>')
-def serve_hosted_project(project_id):
-    """Serve hosted project index.html"""
+@app.route('/app/<project_id>')
+@app.route('/app/<project_id>/')
+@app.route('/app/<project_id>/<path:filename>')
+def serve_hosted_project(project_id, filename='index.html'):
+    """Serve hosted project files"""
     try:
-        from project_hosting_system import ProjectHostingSystem
-        hosting_system = ProjectHostingSystem()
+        # Сначала пытаемся загрузить из базы данных
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
         
-        project_path = os.path.join(hosting_system.base_dir, project_id)
-        index_path = os.path.join(project_path, 'index.html')
+        cursor.execute('''
+            SELECT files FROM hosted_projects 
+            WHERE project_id = ?
+        ''', (project_id,))
         
-        if os.path.exists(index_path):
-            return send_file(index_path)
+        result = cursor.fetchone()
+        conn.close()
+        
+        if not result or not result[0]:
+            return jsonify({"error": "Project not found in database"}), 404
+        
+        try:
+            files_data = json.loads(result[0])
+        except json.JSONDecodeError:
+            return jsonify({"error": "Invalid project data"}), 500
+        
+        # Проверяем есть ли запрашиваемый файл
+        if filename not in files_data:
+            # Если файл не найден, попробуем index.html
+            if 'index.html' not in files_data:
+                return jsonify({"error": "File not found"}), 404
+            filename = 'index.html'
+        
+        # Возвращаем содержимое файла
+        file_content = files_data[filename]
+        
+        # Определяем MIME тип
+        if filename.endswith('.html'):
+            mimetype = 'text/html'
+        elif filename.endswith('.css'):
+            mimetype = 'text/css'  
+        elif filename.endswith('.js'):
+            mimetype = 'application/javascript'
         else:
-            return jsonify({"error": "Project not found"}), 404
+            mimetype = 'text/plain'
+        
+        return Response(file_content, mimetype=mimetype)
             
     except Exception as e:
         logger.error(f"Error serving hosted project {project_id}: {e}")

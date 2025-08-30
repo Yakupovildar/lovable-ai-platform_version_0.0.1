@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Calculator</title>
+    <style>body { font-family: Arial; padding: 20px; }</style>
+</head>
+<body>
+    <h1>Тестовый калькулятор</h1>
+    <input type="text" id="display" readonly>
+    <br><br>
+    <button onclick="document.getElementById('display').value += '1'">1</button>
+    <button onclick="document.getElementById('display').value += '2'">2</button>
+    <button onclick="calculate()">=</button>
+    <script>
+        function calculate() {
+            const display = document.getElementById('display');
+            try {
+                display.value = eval(display.value);
+            } catch(e) {
+                display.value = 'Error';
+            }
+        }
+    </script>
+</body>
+</html>

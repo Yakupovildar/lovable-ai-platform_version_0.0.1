@@ -28,9 +28,13 @@ class ProjectType(Enum):
     LANDING_PAGE = "landing"
     E_COMMERCE = "ecommerce"
     PORTFOLIO = "portfolio"
+    PORTFOLIO_WEBSITE = "portfolio_website"
+    AI_APP = "ai_app"
+    MOBILE_APP = "mobile_app"
     BLOG = "blog"
     DASHBOARD = "dashboard"
     GAME = "game"
+    IDLE_GAME = "idle_game"
     CALCULATOR = "calculator"
     TODO_APP = "todo"
     CHAT_APP = "chat"
@@ -44,6 +48,7 @@ class ProjectType(Enum):
     THREE_D_VIEWER = "3d_viewer"
     DATABASE_APP = "database_app"
     RECORDING_APP = "recording_app"
+    BUSINESS_LANDING = "business_landing"
 
 @dataclass
 class AnalyzedRequest:
@@ -179,16 +184,25 @@ class AdvancedAIProcessor:
         modify_keywords = ['измени', 'обнови', 'исправь', 'добавь', 'убери', 'modify', 'change', 'update', 'add', 'remove']
         
         message_lower = message.lower()
+        print(f"Анализ запроса: '{message_lower}'")
         
-        if any(keyword in message_lower for keyword in create_keywords):
-            return RequestType.CREATE_NEW_PROJECT
-        elif any(keyword in message_lower for keyword in modify_keywords):
-            return RequestType.MODIFY_EXISTING
-        else:
-            return RequestType.GENERAL_QUESTION
+        for keyword in create_keywords:
+            if keyword in message_lower:
+                print(f"Найдено ключевое слово создания: {keyword}")
+                return RequestType.CREATE_NEW_PROJECT
+                
+        for keyword in modify_keywords:
+            if keyword in message_lower:
+                print(f"Найдено ключевое слово модификации: {keyword}")
+                return RequestType.MODIFY_EXISTING
+        
+        print("Ключевые слова не найдены, возвращаю GENERAL_QUESTION")
+        return RequestType.GENERAL_QUESTION
     
     def _detect_project_type(self, message: str) -> Optional[ProjectType]:
         """Определяет тип проекта"""
+        
+        print(f"Определение типа проекта для: '{message}'")
         
         patterns = {
             ProjectType.LANDING_PAGE: ['лендинг', 'landing', 'сайт-визитка', 'одностраничник'],
@@ -214,9 +228,12 @@ class AdvancedAIProcessor:
         message_lower = message.lower()
         
         for project_type, keywords in patterns.items():
-            if any(keyword in message_lower for keyword in keywords):
-                return project_type
+            for keyword in keywords:
+                if keyword in message_lower:
+                    print(f"Найден тип проекта: {project_type.value} по ключевому слову: '{keyword}'")
+                    return project_type
         
+        print("Тип проекта не определен, возвращаю None")
         return None
     
     def _extract_features(self, message: str) -> List[str]:
@@ -377,6 +394,47 @@ class AdvancedAIProcessor:
                 pass
         
         return {"confidence": 0.5}
+    
+    def _call_groq_api_for_code(self, prompt: str, model: str = 'llama3-8b-8192') -> str:
+        """Вызов Groq API для генерации кода"""
+        
+        headers = {
+            'Authorization': f'Bearer {self.groq_api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        data = {
+            'messages': [
+                {
+                    'role': 'user', 
+                    'content': prompt
+                }
+            ],
+            'model': model,
+            'temperature': 0.1,
+            'max_tokens': 2048
+        }
+        
+        response = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            headers=headers,
+            json=data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            content = result['choices'][0]['message']['content']
+            
+            # Извлекаем код из markdown блоков если есть
+            code_match = re.search(r'```(?:html|css|javascript|js)?\n(.*?)\n```', content, re.DOTALL)
+            if code_match:
+                return code_match.group(1).strip()
+            
+            # Возвращаем весь контент если нет markdown
+            return content.strip()
+        
+        return ""
     
     def _call_huggingface_api(self, prompt: str) -> Dict[str, Any]:
         """Вызов Hugging Face API"""
@@ -985,13 +1043,23 @@ class AdvancedAIProcessor:
         
         try:
             if self.default_ai == 'groq' and self.groq_api_key:
-                result = self._call_groq_api(prompt, model=self.models['groq']['code'])
-                if 'content' in result:
-                    return result['content']
-        except:
+                content = self._call_groq_api_for_code(prompt, model=self.models['groq']['code'])
+                if content and len(content.strip()) > 50:  # Проверяем что получили достаточно контента
+                    return content
+        except Exception as e:
+            print(f"Ошибка AI генерации: {e}")
             pass
         
         # Fallback - простой шаблон
+        if task_type == 'code':
+            # Определяем тип файла по промпту
+            if 'HTML' in prompt.upper() or 'INDEX.HTML' in prompt.upper():
+                return self._generate_fallback_code('html')
+            elif 'CSS' in prompt.upper() or 'STYLES' in prompt.upper():
+                return self._generate_fallback_code('css') 
+            elif 'JAVASCRIPT' in prompt.upper() or 'SCRIPT' in prompt.upper():
+                return self._generate_fallback_code('js')
+        
         return self._generate_fallback_code(task_type)
     
     def _generate_fallback_code(self, file_type: str) -> str:

@@ -75,8 +75,13 @@ function setupTabs() {
     const menuItems = document.querySelectorAll('.menu-item');
     const tabContents = document.querySelectorAll('.tab-content');
     
+    console.log('Setup tabs - found menu items:', menuItems.length);
+    console.log('Setup tabs - found tab contents:', tabContents.length);
+    
     menuItems.forEach(item => {
-        item.addEventListener('click', function() {
+        console.log('Adding click listener to:', item.getAttribute('data-tab'));
+        item.addEventListener('click', function(e) {
+            console.log('Tab clicked:', this.getAttribute('data-tab'));
             const tabName = this.getAttribute('data-tab');
             showTab(tabName);
         });
@@ -84,17 +89,29 @@ function setupTabs() {
 }
 
 function showTab(tabName) {
+    console.log('ShowTab called with:', tabName);
+    
     // Обновляем активную вкладку в меню
     document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    const activeMenuItem = document.querySelector(`[data-tab="${tabName}"]`);
+    console.log('Active menu item found:', !!activeMenuItem);
+    if (activeMenuItem) {
+        activeMenuItem.classList.add('active');
+    }
     
     // Показываем нужную вкладку
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
-    document.getElementById(`${tabName}-tab`).classList.add('active');
+    
+    const activeTabContent = document.getElementById(`${tabName}-tab`);
+    console.log('Active tab content found:', !!activeTabContent);
+    if (activeTabContent) {
+        activeTabContent.classList.add('active');
+    }
     
     // Загружаем данные для вкладки если нужно
     if (tabName === 'projects') {
@@ -199,15 +216,21 @@ function addMessage(text, sender, data = null) {
     let messageContent = `<p>${formatMessage(text)}</p>`;
     
     // Если это результат создания проекта, добавляем специальное форматирование
-    if (data && data.type === 'project_created' && data.download_url) {
+    if (data && data.type === 'project_generated' && data.project) {
         messageContent += `
             <div class="project-actions" style="margin-top: 1rem;">
-                <button class="download-btn" onclick="downloadProject('${data.download_url}', '${data.project_id}')">
+                <button class="download-btn" onclick="downloadProject('${data.project.download_url}', '${data.project.id}')">
                     📦 Скачать проект
                 </button>
-                <button class="view-btn" onclick="viewProject('${data.project_id}')">
+                <button class="view-btn" onclick="viewProject('${data.project.id}')">
                     👁️ Просмотр файлов
                 </button>
+                <a href="${data.project.live_url}" target="_blank" style="background: linear-gradient(135deg, #10b981, #06b6d4); color: white; border: none; padding: 8px 16px; border-radius: 6px; margin-left: 8px; text-decoration: none; display: inline-block;">
+                    🌐 Открыть приложение
+                </a>
+            </div>
+            <div class="project-preview" style="margin-top: 1rem; border: none; border-radius: 8px; overflow: hidden; background: transparent;">
+                ${data.project.preview_html || ''}
             </div>
         `;
     }
@@ -593,31 +616,6 @@ function closeModal() {
     if (modal) {
         modal.remove();
     }
-                <h3>Пока нет проектов</h3>
-                <p>Создайте свой первый проект в чате с AI</p>
-                <button class="btn-primary" onclick="showTab('chat')" style="margin-top: 1rem;">
-                    💬 Начать в чате
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    projectsGrid.innerHTML = projects.map(project => `
-        <div class="project-card" onclick="openProject('${project.project_id}')">
-            <div class="project-title">${project.name}</div>
-            <div class="project-date">${formatDate(project.created_at)}</div>
-            <div class="project-description">${project.description || 'Без описания'}</div>
-            <div class="project-actions" onclick="event.stopPropagation();">
-                <button class="project-btn btn-primary" onclick="downloadProject('/api/download/${project.project_id}', '${project.project_id}')">
-                    📥 Скачать
-                </button>
-                <button class="project-btn btn-secondary" onclick="editProject('${project.project_id}')">
-                    ✏️ Редактировать
-                </button>
-            </div>
-        </div>
-    `).join('');
 }
 
 // Загрузка истории чатов
