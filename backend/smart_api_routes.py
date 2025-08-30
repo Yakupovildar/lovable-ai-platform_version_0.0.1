@@ -333,25 +333,26 @@ def register_smart_routes(app, login_required, monitor_performance, logger, exec
     def get_ai_status():
         """Проверка статуса AI сервисов"""
         try:
-            claude_available = bool(smart_generator.claude_api_key)
-            openai_available = bool(smart_generator.openai_api_key)
+            # Используем только бесплатные AI сервисы
+            from ai_config import AIConfig
+            ai_config = AIConfig()
             
             return jsonify({
                 "ai_services": {
-                    "claude": {
-                        "available": claude_available,
-                        "model": "claude-3-5-sonnet-20241022" if claude_available else None
+                    "gigachat": {
+                        "available": ai_config.gigachat_enabled,
+                        "model": "GigaChat-Pro" if ai_config.gigachat_enabled else None
                     },
-                    "openai": {
-                        "available": openai_available, 
-                        "model": "gpt-4" if openai_available else None
+                    "yandex": {
+                        "available": ai_config.yandex_enabled,
+                        "model": "YandexGPT-Lite" if ai_config.yandex_enabled else None
                     },
-                    "fallback": {
-                        "available": True,
-                        "model": "enhanced_local_ai"
+                    "localai": {
+                        "available": ai_config.localai_enabled,
+                        "model": "LocalAI" if ai_config.localai_enabled else None
                     }
                 },
-                "preferred_ai": "claude" if claude_available else ("openai" if openai_available else "fallback"),
+                "preferred_ai": ai_config.default_ai,
                 "smart_features": {
                     "project_generation": True,
                     "code_analysis": True,

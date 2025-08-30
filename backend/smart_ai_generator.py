@@ -25,8 +25,7 @@ class SmartAIGenerator:
     """Умный генератор кода с поддержкой различных AI API"""
     
     def __init__(self):
-        self.openai_api_key = os.getenv('OPENAI_API_KEY')
-        self.claude_api_key = os.getenv('CLAUDE_API_KEY', os.getenv('ANTHROPIC_API_KEY'))
+        # Используем только бесплатные AI: GigaChat, Yandex GPT, LocalAI
         
     def analyze_project_requirements(self, description: str) -> Dict[str, Any]:
         """Анализирует описание проекта и определяет требования"""

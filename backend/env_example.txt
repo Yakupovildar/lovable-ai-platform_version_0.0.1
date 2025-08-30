@@ -1,22 +1,36 @@
 # Пример файла .env для настройки AI сервисов
 # Скопируйте этот файл в .env и заполните своими ключами
 
-# GigaChat (Sber) API ключ
+# === БЕСПЛАТНЫЕ AI СЕРВИСЫ ===
+
+# GigaChat (Sber) API ключ - 10,000 запросов/месяц бесплатно
 # Получите на https://developers.sber.ru/portal/products/gigachat
 GIGACHAT_API_KEY=your_gigachat_api_key_here
 
-# Yandex GPT API ключ  
+# Yandex GPT API ключ - 1,000 запросов/день бесплатно
 # Получите на https://cloud.yandex.ru/docs/foundation-models/
 YANDEX_API_KEY=your_yandex_api_key_here
 
-# LocalAI настройки
+# Hugging Face Inference API - бесплатный
+# Получите на https://huggingface.co/settings/tokens
+HUGGINGFACE_TOKEN=your_huggingface_token_here
+
+# DeepSeek API - очень дешевый ($0.14 за 1M токенов)
+# Получите на https://platform.deepseek.com/
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+
+# Groq API - очень быстрый и бесплатный
+# Получите на https://console.groq.com/
+GROQ_API_KEY=your_groq_api_key_here
+
+# LocalAI настройки - 100% бесплатно
 # URL вашего LocalAI сервера
 LOCALAI_URL=http://localhost:8080
 # Включить LocalAI (true/false)
 LOCALAI_ENABLED=false
 
 # AI сервис по умолчанию
-# Возможные значения: gigachat, yandex, localai
+# Возможные значения: gigachat, yandex, huggingface, deepseek, groq, localai
 DEFAULT_AI=gigachat
 
 # Дополнительные настройки

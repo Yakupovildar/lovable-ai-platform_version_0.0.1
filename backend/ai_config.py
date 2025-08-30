@@ -18,6 +18,18 @@ class AIConfig:
         self.localai_url = os.getenv('LOCALAI_URL', 'http://localhost:8080')
         self.localai_enabled = os.getenv('LOCALAI_ENABLED', 'false').lower() == 'true'
         
+        # Hugging Face Inference API (бесплатный)
+        self.huggingface_token = os.getenv('HUGGINGFACE_TOKEN', '')
+        self.huggingface_enabled = bool(self.huggingface_token)
+        
+        # DeepSeek API (очень дешевый/бесплатный)  
+        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY', '')
+        self.deepseek_enabled = bool(self.deepseek_api_key)
+        
+        # Groq API (быстрый и бесплатный)
+        self.groq_api_key = os.getenv('GROQ_API_KEY', '')
+        self.groq_enabled = bool(self.groq_api_key)
+        
         # Настройки по умолчанию
         self.default_ai = os.getenv('DEFAULT_AI', 'gigachat')
         
@@ -86,6 +98,12 @@ class AIConfig:
             available.append('yandex')
         if self.localai_enabled:
             available.append('localai')
+        if self.huggingface_enabled:
+            available.append('huggingface')
+        if self.deepseek_enabled:
+            available.append('deepseek')
+        if self.groq_enabled:
+            available.append('groq')
         return available
     
     def is_ai_available(self, ai_name):
@@ -96,4 +114,10 @@ class AIConfig:
             return self.yandex_enabled
         elif ai_name == 'localai':
             return self.localai_enabled
+        elif ai_name == 'huggingface':
+            return self.huggingface_enabled
+        elif ai_name == 'deepseek':
+            return self.deepseek_enabled
+        elif ai_name == 'groq':
+            return self.groq_enabled
         return False
