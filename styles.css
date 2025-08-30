@@ -752,6 +752,27 @@ body::before {
     box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
 }
 
+/* Кнопка авторизации в чате */
+.auth-redirect-btn {
+    margin: 1rem 0;
+    padding: 1rem 2rem;
+    background: linear-gradient(45deg, #10b981, #06b6d4);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 300px;
+}
+
+.auth-redirect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
 /* Социальные доказательства */
 .social-proof {
     margin: 2rem 0;

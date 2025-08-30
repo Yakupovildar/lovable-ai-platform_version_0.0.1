@@ -982,6 +982,24 @@ async function sendMessage() {
         console.log('Статус ответа:', response.status);
 
         if (!response.ok) {
+            if (response.status === 401) {
+                // Необходима авторизация
+                const errorData = await response.json().catch(() => ({}));
+                addMessage('🔐 Для использования AI-чата требуется авторизация. Пожалуйста, войдите в систему.', 'ai');
+                
+                // Показываем кнопку авторизации
+                const authButton = document.createElement('button');
+                authButton.className = 'auth-redirect-btn';
+                authButton.textContent = '🚀 Войти в систему';
+                authButton.onclick = () => window.location.href = '/auth.html';
+                
+                const messagesContainer = document.querySelector('.chat-messages');
+                if (messagesContainer) {
+                    messagesContainer.appendChild(authButton);
+                }
+                
+                return;
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
