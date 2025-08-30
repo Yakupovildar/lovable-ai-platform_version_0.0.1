@@ -740,6 +740,45 @@ def save_chat_message(user_id, session_id, message, response, message_type='chat
     conn.commit()
     conn.close()
 
+def save_generated_project(project_data):
+    """Сохраняем сгенерированный проект"""
+    try:
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+        
+        # Создаем таблицу если не существует
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS generated_projects (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                user_id TEXT NOT NULL,
+                files TEXT NOT NULL,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            )
+        ''')
+        
+        # Сохраняем проект
+        cursor.execute('''
+            INSERT OR REPLACE INTO generated_projects 
+            (id, name, user_id, files, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            project_data['id'],
+            project_data['name'], 
+            project_data['user_id'],
+            json.dumps(project_data['files']),
+            project_data['created_at'],
+            time.time()
+        ))
+        
+        conn.commit()
+        conn.close()
+        logger.info(f"Project {project_data['id']} saved successfully")
+        
+    except Exception as e:
+        logger.error(f"Error saving project: {e}")
+
 def get_user_chat_history(user_id, limit=50):
     """Получаем историю чатов пользователя"""
     conn = sqlite3.connect('users.db')
@@ -3159,13 +3198,18 @@ from api_extensions import register_competitive_routes
 @login_required
 @monitor_performance
 def chat():
-        """Обработка сообщений чата с проверкой лимитов"""
+        """Продвинутая обработка сообщений чата с AI процессором"""
+        from advanced_ai_processor import AdvancedAIProcessor, RequestType
+        
         data = request.json
         message = data.get('message', '')
         session_id = data.get('session_id', str(uuid.uuid4()))
 
         try:
             user_id = session['user_id']
+            
+            # Инициализируем продвинутый AI процессор
+            ai_processor = AdvancedAIProcessor()
 
             # Быстрая проверка кэша пользователя
             user_cache_key = get_cache_key("user", user_id)
@@ -3191,18 +3235,71 @@ def chat():
                     "show_subscription": True
                 }), 429
 
-            # Асинхронно запускаем обработку AI
-            future = executor.submit(async_ai_response, message, session_id, user_id)
-
-            # Ждем ответ максимум 10 секунд
+            # Продвинутая AI обработка
             try:
-                ai_response = future.result(timeout=10)
-            except:
-                return jsonify({
-                    "type": "error",
-                    "message": "⏱️ Запрос обрабатывается слишком долго. Попробуйте упростить запрос.",
+                # Анализируем запрос пользователя
+                request_analysis = ai_processor.analyze_user_request(message)
+                
+                # Определяем тип ответа
+                if request_analysis.request_type == RequestType.CREATE_NEW_PROJECT:
+                    # Генерируем готовое приложение
+                    generated_project = ai_processor.generate_project(request_analysis)
+                    
+                    # Сохраняем проект
+                    project_data = {
+                        'id': generated_project.project_id,
+                        'name': generated_project.name,
+                        'files': generated_project.files,
+                        'user_id': user_id,
+                        'created_at': time.time()
+                    }
+                    executor.submit(save_generated_project, project_data)
+                    
+                    ai_response = {
+                        "type": "project_generated",
+                        "message": f"🎉 Создал для вас приложение: **{generated_project.name}**!\n\n{generated_project.instructions}",
+                        "project": {
+                            "id": generated_project.project_id,
+                            "name": generated_project.name,
+                            "description": generated_project.description,
+                            "preview_url": generated_project.preview_url,
+                            "download_url": f"/api/download/{generated_project.project_id}",
+                            "technologies": generated_project.technologies,
+                            "features": generated_project.features
+                        },
+                        "suggestions": ["Скачать проект", "Посмотреть код", "Доработать приложение", "Создать новое"]
+                    }
+                
+                elif request_analysis.request_type == RequestType.MODIFY_EXISTING:
+                    ai_response = {
+                        "type": "modification_request",
+                        "message": "🔧 Для доработки приложения пришлите мне:\n1. Архив с файлами проекта\n2. Описание желаемых изменений\n\nИли укажите ID существующего проекта.",
+                        "suggestions": ["Загрузить файлы", "Выбрать из моих проектов", "Создать новое приложение"]
+                    }
+                
+                else:
+                    # Обычный чат с AI 
+                    ai_response = {
+                        "type": "chat",
+                        "message": f"🤖 Понял! Вы хотите: **{request_analysis.project_type.value if request_analysis.project_type else 'пообщаться'}**\n\n" + 
+                                  f"Найденные функции: {', '.join(request_analysis.features) if request_analysis.features else 'стандартные'}\n\n" +
+                                  "💡 Для создания приложения опишите подробнее что хотите получить!",
+                        "analysis": {
+                            "type": request_analysis.request_type.value,
+                            "project_type": request_analysis.project_type.value if request_analysis.project_type else None,
+                            "features": request_analysis.features,
+                            "confidence": request_analysis.confidence
+                        },
+                        "suggestions": ["Создать приложение", "Показать примеры", "Объяснить возможности"]
+                    }
+                    
+            except Exception as e:
+                logger.error(f"Ошибка AI процессора: {e}")
+                ai_response = {
+                    "type": "error", 
+                    "message": "🤖 Извините, временные проблемы с AI. Попробуйте еще раз!",
                     "suggestions": ["Повторить", "Упростить запрос", "Создать базовое приложение"]
-                })
+                }
 
             # Асинхронно обновляем счетчики и логи
             if user[4] == 'free':
