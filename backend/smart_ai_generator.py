@@ -25,7 +25,8 @@ class SmartAIGenerator:
     """Умный генератор кода с поддержкой различных AI API"""
     
     def __init__(self):
-        # Используем только бесплатные AI: GigaChat, Yandex GPT, LocalAI
+        # Используем только бесплатные AI: Hugging Face, Groq
+        pass
         
     def analyze_project_requirements(self, description: str) -> Dict[str, Any]:
         """Анализирует описание проекта и определяет требования"""
