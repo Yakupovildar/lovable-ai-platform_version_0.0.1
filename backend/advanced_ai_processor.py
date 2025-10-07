@@ -12,10 +12,13 @@ import time
 from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
+<<<<<<< HEAD
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+=======
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
 
 class RequestType(Enum):
     """Типы запросов пользователя"""
@@ -34,9 +37,12 @@ class ProjectType(Enum):
     PORTFOLIO = "portfolio"
     PORTFOLIO_WEBSITE = "portfolio_website"
     AI_APP = "ai_app"
+<<<<<<< HEAD
     AI_MENTOR = "ai_mentor"
     AI_COACH = "ai_coach"
     AI_ASSISTANT = "ai_assistant"
+=======
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
     MOBILE_APP = "mobile_app"
     BLOG = "blog"
     DASHBOARD = "dashboard"
@@ -53,8 +59,11 @@ class ProjectType(Enum):
     MUSIC_APP = "music_app"
     THREE_D_GAME = "3d_game"
     THREE_D_VIEWER = "3d_viewer"
+<<<<<<< HEAD
     THREE_D_AVATAR = "3d_avatar"
     VOICE_APP = "voice_app"
+=======
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
     DATABASE_APP = "database_app"
     RECORDING_APP = "recording_app"
     BUSINESS_LANDING = "business_landing"
@@ -91,6 +100,7 @@ class AdvancedAIProcessor:
         self.groq_api_key = os.getenv('GROQ_API_KEY')
         self.default_ai = os.getenv('DEFAULT_AI', 'groq')
         
+<<<<<<< HEAD
         print(f"🔑 AI Keys loaded: Groq={'✅' if self.groq_api_key else '❌'}, Default AI: {self.default_ai}")
         
         # Модели для разных задач
@@ -99,6 +109,14 @@ class AdvancedAIProcessor:
                 'fast': 'llama-3.1-8b-instant',      # Быстрая модель для анализа
                 'smart': 'llama-3.1-70b-versatile',  # Умная модель для генерации
                 'code': 'llama-3.1-8b-instant'       # Код генерация
+=======
+        # Модели для разных задач
+        self.models = {
+            'groq': {
+                'fast': 'llama3-8b-8192',      # Быстрая модель для анализа
+                'smart': 'llama3-70b-8192',    # Умная модель для генерации
+                'code': 'mixtral-8x7b-32768'   # Специально для кода
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
             },
             'huggingface': {
                 'code': 'codellama/CodeLlama-34b-Instruct-hf',
@@ -143,6 +161,7 @@ class AdvancedAIProcessor:
             extracted_data=ai_analysis
         )
     
+<<<<<<< HEAD
     def generate_project(self, request: AnalyzedRequest, user_preferences: Dict = None, progress_callback=None) -> GeneratedProject:
         """🚀 РЕВОЛЮЦИОННАЯ СИСТЕМА! Генерирует проект через Groq AI с поэтапным прогрессом"""
 
@@ -232,6 +251,30 @@ class AdvancedAIProcessor:
                 technologies.add('Markdown')
 
         return list(technologies)
+=======
+    def generate_project(self, request: AnalyzedRequest, user_preferences: Dict = None) -> GeneratedProject:
+        """Генерирует готовый проект на основе анализа запроса"""
+        
+        # Выбираем подходящий шаблон
+        base_template = self._select_template(request.project_type)
+        
+        # Генерируем код с AI
+        generated_files = self._generate_project_files(request, base_template)
+        
+        # Создаем проект
+        project_id = f"proj_{int(time.time())}_{hash(request.extracted_data.get('name', 'app')) % 10000}"
+        
+        return GeneratedProject(
+            project_id=project_id,
+            name=request.extracted_data.get('name', 'AI Generated App'),
+            description=request.extracted_data.get('description', 'Приложение созданное AI'),
+            files=generated_files,
+            preview_url=f"/preview/{project_id}",
+            technologies=request.tech_stack or ['HTML5', 'CSS3', 'JavaScript'],
+            features=request.features,
+            instructions=self._generate_instructions(request, generated_files)
+        )
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
     
     def modify_project(self, project_id: str, modification_request: str, current_files: Dict[str, str]) -> Dict[str, str]:
         """Модифицирует существующий проект"""
@@ -278,6 +321,7 @@ class AdvancedAIProcessor:
         return RequestType.GENERAL_QUESTION
     
     def _detect_project_type(self, message: str) -> Optional[ProjectType]:
+<<<<<<< HEAD
         """Определяет тип проекта с улучшенным алгоритмом для сложных запросов"""
         
         print(f"Определение типа проекта для: '{message}'")
@@ -333,6 +377,12 @@ class AdvancedAIProcessor:
                 return ProjectType.GAME
         
         # ПРИОРИТЕТ 3: Стандартные паттерны
+=======
+        """Определяет тип проекта"""
+        
+        print(f"Определение типа проекта для: '{message}'")
+        
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         patterns = {
             ProjectType.LANDING_PAGE: ['лендинг', 'landing', 'сайт-визитка', 'одностраничник'],
             ProjectType.E_COMMERCE: ['магазин', 'интернет-магазин', 'ecommerce', 'shop', 'store'],
@@ -348,13 +398,19 @@ class AdvancedAIProcessor:
             ProjectType.MEDIA_PLAYER: ['плеер', 'player', 'музыка', 'music', 'видео', 'video', 'медиаплеер'],
             ProjectType.VIDEO_EDITOR: ['видеоредактор', 'video editor', 'монтаж', 'editing'],
             ProjectType.MUSIC_APP: ['музыкальное приложение', 'music app', 'аудио', 'audio'],
+<<<<<<< HEAD
             ProjectType.THREE_D_VIEWER: ['3d просмотрщик', '3d viewer', '3d модели', 'three.js'],
             ProjectType.AI_COACH: ['ai тренер', 'ии тренер', 'персональный тренер', 'coach'],
             ProjectType.AI_ASSISTANT: ['ai помощник', 'ии помощник', 'ассистент', 'assistant'],
+=======
+            ProjectType.THREE_D_GAME: ['3d игра', '3d game', '3д', 'трехмерный', 'трёхмерный', 'webgl'],
+            ProjectType.THREE_D_VIEWER: ['3d просмотрщик', '3d viewer', '3d модели', 'three.js'],
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
             ProjectType.DATABASE_APP: ['база данных', 'database', 'бд', 'crud', 'данные'],
             ProjectType.RECORDING_APP: ['запись', 'recording', 'диктофон', 'recorder', 'микрофон', 'камера'],
         }
         
+<<<<<<< HEAD
         for project_type, keywords in patterns.items():
             for keyword in keywords:
                 if keyword in message_lower:
@@ -383,6 +439,23 @@ class AdvancedAIProcessor:
         
         # Стандартные функции
         standard_features = {
+=======
+        message_lower = message.lower()
+        
+        for project_type, keywords in patterns.items():
+            for keyword in keywords:
+                if keyword in message_lower:
+                    print(f"Найден тип проекта: {project_type.value} по ключевому слову: '{keyword}'")
+                    return project_type
+        
+        print("Тип проекта не определен, возвращаю None")
+        return None
+    
+    def _extract_features(self, message: str) -> List[str]:
+        """Извлекает функции из описания"""
+        
+        feature_patterns = {
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
             'авторизация': ['авторизация', 'регистрация', 'вход', 'login', 'auth'],
             'корзина': ['корзина', 'cart', 'basket'],
             'поиск': ['поиск', 'search', 'найти'],
@@ -390,6 +463,7 @@ class AdvancedAIProcessor:
             'комментарии': ['комментарии', 'comments', 'отзывы'],
             'уведомления': ['уведомления', 'notifications', 'alerts'],
             'темная тема': ['темная тема', 'dark theme', 'dark mode'],
+<<<<<<< HEAD
             'адаптивность': ['адаптивный', 'responsive', 'адаптация'],
             'анимации': ['анимация', 'animation', 'эффекты'],
             'психологический анализ': ['психология', 'анализ', 'эмоции', 'настроение', 'личность'],
@@ -434,6 +508,19 @@ class AdvancedAIProcessor:
                     print(f"🤖 ОБЯЗАТЕЛЬНАЯ ИИ ФУНКЦИЯ добавлена: {feature}")
         
         print(f"🎯 Итоговые функции: {found_features}")
+=======
+            'адаптивность': ['адаптивный', 'responsive', 'мобильный'],
+            'анимации': ['анимация', 'animation', 'эффекты']
+        }
+        
+        found_features = []
+        message_lower = message.lower()
+        
+        for feature, keywords in feature_patterns.items():
+            if any(keyword in message_lower for keyword in keywords):
+                found_features.append(feature)
+        
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         return found_features
     
     def _extract_tech_stack(self, message: str) -> List[str]:
@@ -516,10 +603,14 @@ class AdvancedAIProcessor:
         
         try:
             if self.default_ai == 'groq' and self.groq_api_key:
+<<<<<<< HEAD
                 result = self._call_groq_api(prompt, model='llama-3.1-8b-instant')
                 # Небольшая задержка между запросами для предотвращения rate limiting
                 time.sleep(2)
                 return result
+=======
+                return self._call_groq_api(prompt, model='llama3-8b-8192')
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
             elif self.huggingface_token:
                 return self._call_huggingface_api(prompt)
         except:
@@ -532,8 +623,13 @@ class AdvancedAIProcessor:
             "confidence": 0.7
         }
     
+<<<<<<< HEAD
     def _call_groq_api(self, prompt: str, model: str = 'llama-3.1-8b-instant', max_retries: int = 3) -> Dict[str, Any]:
         """Вызов Groq API с обработкой rate limiting"""
+=======
+    def _call_groq_api(self, prompt: str, model: str = 'llama3-8b-8192') -> Dict[str, Any]:
+        """Вызов Groq API"""
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         
         headers = {
             'Authorization': f'Bearer {self.groq_api_key}',
@@ -552,6 +648,7 @@ class AdvancedAIProcessor:
             'max_tokens': 1024
         }
         
+<<<<<<< HEAD
         for attempt in range(max_retries):
             try:
                 response = requests.post(
@@ -600,6 +697,32 @@ class AdvancedAIProcessor:
     
     def _call_groq_api_for_code(self, prompt: str, model: str = 'llama-3.1-8b-instant', max_retries: int = 3) -> str:
         """Вызов Groq API для генерации кода с обработкой rate limiting"""
+=======
+        response = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            headers=headers,
+            json=data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            content = result['choices'][0]['message']['content']
+            
+            # Попытка извлечь JSON
+            try:
+                # Ищем JSON в ответе
+                json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                if json_match:
+                    return json.loads(json_match.group())
+            except:
+                pass
+        
+        return {"confidence": 0.5}
+    
+    def _call_groq_api_for_code(self, prompt: str, model: str = 'llama3-8b-8192') -> str:
+        """Вызов Groq API для генерации кода"""
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         
         headers = {
             'Authorization': f'Bearer {self.groq_api_key}',
@@ -618,6 +741,7 @@ class AdvancedAIProcessor:
             'max_tokens': 2048
         }
         
+<<<<<<< HEAD
         for attempt in range(max_retries):
             try:
                 response = requests.post(
@@ -659,6 +783,26 @@ class AdvancedAIProcessor:
                 if attempt < max_retries - 1:
                     time.sleep(5)
                     continue
+=======
+        response = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            headers=headers,
+            json=data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            content = result['choices'][0]['message']['content']
+            
+            # Извлекаем код из markdown блоков если есть
+            code_match = re.search(r'```(?:html|css|javascript|js)?\n(.*?)\n```', content, re.DOTALL)
+            if code_match:
+                return code_match.group(1).strip()
+            
+            # Возвращаем весь контент если нет markdown
+            return content.strip()
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         
         return ""
     
@@ -679,6 +823,7 @@ class AdvancedAIProcessor:
         }
         
         try:
+<<<<<<< HEAD
             print(f"🤗 Вызываем Hugging Face API...")
             # Попробуем разные модели
             models_to_try = [
@@ -720,6 +865,25 @@ class AdvancedAIProcessor:
             print(f"❌ HF Exception: {e}")
             
         return {"confidence": 0.0, "error": "API недоступен"}
+=======
+            response = requests.post(
+                'https://api-inference.huggingface.co/models/meta-llama/Llama-2-7b-chat-hf',
+                headers=headers,
+                json=data,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if isinstance(result, list) and len(result) > 0:
+                    content = result[0].get('generated_text', '')
+                    # Простой анализ ответа
+                    return {"confidence": 0.8}
+        except:
+            pass
+            
+        return {"confidence": 0.6}
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
     
     def _load_project_templates(self) -> Dict[ProjectType, Dict]:
         """Загружает шаблоны проектов"""
@@ -751,6 +915,7 @@ class AdvancedAIProcessor:
         # Шаблон по умолчанию
         return self.project_templates[ProjectType.LANDING_PAGE]
     
+<<<<<<< HEAD
     def _generate_project_files(self, request: AnalyzedRequest, template: Dict, progress_callback=None) -> Dict[str, str]:
         """Генерирует файлы проекта с помощью AI с прогрессом"""
         
@@ -793,6 +958,32 @@ class AdvancedAIProcessor:
     
     def _get_project_specific_requirements(self, request: AnalyzedRequest) -> Dict[str, str]:
         """🎯 РЕВОЛЮЦИОННАЯ СИСТЕМА: Возвращает требования УРОВНЯ 1000/100 для каждого типа проекта"""
+=======
+    def _generate_project_files(self, request: AnalyzedRequest, template: Dict) -> Dict[str, str]:
+        """Генерирует файлы проекта с помощью AI"""
+        
+        files = {}
+        
+        # Генерируем HTML
+        html_prompt = self._create_html_prompt(request)
+        html_content = self._generate_with_ai(html_prompt, 'code')
+        files['index.html'] = html_content
+        
+        # Генерируем CSS  
+        css_prompt = self._create_css_prompt(request)
+        css_content = self._generate_with_ai(css_prompt, 'code')
+        files['styles.css'] = css_content
+        
+        # Генерируем JavaScript
+        js_prompt = self._create_js_prompt(request)
+        js_content = self._generate_with_ai(js_prompt, 'code')
+        files['script.js'] = js_content
+        
+        return files
+    
+    def _get_project_specific_requirements(self, request: AnalyzedRequest) -> Dict[str, str]:
+        """Возвращает детальные требования для конкретного типа проекта"""
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         
         project_type = request.project_type
         requirements = {
@@ -1107,6 +1298,7 @@ class AdvancedAIProcessor:
                     'Видео эффекты', 'Стриминг', 'Облачное хранение'
                 ]
             })
+<<<<<<< HEAD
         
         elif project_type == ProjectType.CALCULATOR:
             requirements.update({
@@ -1156,10 +1348,15 @@ class AdvancedAIProcessor:
             })
         
         # 🚀 РЕВОЛЮЦИОННЫЕ ОБЩИЕ ТРЕБОВАНИЯ КАЧЕСТВА УРОВНЯ 1000/100
+=======
+            
+        # Добавляем общие требования качества
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         for key in requirements:
             if key.endswith('_specifics'):
                 requirements[key] += '''
                 
+<<<<<<< HEAD
                 🚀 РЕВОЛЮЦИОННЫЕ ТРЕБОВАНИЯ КАЧЕСТВА УРОВНЯ 1000/100:
                 
                 🏆 HTML ПРОФЕССИОНАЛЬНЫЕ СТАНДАРТЫ:
@@ -1265,10 +1462,20 @@ class AdvancedAIProcessor:
                 - 5G network optimization
                 - Foldable devices поддержка
                 - Next-generation image formats (AVIF, HEIC)
+=======
+                ОБЩИЕ ТРЕБОВАНИЯ КАЧЕСТВА:
+                - Профессиональный код с комментариями
+                - Семантическая HTML разметка
+                - Современные веб-стандарты
+                - Кроссбраузерная совместимость
+                - Доступность (accessibility)
+                - Производительность и оптимизация
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                 '''
         
         return requirements
     
+<<<<<<< HEAD
     def _generate_mandatory_features_html(self, features: List[str]) -> str:
         """🎯 РЕВОЛЮЦИОННАЯ СИСТЕМА: Генерирует HTML ПРОФЕССИОНАЛЬНОГО УРОВНЯ 1000/100"""
         
@@ -2026,12 +2233,15 @@ class AdvancedAIProcessor:
         mandatory_css += "\n\n🎯 КРИТИЧЕСКИ ВАЖНО: ВСЕ ВЫШЕПЕРЕЧИСЛЕННЫЕ CSS СТИЛИ ДОЛЖНЫ БЫТЬ РЕАЛИЗОВАНЫ НА 100%! КАЧЕСТВО ДОЛЖНО БЫТЬ УРОВНЯ 1000/100!"
         return mandatory_css
     
+=======
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
     def _create_html_prompt(self, request: AnalyzedRequest) -> str:
         """Создает промпт для генерации HTML"""
         
         # Получаем детальные требования для конкретного типа проекта
         project_requirements = self._get_project_specific_requirements(request)
         
+<<<<<<< HEAD
         # Генерируем обязательные функции на основе пользовательского запроса
         required_features_html = self._generate_mandatory_features_html(request.features)
         
@@ -2123,6 +2333,54 @@ class AdvancedAIProcessor:
         
         print(f"🔍 HTML PROMPT для {request.project_type}: {prompt[:200]}...")
         return prompt
+=======
+        # Обязательная структура UI для всех приложений
+        mandatory_ui_structure = """
+        ОБЯЗАТЕЛЬНАЯ СТРУКТУРА UI (ВСЕГДА включай эти элементы):
+        1. Главная страница с заголовком и описанием приложения
+        2. Навигационное меню (если больше одного экрана)
+        3. Кнопка "Настройки" или ссылка на настройки
+        4. Стартовый экран с кнопкой "Начать" (для игр) или "Открыть" (для других приложений)
+        5. Основной функционал приложения должен быть скрыт по умолчанию
+        6. Используй атрибуты data-screen для переключения между экранами
+        
+        Структура:
+        - #main-screen: главная страница с описанием и кнопкой "Начать"
+        - #settings-screen: экран настроек (скрытый по умолчанию)  
+        - #app-screen: основной функционал приложения (скрытый по умолчанию)
+        
+        Навигация:
+        - Кнопка "Начать/Открыть" переводит из main-screen в app-screen
+        - Кнопка "Настройки" показывает settings-screen
+        - Кнопка "Назад" возвращает на main-screen из любого экрана
+        """
+        
+        return f"""
+        Создай профессиональный HTML файл для {request.project_type.value if request.project_type else 'веб-приложения'}.
+        
+        {mandatory_ui_structure}
+        
+        {project_requirements['html_specifics']}
+        
+        Пользовательские требования:
+        - Функции: {', '.join(request.features)}
+        - Технологии: {', '.join(request.tech_stack)}
+        - Дизайн: {', '.join(request.design_requirements)}
+        - Дополнительные возможности: {', '.join(project_requirements['additional_features'])}
+        
+        Технические требования:
+        - Адаптивный дизайн для всех устройств
+        - Семантичная HTML5 разметка с accessibility
+        - Подключение styles.css и script.js
+        - SEO-оптимизация (мета-теги, структурированные данные)
+        - Валидный HTML код
+        
+        ВАЖНО: НЕ показывай игровой процесс или основной функционал сразу! 
+        Всегда начинай с главной страницы и кнопки "Начать".
+        
+        Создай детальную и функциональную HTML структуру. Верни только чистый HTML код без объяснений.
+        """
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
     
     def _create_css_prompt(self, request: AnalyzedRequest) -> str:
         """Создает промпт для генерации CSS"""
@@ -2147,6 +2405,7 @@ class AdvancedAIProcessor:
         - Анимация появления кнопок и элементов
         """
         
+<<<<<<< HEAD
         # Генерируем обязательные CSS требования на основе функций
         required_css_features = self._generate_mandatory_css_features(request.features)
         
@@ -2154,11 +2413,16 @@ class AdvancedAIProcessor:
         🔥 КРИТИЧЕСКИ ВАЖНО - СОЗДАЙ CSS С ПОЛНЫМ СООТВЕТСТВИЕМ ПОЛЬЗОВАТЕЛЬСКОМУ ЗАПРОСУ!
         
         🎨 СОЗДАЙ ПРОФЕССИОНАЛЬНЫЕ CSS СТИЛИ ДЛЯ: {request.project_type.value if request.project_type else 'веб-приложения'}
+=======
+        return f"""
+        Создай профессиональные CSS стили для {request.project_type.value if request.project_type else 'веб-приложения'}.
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         
         {mandatory_css_structure}
         
         {project_requirements['css_specifics']}
         
+<<<<<<< HEAD
         {required_css_features}
         
         🔥 ПОЛЬЗОВАТЕЛЬСКИЕ ТРЕБОВАНИЯ ДИЗАЙНА (РЕАЛИЗУЙ ВСЕ БЕЗ ИСКЛЮЧЕНИЙ):
@@ -3886,6 +4150,135 @@ function changeBackground() {
 </html>'''
         
         elif file_type == 'html':
+=======
+        Пользовательские требования дизайна:
+        - Стиль дизайна: {', '.join(request.design_requirements)}
+        - Дополнительные функции стилизации: {', '.join(project_requirements['additional_features'])}
+        
+        Технические требования CSS:
+        - Полная адаптивность (mobile-first подход)
+        - Современные CSS3 свойства (flexbox, grid, custom properties)
+        - Плавные анимации и micro-interactions
+        - Кроссбраузерная совместимость
+        - Высокая производительность (оптимизированные селекторы)
+        - Accessibility compliance (контрастность, фокус)
+        - Progressive enhancement
+        
+        Цветовая схема и типографика:
+        - Современная цветовая палитра с контрастными акцентами
+        - Читаемые шрифты с правильной иерархией
+        - Consistency в spacing и sizing
+        
+        ВАЖНО: По умолчанию показывай только главный экран (#main-screen.active), 
+        остальные экраны должны быть скрыты (.screen:not(.active)).
+        
+        Создай детальную и качественную CSS структуру. Верни только чистый CSS код без объяснений.
+        """
+    
+    def _create_js_prompt(self, request: AnalyzedRequest) -> str:
+        """Создает промпт для генерации JavaScript"""
+        
+        # Получаем детальные требования для конкретного типа проекта
+        project_requirements = self._get_project_specific_requirements(request)
+        
+        mandatory_navigation_logic = """
+        ОБЯЗАТЕЛЬНАЯ НАВИГАЦИОННАЯ СИСТЕМА (всегда включай):
+        
+        1. Функция переключения экранов:
+        function showScreen(screenId) {
+            // Скрыть все экраны с анимацией
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            // Показать нужный экран с анимацией
+            setTimeout(() => {
+                document.getElementById(screenId).classList.add('active');
+            }, 150);
+        }
+        
+        2. Обработчики кнопок навигации:
+        - Кнопка "Начать/Открыть" → showScreen('app-screen') + инициализация основного функционала
+        - Кнопка "Настройки" → showScreen('settings-screen') + загрузка настроек
+        - Кнопка "Назад" → showScreen('main-screen') + сохранение состояния
+        
+        3. Инициализация при загрузке:
+        document.addEventListener('DOMContentLoaded', function() {
+            // Показать главный экран по умолчанию
+            showScreen('main-screen');
+            // Настроить обработчики навигации
+            setupNavigation();
+            // Загрузить сохраненные данные
+            loadSavedData();
+        });
+        
+        4. Основной функционал приложения должен активироваться только после нажатия "Начать".
+        """
+        
+        return f"""
+        Создай профессиональный JavaScript для {request.project_type.value if request.project_type else 'веб-приложения'}.
+        
+        {mandatory_navigation_logic}
+        
+        {project_requirements['js_specifics']}
+        
+        Пользовательские функции для реализации:
+        {', '.join(request.features)}
+        
+        Дополнительные возможности:
+        {', '.join(project_requirements['additional_features'])}
+        
+        Технические требования JavaScript:
+        - Современный ES6+ синтаксис (arrow functions, const/let, modules)
+        - Event-driven архитектура
+        - Обработка ошибок (try-catch блоки)
+        - Валидация пользовательского ввода
+        - Локальное хранение данных (localStorage/sessionStorage)
+        - Адаптивное поведение и отзывчивость
+        - Performance optimization (debouncing, throttling)
+        - Accessibility support (keyboard navigation, ARIA)
+        
+        Структура кода:
+        - Модульная организация (разделение на функции/классы)
+        - Комментарии для сложных алгоритмов
+        - Константы для магических чисел
+        - Обработка различных состояний приложения
+        
+        ВАЖНО: НЕ запускай основной функционал сразу! Сначала пользователь должен 
+        увидеть главную страницу и нажать "Начать". Весь основной код должен быть 
+        инкапсулирован в функции и классы.
+        
+        Создай детальную и функциональную JavaScript структуру. Верни только чистый JavaScript код без объяснений.
+        """
+    
+    def _generate_with_ai(self, prompt: str, task_type: str = 'code') -> str:
+        """Генерирует код с помощью AI"""
+        
+        try:
+            if self.default_ai == 'groq' and self.groq_api_key:
+                content = self._call_groq_api_for_code(prompt, model=self.models['groq']['code'])
+                if content and len(content.strip()) > 50:  # Проверяем что получили достаточно контента
+                    return content
+        except Exception as e:
+            print(f"Ошибка AI генерации: {e}")
+            pass
+        
+        # Fallback - простой шаблон
+        if task_type == 'code':
+            # Определяем тип файла по промпту
+            if 'HTML' in prompt.upper() or 'INDEX.HTML' in prompt.upper():
+                return self._generate_fallback_code('html')
+            elif 'CSS' in prompt.upper() or 'STYLES' in prompt.upper():
+                return self._generate_fallback_code('css') 
+            elif 'JAVASCRIPT' in prompt.upper() or 'SCRIPT' in prompt.upper():
+                return self._generate_fallback_code('js')
+        
+        return self._generate_fallback_code(task_type)
+    
+    def _generate_fallback_code(self, file_type: str) -> str:
+        """Генерирует базовый код если AI недоступен"""
+        
+        if file_type == 'html':
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
             return '''<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -4131,6 +4524,7 @@ function initializeSettings() {
         """Генерирует модификации существующего проекта"""
         
         modified_files = current_files.copy()
+<<<<<<< HEAD
 
         # Анализируем что нужно изменить и генерируем с AI
         try:
@@ -4157,6 +4551,26 @@ function initializeSettings() {
             print(f"⚠️ Ошибка доступа к current_files.items(): {e}")
             return {}
 
+=======
+        
+        # Анализируем что нужно изменить и генерируем с AI
+        for filename, content in current_files.items():
+            modification_prompt = f"""
+            Модифицируй следующий код согласно требованиям:
+            
+            Требования: {', '.join(analysis.features)}
+            
+            Текущий код:
+            {content}
+            
+            Верни только обновленный код без объяснений.
+            """
+            
+            modified_content = self._generate_with_ai(modification_prompt, 'code')
+            if modified_content and modified_content != content:
+                modified_files[filename] = modified_content
+        
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         return modified_files
     
     def _generate_instructions(self, request: AnalyzedRequest, files: Dict[str, str]) -> str:

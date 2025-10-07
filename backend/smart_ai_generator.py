@@ -5,6 +5,7 @@ import time
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 import re
+<<<<<<< HEAD
 from enum import Enum
 
 # Добавляем недостающие типы данных
@@ -28,6 +29,8 @@ class RequestAnalysis:
     features: List[str]
     confidence: float
     raw_message: str
+=======
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
 
 @dataclass
 class GeneratedFile:
@@ -43,6 +46,7 @@ class ProjectResult:
     structure: List[str]
     instructions: str
     project_type: str
+<<<<<<< HEAD
     name: str = ""
     description: str = ""
     technologies: List[str] = None
@@ -53,11 +57,14 @@ class ProjectResult:
             self.technologies = []
         if self.features is None:
             self.features = []
+=======
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
 
 class SmartAIGenerator:
     """Умный генератор кода с поддержкой различных AI API"""
     
     def __init__(self):
+<<<<<<< HEAD
         # Интегрируем Groq API для мощной генерации проектов
         self.groq_api_key = os.getenv('GROQ_API_KEY')
         self.groq_enabled = bool(self.groq_api_key)
@@ -353,6 +360,13 @@ class SmartAIGenerator:
 
     def analyze_project_requirements(self, description: str) -> Dict[str, Any]:
         """Базовый анализ проекта (fallback)"""
+=======
+        # Используем только бесплатные AI: Hugging Face, Groq
+        pass
+        
+    def analyze_project_requirements(self, description: str) -> Dict[str, Any]:
+        """Анализирует описание проекта и определяет требования"""
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         
         project_types = {
             'landing': ['лендинг', 'landing', 'сайт-визитка', 'одностраничник', 'промо'],
@@ -391,6 +405,7 @@ class SmartAIGenerator:
         
         # Сначала ищем точные совпадения с весом
         type_scores = {}
+<<<<<<< HEAD
         try:
             if isinstance(project_types, dict):
                 for proj_type, keywords in project_types.items():
@@ -406,6 +421,16 @@ class SmartAIGenerator:
         except AttributeError as e:
             print(f"⚠️ Ошибка доступа к project_types.items(): {e}")
             print(f"⚠️ Тип project_types: {type(project_types)}")
+=======
+        for proj_type, keywords in project_types.items():
+            score = 0
+            for keyword in keywords:
+                if keyword in description_lower:
+                    # Приоритет длинным ключевым словам
+                    weight = len(keyword.split()) * 2 + 1
+                    score += weight
+            type_scores[proj_type] = score
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         
         # Находим тип с максимальным весом
         if type_scores:
@@ -770,11 +795,15 @@ class SmartAIGenerator:
                 files=files,
                 structure=[f.name for f in files],
                 instructions=instructions or "Откройте index.html в браузере для просмотра приложения.",
+<<<<<<< HEAD
                 project_type=analysis['project_type'],
                 name=analysis.get('name', 'AI Project'),
                 description=description,
                 technologies=analysis.get('technologies', []),
                 features=analysis.get('features', [])
+=======
+                project_type=analysis['project_type']
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
             )
             
         except Exception as e:
@@ -807,6 +836,7 @@ class SmartAIGenerator:
         return files
 
     def _fallback_generation(self, description: str, analysis: Dict[str, Any]) -> ProjectResult:
+<<<<<<< HEAD
         """🚀 МОЩНЫЙ резервный метод - генерирует полноценные проекты!"""
 
         print("🔄 Используем улучшенную fallback генерацию...")
@@ -2477,6 +2507,54 @@ npm start
         }
 
         return defaults.get(mentor, defaults['musk'])
+=======
+        """Резервный метод генерации когда AI API недоступны"""
+        
+        from enhanced_ai_services import SmartAI
+        
+        smart_ai = SmartAI()
+        result = smart_ai.generate_project_response(analysis['project_type'], description)
+        
+        files = []
+        for filename, content in result.get('files', {}).items():
+            file_type = filename.split('.')[-1].lower()
+            files.append(GeneratedFile(
+                name=filename,
+                content=content,
+                type=file_type
+            ))
+        
+        return ProjectResult(
+            success=True,
+            message="Проект создан с помощью встроенного AI (резервный режим)",
+            files=files,
+            structure=result.get('structure', []),
+            instructions=result.get('instructions', ''),
+            project_type=analysis['project_type']
+        )
+
+    def generate_project(self, description: str, preferred_ai: str = 'auto') -> ProjectResult:
+        """Главный метод для генерации проекта"""
+        
+        # Анализируем требования проекта
+        analysis = self.analyze_project_requirements(description)
+        
+        print(f"🔍 Анализ проекта:")
+        print(f"   Тип: {analysis['project_type']}")
+        print(f"   Сложность: {analysis['complexity']}")
+        print(f"   Файлы: {analysis['estimated_files']}")
+        
+        # Выбираем AI сервис
+        if preferred_ai == 'claude' or (preferred_ai == 'auto' and self.claude_api_key):
+            print("🧠 Генерирую с помощью Claude AI...")
+            return self.generate_with_claude(description, analysis)
+        elif preferred_ai == 'openai' or (preferred_ai == 'auto' and self.openai_api_key):
+            print("🧠 Генерирую с помощью OpenAI GPT-4...")
+            return self.generate_with_openai(description, analysis)
+        else:
+            print("🧠 Генерирую с помощью встроенного AI...")
+            return self._fallback_generation(description, analysis)
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
 
 # Функция для тестирования
 def test_generator():

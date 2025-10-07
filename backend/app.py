@@ -368,7 +368,11 @@ def save_pre_registration():
         interaction_logger.log_event("pre_registration", data)
 
         # Также можно сохранить в базу данных
+<<<<<<< HEAD
         conn = sqlite3.connect(DB_PATH)
+=======
+        conn = sqlite3.connect('users.db')
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO pre_registration_analytics 
@@ -783,7 +787,11 @@ def save_chat_message(user_id, session_id, message, response, message_type='chat
 def save_generated_project(project_data):
     """Сохраняем сгенерированный проект"""
     try:
+<<<<<<< HEAD
         conn = sqlite3.connect(DB_PATH)
+=======
+        conn = sqlite3.connect('users.db')
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         cursor = conn.cursor()
         
         # Создаем таблицу если не существует
@@ -807,11 +815,15 @@ def save_generated_project(project_data):
             project_data['id'],
             project_data['name'], 
             project_data['user_id'],
+<<<<<<< HEAD
             json.dumps([
                 {'name': f.name, 'content': f.content, 'type': f.type}
                 if hasattr(f, 'name') else f
                 for f in project_data['files']
             ]),
+=======
+            json.dumps(project_data['files']),
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
             project_data['created_at'],
             time.time()
         ))
@@ -3231,7 +3243,11 @@ cityInput.addEventListener('keypress', (e) => {
 generator = ProjectGenerator()
 
 # Import new smart AI services
+<<<<<<< HEAD
 from smart_ai_generator import SmartAIGenerator, RequestType, ProjectType, RequestAnalysis
+=======
+from smart_ai_generator import SmartAIGenerator
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
 from intelligent_chat import IntelligentChat
 
 # Import new fullstack services
@@ -3276,13 +3292,22 @@ from api_extensions import register_competitive_routes
 @app.route('/api/chat', methods=['POST'])
 @login_required
 def chat():
+<<<<<<< HEAD
         """🚀 РЕВОЛЮЦИОННАЯ обработка чата с полноценной генерацией проектов"""
+=======
+        """Продвинутая обработка сообщений чата с AI процессором"""
+        from advanced_ai_processor import AdvancedAIProcessor, RequestType
+        
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         data = request.json
         message = data.get('message', '')
         session_id = data.get('session_id', str(uuid.uuid4()))
 
         try:
             user_id = session['user_id']
+            
+            # Инициализируем продвинутый AI процессор
+            ai_processor = AdvancedAIProcessor()
 
             # Быстрая проверка кэша пользователя
             user_cache_key = get_cache_key("user", user_id)
@@ -3310,6 +3335,7 @@ def chat():
 
             # Продвинутая AI обработка
             try:
+<<<<<<< HEAD
                 # Проверяем, требует ли запрос создания проекта
                 create_keywords = ['создай', 'создать', 'сделай', 'сделать', 'разработай', 'разработать', 'построй', 'построить']
                 is_project_creation = any(keyword in message.lower() for keyword in create_keywords)
@@ -3333,6 +3359,17 @@ def chat():
                     
                     # Интегрируем с системой хостинга
                     progress_callback("🌐 Публикую приложение в интернете...", 90)
+=======
+                # Анализируем запрос пользователя
+                request_analysis = ai_processor.analyze_user_request(message)
+                
+                # Определяем тип ответа
+                if request_analysis.request_type == RequestType.CREATE_NEW_PROJECT:
+                    # Генерируем готовое приложение
+                    generated_project = ai_processor.generate_project(request_analysis)
+                    
+                    # Интегрируем с системой хостинга
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                     from project_hosting_system import ProjectHostingSystem
                     hosting_system = ProjectHostingSystem()
                     
@@ -3349,6 +3386,7 @@ def chat():
                         user_id=user_id
                     )
                     
+<<<<<<< HEAD
                     progress_callback("📱 Генерирую QR-код и превью...", 95)
                     
                     # Извлекаем правильный project_id из hosting_result
@@ -3357,6 +3395,11 @@ def chat():
                     # Сохраняем проект
                     project_data = {
                         'id': correct_project_id,  # Используем ID от хостинговой системы
+=======
+                    # Сохраняем проект
+                    project_data = {
+                        'id': generated_project.project_id,
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                         'name': generated_project.name,
                         'files': generated_project.files,
                         'user_id': user_id,
@@ -3366,6 +3409,7 @@ def chat():
                     }
                     executor.submit(save_generated_project, project_data)
                     
+<<<<<<< HEAD
                     # Генерируем превью для чата с правильным URL
                     from project_hosting_system import ProjectPreviewGenerator
                     preview_generator = ProjectPreviewGenerator(hosting_system)
@@ -3376,18 +3420,33 @@ def chat():
                     preview_html = preview_generator.generate_chat_preview(preview_data)
                     
                     progress_callback("✅ Приложение успешно создано и опубликовано!", 100)
+=======
+                    # Генерируем превью для чата
+                    from project_hosting_system import ProjectPreviewGenerator
+                    preview_generator = ProjectPreviewGenerator(hosting_system)
+                    preview_html = preview_generator.generate_chat_preview(project_data)
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                     
                     ai_response = {
                         "type": "project_generated",
                         "message": f"🎉 Создал для вас приложение: **{generated_project.name}**!\n\n{generated_project.instructions}\n\n🌐 **Прямая ссылка:** {hosting_result['live_url']}\n📱 **QR-код для телефона:** Доступен в превью",
                         "project": {
+<<<<<<< HEAD
                             "id": correct_project_id,  # Используем правильный ID
+=======
+                            "id": generated_project.project_id,
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                             "name": generated_project.name,
                             "description": generated_project.description,
                             "live_url": hosting_result['live_url'],
                             "qr_code": hosting_result['qr_code'],
+<<<<<<< HEAD
                             "preview_url": f"/preview/{correct_project_id}",
                             "download_url": f"/api/download/{correct_project_id}",
+=======
+                            "preview_url": generated_project.preview_url,
+                            "download_url": f"/api/download/{generated_project.project_id}",
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                             "technologies": generated_project.technologies,
                             "features": generated_project.features,
                             "preview_html": preview_html
@@ -3397,7 +3456,11 @@ def chat():
                     
                     # Генерируем рекомендации для улучшения проекта
                     try:
+<<<<<<< HEAD
                         recommendations = smart_generator.generate_project_recommendations(
+=======
+                        recommendations = ai_processor.generate_project_recommendations(
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                             generated_project.files, 
                             request_analysis.project_type
                         )
@@ -3430,17 +3493,27 @@ def chat():
                     
                     # Добавляем контекстные предложения
                     try:
+<<<<<<< HEAD
                         contextual_suggestions = smart_generator.get_contextual_suggestions(message)
+=======
+                        contextual_suggestions = ai_processor.get_contextual_suggestions(message)
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                         ai_response["contextual_suggestions"] = contextual_suggestions
                     except Exception as e:
                         logger.warning(f"Failed to generate contextual suggestions: {e}")
                     
             except Exception as e:
+<<<<<<< HEAD
                 import traceback
                 logger.error(f"Ошибка AI процессора: {e}")
                 logger.error(f"Полный traceback: {traceback.format_exc()}")
                 ai_response = {
                     "type": "error",
+=======
+                logger.error(f"Ошибка AI процессора: {e}")
+                ai_response = {
+                    "type": "error", 
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                     "message": "🤖 Извините, временные проблемы с AI. Попробуйте еще раз!",
                     "suggestions": ["Повторить", "Упростить запрос", "Создать базовое приложение"]
                 }
@@ -3872,6 +3945,7 @@ def create_project_archive(project_id):
 def serve_hosted_project(project_id, filename='index.html'):
     """Serve hosted project files"""
     try:
+<<<<<<< HEAD
         # Подробное логирование для диагностики Railway проблем
         logger.info(f"🔍 Serving project {project_id}, file: {filename}")
         
@@ -4043,6 +4117,25 @@ def serve_hosted_project(project_id, filename='index.html'):
                     logger.error(f"❌ Failed to convert files for project {project_id}, no valid files found")
                     return jsonify({"error": "No valid files found in project"}), 404
                 
+=======
+        # Сначала пытаемся загрузить из базы данных
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT files FROM hosted_projects 
+            WHERE project_id = ?
+        ''', (project_id,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if not result or not result[0]:
+            return jsonify({"error": "Project not found in database"}), 404
+        
+        try:
+            files_data = json.loads(result[0])
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid project data"}), 500
         
@@ -4059,6 +4152,7 @@ def serve_hosted_project(project_id, filename='index.html'):
         # Определяем MIME тип
         if filename.endswith('.html'):
             mimetype = 'text/html'
+<<<<<<< HEAD
             # Исправляем пути в HTML файлах для корректной загрузки ресурсов
             import re
             # Исправляем ссылки на CSS файлы (только локальные, не внешние)
@@ -4073,6 +4167,8 @@ def serve_hosted_project(project_id, filename='index.html'):
                 f'src="/app/{project_id}/\\1"',
                 file_content
             )
+=======
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         elif filename.endswith('.css'):
             mimetype = 'text/css'  
         elif filename.endswith('.js'):
@@ -4812,6 +4908,7 @@ if __name__ == '__main__':
 </body>
 </html>"""
 
+<<<<<<< HEAD
 # AI Наставник роут - без авторизации для демо приложения  
 @app.route('/api/mentor-chat', methods=['POST'])
 def mentor_chat():
@@ -5015,4 +5112,6 @@ def update_project_file_api(project_id):
         return jsonify({'error': 'Database error'}), 500
 
 if __name__ == '__main__':
+=======
+>>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
     socketio.run(app, host='0.0.0.0', port=5002, debug=False, allow_unsafe_werkzeug=True)
