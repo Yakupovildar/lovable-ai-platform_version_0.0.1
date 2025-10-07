@@ -368,11 +368,7 @@ def save_pre_registration():
         interaction_logger.log_event("pre_registration", data)
 
         # Также можно сохранить в базу данных
-<<<<<<< HEAD
-        conn = sqlite3.connect(DB_PATH)
-=======
         conn = sqlite3.connect('users.db')
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO pre_registration_analytics 
@@ -787,11 +783,7 @@ def save_chat_message(user_id, session_id, message, response, message_type='chat
 def save_generated_project(project_data):
     """Сохраняем сгенерированный проект"""
     try:
-<<<<<<< HEAD
-        conn = sqlite3.connect(DB_PATH)
-=======
         conn = sqlite3.connect('users.db')
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         cursor = conn.cursor()
         
         # Создаем таблицу если не существует
@@ -815,15 +807,7 @@ def save_generated_project(project_data):
             project_data['id'],
             project_data['name'], 
             project_data['user_id'],
-<<<<<<< HEAD
-            json.dumps([
-                {'name': f.name, 'content': f.content, 'type': f.type}
-                if hasattr(f, 'name') else f
-                for f in project_data['files']
-            ]),
-=======
             json.dumps(project_data['files']),
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
             project_data['created_at'],
             time.time()
         ))
@@ -3243,11 +3227,7 @@ cityInput.addEventListener('keypress', (e) => {
 generator = ProjectGenerator()
 
 # Import new smart AI services
-<<<<<<< HEAD
-from smart_ai_generator import SmartAIGenerator, RequestType, ProjectType, RequestAnalysis
-=======
 from smart_ai_generator import SmartAIGenerator
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
 from intelligent_chat import IntelligentChat
 
 # Import new fullstack services
@@ -3292,13 +3272,9 @@ from api_extensions import register_competitive_routes
 @app.route('/api/chat', methods=['POST'])
 @login_required
 def chat():
-<<<<<<< HEAD
-        """🚀 РЕВОЛЮЦИОННАЯ обработка чата с полноценной генерацией проектов"""
-=======
         """Продвинутая обработка сообщений чата с AI процессором"""
         from advanced_ai_processor import AdvancedAIProcessor, RequestType
         
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         data = request.json
         message = data.get('message', '')
         session_id = data.get('session_id', str(uuid.uuid4()))
@@ -3335,31 +3311,6 @@ def chat():
 
             # Продвинутая AI обработка
             try:
-<<<<<<< HEAD
-                # Проверяем, требует ли запрос создания проекта
-                create_keywords = ['создай', 'создать', 'сделай', 'сделать', 'разработай', 'разработать', 'построй', 'построить']
-                is_project_creation = any(keyword in message.lower() for keyword in create_keywords)
-
-                if is_project_creation:
-                    # Создаем progress callback для WebSocket уведомлений
-                    def progress_callback(message, percentage):
-                        try:
-                            socketio.emit('generation_progress', {
-                                'message': message,
-                                'percentage': percentage,
-                                'session_id': session_id
-                            }, room=f'user_{user_id}')
-                        except Exception as e:
-                            print(f"Ошибка отправки прогресса: {e}")
-                    
-                    # Генерируем готовое приложение используя ГАРАНТИРОВАННЫЙ метод полноценной генерации
-                    progress_callback("🚀 Создание полноценного HTML приложения...", 0)
-                    # ВСЕГДА используем generate_project который создает РЕАЛЬНЫЕ файлы
-                    generated_project = smart_generator.generate_project(message, progress_callback=progress_callback)
-                    
-                    # Интегрируем с системой хостинга
-                    progress_callback("🌐 Публикую приложение в интернете...", 90)
-=======
                 # Анализируем запрос пользователя
                 request_analysis = ai_processor.analyze_user_request(message)
                 
@@ -3369,7 +3320,6 @@ def chat():
                     generated_project = ai_processor.generate_project(request_analysis)
                     
                     # Интегрируем с системой хостинга
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                     from project_hosting_system import ProjectHostingSystem
                     hosting_system = ProjectHostingSystem()
                     
@@ -3386,20 +3336,9 @@ def chat():
                         user_id=user_id
                     )
                     
-<<<<<<< HEAD
-                    progress_callback("📱 Генерирую QR-код и превью...", 95)
-                    
-                    # Извлекаем правильный project_id из hosting_result
-                    correct_project_id = hosting_result['live_url'].split('/')[-1]  # Получаем ID из URL
-                    
-                    # Сохраняем проект
-                    project_data = {
-                        'id': correct_project_id,  # Используем ID от хостинговой системы
-=======
                     # Сохраняем проект
                     project_data = {
                         'id': generated_project.project_id,
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                         'name': generated_project.name,
                         'files': generated_project.files,
                         'user_id': user_id,
@@ -3409,44 +3348,22 @@ def chat():
                     }
                     executor.submit(save_generated_project, project_data)
                     
-<<<<<<< HEAD
-                    # Генерируем превью для чата с правильным URL
-                    from project_hosting_system import ProjectPreviewGenerator
-                    preview_generator = ProjectPreviewGenerator(hosting_system)
-                    
-                    # Создаем данные для превью с правильным live_url
-                    preview_data = project_data.copy()
-                    preview_data['live_url'] = hosting_result['live_url']  # Убеждаемся что URL правильный
-                    preview_html = preview_generator.generate_chat_preview(preview_data)
-                    
-                    progress_callback("✅ Приложение успешно создано и опубликовано!", 100)
-=======
                     # Генерируем превью для чата
                     from project_hosting_system import ProjectPreviewGenerator
                     preview_generator = ProjectPreviewGenerator(hosting_system)
                     preview_html = preview_generator.generate_chat_preview(project_data)
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                     
                     ai_response = {
                         "type": "project_generated",
                         "message": f"🎉 Создал для вас приложение: **{generated_project.name}**!\n\n{generated_project.instructions}\n\n🌐 **Прямая ссылка:** {hosting_result['live_url']}\n📱 **QR-код для телефона:** Доступен в превью",
                         "project": {
-<<<<<<< HEAD
-                            "id": correct_project_id,  # Используем правильный ID
-=======
                             "id": generated_project.project_id,
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                             "name": generated_project.name,
                             "description": generated_project.description,
                             "live_url": hosting_result['live_url'],
                             "qr_code": hosting_result['qr_code'],
-<<<<<<< HEAD
-                            "preview_url": f"/preview/{correct_project_id}",
-                            "download_url": f"/api/download/{correct_project_id}",
-=======
                             "preview_url": generated_project.preview_url,
                             "download_url": f"/api/download/{generated_project.project_id}",
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                             "technologies": generated_project.technologies,
                             "features": generated_project.features,
                             "preview_html": preview_html
@@ -3456,11 +3373,7 @@ def chat():
                     
                     # Генерируем рекомендации для улучшения проекта
                     try:
-<<<<<<< HEAD
-                        recommendations = smart_generator.generate_project_recommendations(
-=======
                         recommendations = ai_processor.generate_project_recommendations(
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                             generated_project.files, 
                             request_analysis.project_type
                         )
@@ -3493,27 +3406,15 @@ def chat():
                     
                     # Добавляем контекстные предложения
                     try:
-<<<<<<< HEAD
-                        contextual_suggestions = smart_generator.get_contextual_suggestions(message)
-=======
                         contextual_suggestions = ai_processor.get_contextual_suggestions(message)
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                         ai_response["contextual_suggestions"] = contextual_suggestions
                     except Exception as e:
                         logger.warning(f"Failed to generate contextual suggestions: {e}")
                     
             except Exception as e:
-<<<<<<< HEAD
-                import traceback
-                logger.error(f"Ошибка AI процессора: {e}")
-                logger.error(f"Полный traceback: {traceback.format_exc()}")
-                ai_response = {
-                    "type": "error",
-=======
                 logger.error(f"Ошибка AI процессора: {e}")
                 ai_response = {
                     "type": "error", 
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
                     "message": "🤖 Извините, временные проблемы с AI. Попробуйте еще раз!",
                     "suggestions": ["Повторить", "Упростить запрос", "Создать базовое приложение"]
                 }
@@ -3945,179 +3846,6 @@ def create_project_archive(project_id):
 def serve_hosted_project(project_id, filename='index.html'):
     """Serve hosted project files"""
     try:
-<<<<<<< HEAD
-        # Подробное логирование для диагностики Railway проблем
-        logger.info(f"🔍 Serving project {project_id}, file: {filename}")
-        
-        # Сначала пытаемся загрузить из базы данных
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Проверяем что база данных вообще существует и имеет таблицы
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='hosted_projects'")
-        table_exists = cursor.fetchone()
-        logger.info(f"🔍 hosted_projects table exists: {bool(table_exists)}")
-        
-        if not table_exists:
-            # Если таблицы нет, создадим её
-            from project_hosting_system import ProjectHostingSystem
-            hosting_system = ProjectHostingSystem()
-            hosting_system.init_database()
-            logger.info("🔧 Database initialized because table was missing")
-        
-        # Сначала проверяем в generated_projects (чат-проекты)
-        cursor.execute('''
-            SELECT files FROM generated_projects WHERE id = ?
-        ''', (project_id,))
-        
-        result = cursor.fetchone()
-        
-        if not result:
-            # Если не найдено, проверяем в hosted_projects (API проекты)
-            cursor.execute('''
-                SELECT files FROM hosted_projects 
-                WHERE project_id = ?
-            ''', (project_id,))
-            
-            result = cursor.fetchone()
-        
-        # Логируем количество проектов в базе для диагностики
-        cursor.execute("SELECT COUNT(*) FROM hosted_projects")
-        total_projects = cursor.fetchone()[0]
-        logger.info(f"🔍 Total projects in database: {total_projects}")
-        
-        conn.close()
-        
-        if not result or not result[0]:
-            logger.warning(f"⚠️ Project {project_id} not found in database (total projects: {total_projects})")
-            
-            # FALLBACK: Попробуем сгенерировать простое приложение на лету
-            # Это решает проблему с Railway где база может очищаться
-            logger.info(f"🔧 Generating fallback project for {project_id}")
-            
-            fallback_html = f'''<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated App</title>
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-        .container {{
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-        }}
-        h1 {{
-            color: #333;
-            margin-bottom: 20px;
-        }}
-        .status {{
-            background: #10b981;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            display: inline-block;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }}
-        button {{
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 10px;
-            transition: transform 0.2s;
-        }}
-        button:hover {{
-            transform: translateY(-2px);
-        }}
-        .footer {{
-            margin-top: 30px;
-            color: #666;
-            font-size: 14px;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 Generated Application</h1>
-        <div class="status">✅ Application is running!</div>
-        <p>This is your AI-generated application. Project ID: <strong>{project_id}</strong></p>
-        
-        <button onclick="alert('Hello from your AI app!')">Click me!</button>
-        <button onclick="document.body.style.background = 'linear-gradient(135deg, #ff6b6b, #4ecdc4)'">Change Theme</button>
-        
-        <div class="footer">
-            <p>💡 Generated by Vibecode AI Platform</p>
-            <p>This fallback ensures your app is always accessible, even on Railway!</p>
-        </div>
-    </div>
-    
-    <script>
-        console.log('🎉 Your AI-generated app is running! Project ID: {project_id}');
-        
-        // Простая интерактивность
-        let clicks = 0;
-        document.querySelector('button').addEventListener('click', function() {{
-            clicks++;
-            if (clicks > 3) {{
-                this.textContent = '🎉 You clicked me ' + clicks + ' times!';
-                this.style.background = 'linear-gradient(135deg, #ff6b6b, #feca57)';
-            }}
-        }});
-    </script>
-</body>
-</html>'''
-            
-            return Response(fallback_html, mimetype='text/html')
-        
-        try:
-            files_data = json.loads(result[0])
-            
-            # ИСПРАВЛЕНИЕ: Если files_data это список GeneratedFile объектов,
-            # конвертируем в словарь для правильного отображения
-            if isinstance(files_data, list):
-                logger.info(f"✅ Project {project_id} has list format, converting to dict for proper display")
-                # Конвертируем список файлов в словарь {имя_файла: содержимое}
-                converted_files = {}
-                for item in files_data:
-                    if isinstance(item, dict):
-                        # Поддерживаем разные форматы ключей
-                        file_name = item.get('name') or item.get('filename')
-                        file_content = item.get('content') or item.get('data')
-                        if file_name and file_content:
-                            converted_files[file_name] = file_content
-                        else:
-                            logger.warning(f"⚠️ Skipping invalid file item: {item}")
-                    else:
-                        logger.warning(f"⚠️ Skipping non-dict file item: {item}")
-
-                if converted_files:
-                    files_data = converted_files
-                    logger.info(f"✅ Successfully converted {len(files_data)} files to dict format")
-                else:
-                    logger.error(f"❌ Failed to convert files for project {project_id}, no valid files found")
-                    return jsonify({"error": "No valid files found in project"}), 404
-                
-=======
         # Сначала пытаемся загрузить из базы данных
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
@@ -4135,7 +3863,6 @@ def serve_hosted_project(project_id, filename='index.html'):
         
         try:
             files_data = json.loads(result[0])
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid project data"}), 500
         
@@ -4152,23 +3879,6 @@ def serve_hosted_project(project_id, filename='index.html'):
         # Определяем MIME тип
         if filename.endswith('.html'):
             mimetype = 'text/html'
-<<<<<<< HEAD
-            # Исправляем пути в HTML файлах для корректной загрузки ресурсов
-            import re
-            # Исправляем ссылки на CSS файлы (только локальные, не внешние)
-            file_content = re.sub(
-                r'href="([^":/]+\.css)"',
-                f'href="/app/{project_id}/\\1"',
-                file_content
-            )
-            # Исправляем ссылки на JS файлы (только локальные, не внешние)
-            file_content = re.sub(
-                r'src="([^":/]+\.js)"',
-                f'src="/app/{project_id}/\\1"',
-                file_content
-            )
-=======
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
         elif filename.endswith('.css'):
             mimetype = 'text/css'  
         elif filename.endswith('.js'):
@@ -4908,210 +4618,4 @@ if __name__ == '__main__':
 </body>
 </html>"""
 
-<<<<<<< HEAD
-# AI Наставник роут - без авторизации для демо приложения  
-@app.route('/api/mentor-chat', methods=['POST'])
-def mentor_chat():
-    """Специальный чат для AI Наставника приложения"""
-    try:
-        data = request.json
-        message = data.get('message', '')
-        mentor = data.get('mentor', 'elon')
-        personality = data.get('personality', '')
-        history = data.get('history', [])
-        
-        if not message:
-            return jsonify({'error': 'Сообщение не может быть пустым'}), 400
-            
-        # РЕВОЛЮЦИОННАЯ AI СИСТЕМА - реальные ответы через SmartAI + WebResearch
-        logger.info(f"🧠 AI Mentor Request: {mentor} - {message[:100]}...")
-
-        mentor_names = {
-            'musk': 'Илон Маск',
-            'elon': 'Илон Маск',
-            'gates': 'Билл Гейтс',
-            'bezos': 'Джефф Безос',
-            'buffett': 'Уоррен Баффет'
-        }
-
-        # Нормализуем имя наставника
-        mentor_key = 'musk' if mentor in ['elon', 'musk'] else mentor
-        mentor_name = mentor_names.get(mentor_key, 'Илон Маск')
-
-        try:
-            # Используем SmartAIGenerator для генерации ответа в стиле наставника
-            smart_generator = SmartAIGenerator()
-
-            # Создаем контекстуальный промт для наставника
-            mentor_prompt = f"""
-Ты - {mentor_name}. Отвечай ТОЛЬКО как этот наставник, используя его философию, стиль речи и опыт.
-
-КОНТЕКСТ НАСТАВНИКА:
-- Илон Маск: Первые принципы, инновации, космос, электромобили, смелые цели
-- Билл Гейтс: Технологии для человечества, здравоохранение, образование, филантропия
-- Джефф Безос: Клиентоориентированность, долгосрочное мышление, изобретательность
-- Уоррен Баффет: Инвестиции, терпение, фундаментальный анализ, простота
-
-ВОПРОС ПОЛЬЗОВАТЕЛЯ: {message}
-
-Отвечай КАК {mentor_name}:
-- Используй его характерные фразы и подход
-- Приведи реальные примеры из его опыта
-- Дай практический совет в его стиле
-- Максимум 3-4 предложения
-- НА РУССКОМ ЯЗЫКЕ
-
-ОТВЕТ {mentor_name}:"""
-
-            # Получаем ответ через Groq AI
-            try:
-                ai_response = smart_generator._call_groq_api(mentor_prompt, "llama-3.1-8b-instant")
-                if ai_response and len(ai_response.strip()) > 10:
-                    response = ai_response.strip()
-                else:
-                    raise Exception("Empty AI response")
-
-                logger.info(f"✅ AI Response generated: {len(response)} chars")
-
-            except Exception as ai_error:
-                logger.warning(f"⚠️ Groq AI failed, using enhanced fallback: {ai_error}")
-
-                # Улучшенный fallback с контекстом
-                response = smart_generator._get_enhanced_mentor_response(message, mentor_key)
-
-        except Exception as e:
-            logger.error(f"❌ SmartAI failed: {e}")
-
-            # Финальный fallback
-            fallback_responses = {
-                'musk': f"Интересный вопрос! Думайте от первых принципов: разложите '{message}' на базовые элементы и найдите инновационное решение.",
-                'gates': f"Для ответа на '{message}' нужно проанализировать данные и подумать о долгосрочном влиянии на общество.",
-                'bezos': f"Относительно '{message}' - начните с клиента и идите назад. Какую ценность это создаст?",
-                'buffett': f"Вопрос '{message}' требует терпеливого анализа. Инвестируйте только в то, что понимаете."
-            }
-            response = fallback_responses.get(mentor_key, fallback_responses['musk'])
-        
-        return jsonify({
-            'response': response,
-            'mentor': mentor,
-            'mentor_name': mentor_name,
-            'timestamp': time.time()
-        })
-        
-    except Exception as e:
-        print(f"Ошибка в mentor_chat: {e}")
-        return jsonify({
-            'response': 'Извините, произошла техническая ошибка. Попробуйте ещё раз.',
-            'error': str(e)
-        }), 500
-
-# API эндпоинты для получения файлов проекта
-@app.route('/api/project/<project_id>/files')
-def get_project_files_api(project_id):
-    """Получить файлы проекта из базы данных"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Сначала проверяем в generated_projects (чат-проекты)
-        cursor.execute('''
-            SELECT files FROM generated_projects WHERE id = ?
-        ''', (project_id,))
-        
-        result = cursor.fetchone()
-        
-        if not result:
-            # Если не найдено, проверяем в hosted_projects (API проекты)
-            cursor.execute('''
-                SELECT files FROM hosted_projects WHERE project_id = ?
-            ''', (project_id,))
-            
-            result = cursor.fetchone()
-        
-        conn.close()
-        
-        if result:
-            files_data = result[0]
-            try:
-                files = json.loads(files_data)
-                return jsonify({
-                    'success': True,
-                    'files': files
-                })
-            except json.JSONDecodeError:
-                logger.error(f"🔍 JSONDecodeError in get_project_files_api for project {project_id}")
-                return jsonify({'error': 'Project not found in database'}), 404
-        else:
-            logger.error(f"🔍 No result found in get_project_files_api for project {project_id}")
-            return jsonify({'error': 'Project not found in database'}), 404
-            
-    except Exception as e:
-        logger.error(f"Error getting project files: {e}")
-        return jsonify({'error': 'Database error'}), 500
-
-@app.route('/api/project/<project_id>/file', methods=['POST'])
-def update_project_file_api(project_id):
-    """Обновить файл проекта в базе данных"""
-    try:
-        data = request.json
-        filename = data.get('filename')
-        content = data.get('content')
-        
-        if not filename or content is None:
-            return jsonify({'error': 'Missing filename or content'}), 400
-            
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Сначала проверяем в generated_projects (чат-проекты)
-        cursor.execute('''
-            SELECT files FROM generated_projects WHERE id = ?
-        ''', (project_id,))
-        
-        result = cursor.fetchone()
-        table_to_update = 'generated_projects'
-        id_column = 'id'
-        
-        if not result:
-            # Если не найдено, проверяем в hosted_projects (API проекты)
-            cursor.execute('''
-                SELECT files FROM hosted_projects WHERE project_id = ?
-            ''', (project_id,))
-            
-            result = cursor.fetchone()
-            table_to_update = 'hosted_projects'
-            id_column = 'project_id'
-        
-        if not result:
-            conn.close()
-            logger.error(f"🔍 No result found in update_project_file_api for project {project_id}")
-            return jsonify({'error': 'Project not found in database'}), 404
-            
-        try:
-            files = json.loads(result[0])
-            files[filename] = content
-            
-            cursor.execute(f'''
-                UPDATE {table_to_update} SET files = ?, last_accessed = ? WHERE {id_column} = ?
-            ''', (json.dumps(files), time.time(), project_id))
-            
-            conn.commit()
-            conn.close()
-            
-            return jsonify({
-                'success': True,
-                'message': 'File updated successfully'
-            })
-            
-        except json.JSONDecodeError:
-            conn.close()
-            return jsonify({'error': 'Invalid project data'}), 404
-            
-    except Exception as e:
-        logger.error(f"Error updating project file: {e}")
-        return jsonify({'error': 'Database error'}), 500
-
-if __name__ == '__main__':
-=======
->>>>>>> 7976a00e07f65908bec962e8dd4b0dc605312a62
     socketio.run(app, host='0.0.0.0', port=5002, debug=False, allow_unsafe_werkzeug=True)
