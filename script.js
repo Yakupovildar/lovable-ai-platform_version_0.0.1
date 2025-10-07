@@ -80,79 +80,112 @@ function showPreRegistrationForm() {
                 <div class="modal-header">
                     <h2 style="color: #ffffff; margin: 0 0 10px 0;">🚀 Расскажите о себе</h2>
                     <button class="modal-close" onclick="closePreRegistrationModal()" style="color: #ffffff; background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
-                    <p style="color: rgba(255, 255, 255, 0.8); margin: 10px 0 0 0;">Помогите нам создать лучший опыт для вас</p>
+                    <p style="color: rgba(255, 255, 255, 0.8); margin: 10px 0 0 0;">Это займёт не более минуты</p>
+                    <div class="progress-indicator" style="display: flex; gap: 8px; margin-top: 20px; justify-content: center;">
+                        <span class="progress-dot active" style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e;"></span>
+                        <span class="progress-dot" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3);"></span>
+                        <span class="progress-dot" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3);"></span>
+                        <span class="progress-dot" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3);"></span>
+                        <span class="progress-dot" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3);"></span>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <form id="preRegistrationForm" class="pre-registration-form">
-                        <div class="form-group">
-                            <label for="userRole" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Кто вы? *</label>
-                            <select id="userRole" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
-                                <option value="">Выберите роль</option>
-                                <option value="developer">Разработчик</option>
-                                <option value="designer">Дизайнер</option>
-                                <option value="entrepreneur">Предприниматель</option>
-                                <option value="student">Студент</option>
-                                <option value="freelancer">Фрилансер</option>
-                                <option value="manager">Менеджер продукта</option>
-                                <option value="other">Другое</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="experienceLevel" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Уровень опыта в разработке? *</label>
-                            <select id="experienceLevel" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
-                                <option value="">Выберите уровень</option>
-                                <option value="beginner">Новичок (без опыта)</option>
-                                <option value="intermediate">Средний (1-3 года)</option>
-                                <option value="advanced">Продвинутый (3+ лет)</option>
-                                <option value="expert">Эксперт (5+ лет)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="projectType" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Что планируете создавать? *</label>
-                            <select id="projectType" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
-                                <option value="">Выберите тип проекта</option>
-                                <option value="landing">Лендинги</option>
-                                <option value="ecommerce">Интернет-магазины</option>
-                                <option value="webapp">Веб-приложения</option>
-                                <option value="portfolio">Портфолио</option>
-                                <option value="blog">Блоги</option>
-                                <option value="business">Корпоративные сайты</option>
-                                <option value="startup">Стартап MVP</option>
-                                <option value="other">Другое</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="teamSize" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Размер команды? *</label>
-                            <select id="teamSize" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
-                                <option value="">Выберите размер</option>
-                                <option value="solo">Работаю один</option>
-                                <option value="small">2-5 человек</option>
-                                <option value="medium">6-20 человек</option>
-                                <option value="large">20+ человек</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="hearAbout" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Как узнали о нас?</label>
-                            <select id="hearAbout" style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
-                                <option value="">Выберите источник</option>
-                                <option value="search">Поиск Google</option>
-                                <option value="social">Социальные сети</option>
-                                <option value="youtube">YouTube</option>
-                                <option value="friend">Рекомендация друга</option>
-                                <option value="blog">Блог/статья</option>
-                                <option value="ads">Реклама</option>
-                                <option value="other">Другое</option>
-                            </select>
+                        <!-- Step 1 -->
+                        <div class="form-step active" data-step="1">
+                            <div class="form-group">
+                                <label for="userRole" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Кто вы? *</label>
+                                <select id="userRole" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
+                                    <option value="">Выберите роль</option>
+                                    <option value="developer">Разработчик</option>
+                                    <option value="designer">Дизайнер</option>
+                                    <option value="entrepreneur">Предприниматель</option>
+                                    <option value="student">Студент</option>
+                                    <option value="freelancer">Фрилансер</option>
+                                    <option value="manager">Менеджер продукта</option>
+                                    <option value="other">Другое</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-primary" onclick="nextStep(2)">
+                                <span>Далее</span>
+                            </button>
                         </div>
 
-                        <button type="submit" class="btn-primary" id="preRegisterBtn">
-                            <span>Продолжить регистрацию</span>
-                            <div class="btn-glow"></div>
-                        </button>
+                        <!-- Step 2 -->
+                        <div class="form-step" data-step="2" style="display: none;">
+                            <div class="form-group">
+                                <label for="experienceLevel" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Уровень опыта в разработке? *</label>
+                                <select id="experienceLevel" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
+                                    <option value="">Выберите уровень</option>
+                                    <option value="beginner">Новичок (без опыта)</option>
+                                    <option value="intermediate">Средний (1-3 года)</option>
+                                    <option value="advanced">Продвинутый (3+ лет)</option>
+                                    <option value="expert">Эксперт (5+ лет)</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-primary" onclick="nextStep(3)">
+                                <span>Далее</span>
+                            </button>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="form-step" data-step="3" style="display: none;">
+                            <div class="form-group">
+                                <label for="projectType" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Что планируете создавать? *</label>
+                                <select id="projectType" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
+                                    <option value="">Выберите тип проекта</option>
+                                    <option value="landing">Лендинги</option>
+                                    <option value="ecommerce">Интернет-магазины</option>
+                                    <option value="webapp">Веб-приложения</option>
+                                    <option value="portfolio">Портфолио</option>
+                                    <option value="blog">Блоги</option>
+                                    <option value="business">Корпоративные сайты</option>
+                                    <option value="startup">Стартап MVP</option>
+                                    <option value="other">Другое</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-primary" onclick="nextStep(4)">
+                                <span>Далее</span>
+                            </button>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="form-step" data-step="4" style="display: none;">
+                            <div class="form-group">
+                                <label for="teamSize" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Размер команды? *</label>
+                                <select id="teamSize" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
+                                    <option value="">Выберите размер</option>
+                                    <option value="solo">Работаю один</option>
+                                    <option value="small">2-5 человек</option>
+                                    <option value="medium">6-20 человек</option>
+                                    <option value="large">20+ человек</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-primary" onclick="nextStep(5)">
+                                <span>Далее</span>
+                            </button>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div class="form-step" data-step="5" style="display: none;">
+                            <div class="form-group">
+                                <label for="hearAbout" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Как узнали о нас?</label>
+                                <select id="hearAbout" style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
+                                    <option value="">Выберите источник</option>
+                                    <option value="search">Поиск Google</option>
+                                    <option value="social">Социальные сети</option>
+                                    <option value="youtube">YouTube</option>
+                                    <option value="friend">Рекомендация друга</option>
+                                    <option value="blog">Блог/статья</option>
+                                    <option value="ads">Реклама</option>
+                                    <option value="other">Другое</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary" id="preRegisterBtn">
+                                <span>Продолжить регистрацию</span>
+                                <div class="btn-glow"></div>
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -552,6 +585,36 @@ window.closeDemoSection = function() {
         // Прокручиваем обратно наверх
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+};
+
+window.nextStep = function(stepNumber) {
+    // Валидация текущего шага
+    const currentStep = document.querySelector('.form-step.active');
+    const select = currentStep.querySelector('select');
+
+    if (select && select.hasAttribute('required') && !select.value) {
+        alert('Пожалуйста, выберите вариант');
+        return;
+    }
+
+    // Скрываем текущий шаг
+    currentStep.classList.remove('active');
+    currentStep.style.display = 'none';
+
+    // Показываем следующий шаг
+    const nextStep = document.querySelector(`.form-step[data-step="${stepNumber}"]`);
+    nextStep.style.display = 'block';
+    nextStep.classList.add('active');
+
+    // Обновляем индикатор прогресса
+    const dots = document.querySelectorAll('.progress-dot');
+    dots.forEach((dot, index) => {
+        if (index < stepNumber) {
+            dot.style.background = '#22c55e';
+        } else {
+            dot.style.background = 'rgba(255,255,255,0.3)';
+        }
+    });
 };
 
 window.showLogin = function() {
