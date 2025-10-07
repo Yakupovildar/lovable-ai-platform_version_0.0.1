@@ -1,8 +1,8 @@
 // Lovable AI Platform - Enhanced JavaScript with Backend Integration
 console.log('💻 Vibecode AI Platform loaded!');
 
-// Конфигурация для Replit
-const API_BASE_URL = 'https://assumption-playlist-incorporate-monsters.trycloudflare.com';  // Backend API URL
+// Конфигурация для Railway
+const API_BASE_URL = 'https://web-production-d498d.up.railway.app';  // Backend API URL
 const WS_URL = window.location.origin;        // WebSocket на том же домене
 
 // Глобальные переменные
