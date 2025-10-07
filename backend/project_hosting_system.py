@@ -16,18 +16,29 @@ from pathlib import Path
 import sqlite3
 import hashlib
 
+# Database configuration - ЕДИНАЯ база данных для всех экземпляров
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'users.db')
+
 class ProjectHostingSystem:
     """Система для хостинга и демонстрации созданных приложений"""
     
     def __init__(self):
         self.projects_dir = Path("hosted_projects")
         self.projects_dir.mkdir(exist_ok=True)
-        self.base_url = os.getenv('BASE_URL', 'https://web-production-d498d.up.railway.app')
+        self.base_url = os.getenv('BASE_URL', 'http://127.0.0.1:5002')
+        
+        # Определяем среду выполнения
+        self.is_railway = os.getenv('RAILWAY_ENVIRONMENT_ID') is not None
+        self.is_production = os.getenv('NODE_ENV') == 'production' or self.is_railway
+        
+        if self.is_railway:
+            print("🚂 Running on Railway - using optimized configuration")
+        
         self.init_database()
     
     def init_database(self):
         """Инициализация базы данных для хостинга"""
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -68,31 +79,92 @@ class ProjectHostingSystem:
         qr_code_data = self.generate_qr_code(project_id)
         
         # Создаем thumbnail
-        thumbnail_data = self.generate_thumbnail(files.get('index.html', ''))
+        try:
+            if isinstance(files, dict):
+                thumbnail_data = self.generate_thumbnail(files.get('index.html', ''))
+            elif isinstance(files, list):
+                # Ищем index.html в списке файлов
+                index_html_content = ''
+                for item in files:
+                    if isinstance(item, dict):
+                        if item.get('name') == 'index.html' or item.get('filename') == 'index.html':
+                            index_html_content = item.get('content', '')
+                            break
+                    elif isinstance(item, str) and 'index.html' in item:
+                        index_html_content = item
+                        break
+                thumbnail_data = self.generate_thumbnail(index_html_content)
+            else:
+                print(f"⚠️ Неизвестный тип files для thumbnail: {type(files)}")
+                thumbnail_data = self.generate_thumbnail('')
+        except Exception as e:
+            print(f"⚠️ Ошибка создания thumbnail: {e}")
+            thumbnail_data = self.generate_thumbnail('')
         
-        # Сохраняем в базу данных
-        conn = sqlite3.connect('users.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT OR REPLACE INTO hosted_projects 
-            (project_id, user_id, project_name, project_type, files, created_at, 
-             last_accessed, qr_code, thumbnail)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            project_id,
-            user_id,
-            project_data.get('name', 'Unnamed Project'),
-            project_data.get('type', 'web_app'),
-            json.dumps(files),
-            datetime.now().timestamp(),
-            datetime.now().timestamp(),
-            qr_code_data,
-            thumbnail_data
-        ))
-        
-        conn.commit()
-        conn.close()
+        # Сохраняем в базу данных с retry механизмом для Railway
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                conn = sqlite3.connect(DB_PATH)
+                cursor = conn.cursor()
+                
+                # Убеждаемся что таблица существует
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS hosted_projects (
+                        project_id TEXT PRIMARY KEY,
+                        user_id TEXT NOT NULL,
+                        project_name TEXT NOT NULL,
+                        project_type TEXT NOT NULL,
+                        files TEXT NOT NULL,
+                        created_at REAL NOT NULL,
+                        last_accessed REAL NOT NULL,
+                        access_count INTEGER DEFAULT 0,
+                        is_public BOOLEAN DEFAULT 1,
+                        custom_domain TEXT NULL,
+                        qr_code TEXT NULL,
+                        thumbnail TEXT NULL
+                    )
+                ''')
+                
+                cursor.execute('''
+                    INSERT OR REPLACE INTO hosted_projects 
+                    (project_id, user_id, project_name, project_type, files, created_at, 
+                     last_accessed, qr_code, thumbnail)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    project_id,
+                    user_id,
+                    project_data.get('name', 'Unnamed Project'),
+                    project_data.get('type', 'web_app'),
+                    json.dumps(files),
+                    datetime.now().timestamp(),
+                    datetime.now().timestamp(),
+                    qr_code_data,
+                    thumbnail_data
+                ))
+                
+                conn.commit()
+                
+                # Проверяем что проект действительно сохранился
+                cursor.execute('SELECT project_id FROM hosted_projects WHERE project_id = ?', (project_id,))
+                if cursor.fetchone():
+                    print(f"✅ Project {project_id} successfully saved to database (attempt {attempt + 1})")
+                    conn.close()
+                    break
+                else:
+                    raise Exception("Project not found after insert")
+                    
+            except Exception as e:
+                print(f"⚠️ Database save attempt {attempt + 1} failed: {e}")
+                if 'conn' in locals():
+                    conn.close()
+                if attempt == max_retries - 1:
+                    print(f"❌ Failed to save project {project_id} after {max_retries} attempts")
+                    # На Railway продолжаем работу даже если база не сохранилась
+                    # так как есть fallback при обслуживании
+                else:
+                    import time
+                    time.sleep(0.1)  # Небольшая пауза перед retry
         
         # Возвращаем информацию о размещенном проекте
         return {
@@ -115,15 +187,48 @@ class ProjectHostingSystem:
     
     def save_project_files(self, project_path: Path, files: Dict[str, str]):
         """Сохраняет файлы проекта на диск"""
-        for filename, content in files.items():
-            file_path = project_path / filename
-            
-            # Создаем поддиректории если нужно
-            file_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Сохраняем файл
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
+        try:
+            if isinstance(files, dict):
+                for filename, content in files.items():
+                    file_path = project_path / filename
+
+                    # Создаем поддиректории если нужно
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    # Записываем содержимое файла
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+            else:
+                print(f"⚠️ Ошибка: files не является словарем: {type(files)}")
+                print(f"⚠️ Получены данные: {files}")
+                # Если это список, попробуем обработать как список файлов
+                if isinstance(files, list):
+                    for i, item in enumerate(files):
+                        if isinstance(item, dict) and 'name' in item and 'content' in item:
+                            filename = item['name']
+                            content = item['content']
+                            file_path = project_path / filename
+                            file_path.parent.mkdir(parents=True, exist_ok=True)
+                            with open(file_path, 'w', encoding='utf-8') as f:
+                                f.write(content)
+                        else:
+                            print(f"⚠️ Неизвестный формат файла в позиции {i}: {item}")
+        except AttributeError as e:
+            print(f"⚠️ Ошибка доступа к files.items(): {e}")
+            print(f"⚠️ Тип данных: {type(files)}")
+            print(f"⚠️ Содержимое: {files}")
+            return
+
+    def _save_single_file(self, project_path: Path, filename: str, content: str):
+        """Вспомогательная функция для сохранения одного файла"""
+        file_path = project_path / filename
+
+        # Создаем поддиректории если нужно
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Сохраняем файл
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
     
     def generate_qr_code(self, project_id: str) -> str:
         """Генерирует QR код для приложения"""
@@ -192,7 +297,7 @@ class ProjectHostingSystem:
     
     def get_project_stats(self, project_id: str) -> Dict[str, Any]:
         """Получает статистику проекта"""
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -220,7 +325,7 @@ class ProjectHostingSystem:
     
     def update_access_stats(self, project_id: str):
         """Обновляет статистику доступа к проекту"""
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -234,7 +339,7 @@ class ProjectHostingSystem:
     
     def get_user_projects(self, user_id: str) -> List[Dict[str, Any]]:
         """Получает все проекты пользователя"""
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -266,7 +371,7 @@ class ProjectHostingSystem:
     def delete_project(self, project_id: str, user_id: str) -> bool:
         """Удаляет проект пользователя"""
         # Проверяем права доступа
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -299,7 +404,7 @@ class ProjectHostingSystem:
         """Очистка старых неиспользуемых проектов"""
         cutoff_time = datetime.now() - timedelta(days=days_old)
         
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
         # Находим старые проекты
@@ -336,9 +441,16 @@ class ProjectPreviewGenerator:
     def generate_chat_preview(self, project_data: Dict[str, Any]) -> str:
         """Генерирует HTML превью для отображения в чате"""
         
-        project_id = project_data.get('project_id', 'unknown')
+        project_id = project_data.get('id', project_data.get('project_id', 'unknown'))
         project_name = project_data.get('name', 'Unnamed Project')
-        live_url = project_data.get('live_url', '#')
+        live_url = project_data.get('hosted_url', project_data.get('live_url', '#'))
+        
+        # Debugging: Log the project_data to see what's being passed
+        print(f"🔍 Preview generation - project_data keys: {list(project_data.keys())}")
+        print(f"🔍 Preview generation - hosted_url: {project_data.get('hosted_url', 'NOT_FOUND')}")
+        print(f"🔍 Preview generation - live_url: {project_data.get('live_url', 'NOT_FOUND')}")
+        print(f"🔍 Preview generation - final live_url: {live_url}")
+        
         thumbnail = project_data.get('thumbnail', '')
         
         preview_html = f'''

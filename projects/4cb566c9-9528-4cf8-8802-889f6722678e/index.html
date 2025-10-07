@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новый исправленный тест</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="modern-theme">
+    <div class="weather-app">
+        <div class="app-header">
+            <h1>Новый исправленный тест</h1>
+            <p>Приложение погоды с исправленными файлами</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-group">
+                <input type="text" id="cityInput" placeholder="Введите название города..." />
+                <button id="searchBtn" class="search-btn">🔍</button>
+            </div>
+        </div>
+
+        <div class="weather-display" id="weatherDisplay">
+            <div class="weather-card">
+                <div class="current-weather">
+                    <div class="weather-icon">☀️</div>
+                    <div class="temperature">--°C</div>
+                    <div class="city-name">--</div>
+                    <div class="weather-description">--</div>
+                </div>
+
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Ощущается как</span>
+                        <span class="detail-value">--°C</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Влажность</span>
+                        <span class="detail-value">--%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Ветер</span>
+                        <span class="detail-value">-- км/ч</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Давление</span>
+                        <span class="detail-value">-- гПа</span>
+                    </div>
+                </div>
+
+                <div class="forecast">
+                    <h3>Прогноз на 5 дней</h3>
+                    <div class="forecast-list" id="forecastList">
+                        <p>Загрузка прогноза...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-footer">
+            <p>Создано с помощью Lovable AI</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

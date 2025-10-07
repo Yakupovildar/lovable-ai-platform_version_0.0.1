@@ -66,6 +66,7 @@ function getPlanName(plan) {
 function initializeDashboard() {
     setupTabs();
     setupChat();
+    setupWebSocket();
     loadUserProjects();
     loadChatHistory();
 }
@@ -136,6 +137,51 @@ function setupChat() {
     }
 }
 
+// Настройка WebSocket для прогресса
+function setupWebSocket() {
+    // Подключаемся к WebSocket серверу
+    window.socket = io();
+    
+    console.log('🔌 Подключаюсь к WebSocket...');
+    
+    // Обработка событий прогресса генерации
+    window.socket.on('generation_progress', function(data) {
+        console.log('📊 Получен прогресс:', data);
+        
+        if (data.message && data.percentage !== undefined) {
+            // Показываем или обновляем прогресс
+            const progressIndicator = document.getElementById('progressIndicator');
+            if (!progressIndicator) {
+                showProgressIndicator(data.message, data.percentage);
+            } else {
+                updateProgressIndicator(data.message, data.percentage);
+            }
+            
+            // Если генерация завершена, скрываем прогресс через 2 секунды
+            if (data.percentage >= 100) {
+                setTimeout(() => {
+                    hideProgressIndicator();
+                }, 2000);
+            }
+        }
+    });
+    
+    // Обработка подключения
+    window.socket.on('connect', function() {
+        console.log('✅ WebSocket подключен');
+    });
+    
+    // Обработка отключения
+    window.socket.on('disconnect', function() {
+        console.log('❌ WebSocket отключен');
+    });
+    
+    // Обработка ошибок
+    window.socket.on('error', function(error) {
+        console.error('❌ Ошибка WebSocket:', error);
+    });
+}
+
 // Отправка сообщения в чат
 async function sendMessage() {
     const chatInput = document.getElementById('chatInput');
@@ -153,8 +199,14 @@ async function sendMessage() {
     addMessage(message, 'user');
     chatInput.value = '';
     
-    // Показываем индикатор печати
-    showTypingIndicator();
+    // Показываем прогресс (для генерации) или обычный индикатор
+    if (message.toLowerCase().includes('создай') || 
+        message.toLowerCase().includes('сделай') || 
+        message.toLowerCase().includes('построй')) {
+        showProgressIndicator("🚀 Начинаю создание приложения...", 0);
+    } else {
+        showTypingIndicator();
+    }
     
     try {
         const response = await fetch('/api/chat', {
@@ -169,6 +221,7 @@ async function sendMessage() {
         });
         
         hideTypingIndicator();
+        hideProgressIndicator();
         
         if (response.status === 429) {
             // Лимит исчерпан
@@ -339,6 +392,56 @@ function hideTypingIndicator() {
     }
 }
 
+// Показ прогресса генерации
+function showProgressIndicator(message = "Генерирую приложение...", percentage = 0) {
+    // Удаляем старые индикаторы
+    hideTypingIndicator();
+    hideProgressIndicator();
+    
+    const chatMessages = document.getElementById('chatMessages');
+    const progressDiv = document.createElement('div');
+    progressDiv.className = 'message ai-message progress-indicator';
+    progressDiv.id = 'progressIndicator';
+    
+    progressDiv.innerHTML = `
+        <div class="message-avatar ai-avatar">🤖</div>
+        <div class="message-content">
+            <div class="progress-container">
+                <div class="progress-message" id="progressMessage">${message}</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar" style="width: ${percentage}%"></div>
+                </div>
+                <div class="progress-percentage" id="progressPercentage">${Math.round(percentage)}%</div>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(progressDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function updateProgressIndicator(message, percentage) {
+    const progressMessage = document.getElementById('progressMessage');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercentage = document.getElementById('progressPercentage');
+    
+    if (progressMessage) progressMessage.textContent = message;
+    if (progressBar) progressBar.style.width = `${percentage}%`;
+    if (progressPercentage) progressPercentage.textContent = `${Math.round(percentage)}%`;
+    
+    // Анимация прогресс-бара
+    if (progressBar) {
+        progressBar.style.transition = 'width 0.5s ease-in-out';
+    }
+}
+
+function hideProgressIndicator() {
+    const progressIndicator = document.getElementById('progressIndicator');
+    if (progressIndicator) {
+        progressIndicator.remove();
+    }
+}
+
 // Показ предложений
 function showSuggestions(suggestions) {
     const chatMessages = document.getElementById('chatMessages');
@@ -451,18 +554,11 @@ async function openProject(projectId) {
 
 async function runProject(projectId) {
     try {
-        const response = await fetch(`/api/project/${projectId}/run`, {
-            method: 'POST'
-        });
+        // Напрямую открываем проект без лишних API вызовов
+        const projectUrl = `/app/${projectId}`;
         
-        if (response.ok) {
-            const data = await response.json();
-            showNotification('Проект запущен!', 'success');
-            // Открыть проект в новой вкладке или iframe
-            window.open(data.url, '_blank');
-        } else {
-            showNotification('Ошибка запуска проекта', 'error');
-        }
+        showNotification('Открываем проект...', 'info');
+        window.open(projectUrl, '_blank');
     } catch (error) {
         console.error('Ошибка запуска проекта:', error);
         showNotification('Ошибка запуска проекта', 'error');
@@ -620,21 +716,62 @@ function closeModal() {
 
 // Загрузка истории чатов
 async function loadChatHistory() {
+    console.log('🔄 Загружаю историю чатов...');
+    const historyList = document.getElementById('historyList');
+    
     try {
         const response = await fetch('/api/user/history');
+        console.log('📡 Ответ API истории:', response.status, response.statusText);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log('📊 Данные истории:', data);
+            console.log('📋 Количество сессий:', data.sessions?.length || 0);
+            
+            // Показываем состояние загрузки
+            if (historyList) {
+                historyList.innerHTML = `<div style="text-align: center; padding: 2rem; color: rgba(255, 255, 255, 0.7);">
+                    ✅ Данные получены: ${data.sessions?.length || 0} сессий
+                </div>`;
+            }
+            
             displayChatHistory(data.sessions);
+        } else {
+            const errorText = await response.text();
+            console.error('❌ Ошибка API истории:', response.status, errorText);
+            
+            if (historyList) {
+                historyList.innerHTML = `<div style="text-align: center; padding: 2rem; color: #ef4444;">
+                    ❌ Ошибка загрузки: ${response.status} ${response.statusText}
+                    <br><small>${errorText}</small>
+                </div>`;
+            }
         }
     } catch (error) {
-        console.error('Ошибка загрузки истории:', error);
+        console.error('❌ Ошибка загрузки истории:', error);
+        
+        if (historyList) {
+            historyList.innerHTML = `<div style="text-align: center; padding: 2rem; color: #ef4444;">
+                ❌ Ошибка сети: ${error.message}
+            </div>`;
+        }
     }
 }
 
 function displayChatHistory(sessions) {
+    console.log('🖥️ Отображаю историю чатов, получено:', sessions);
+    console.log('📝 Тип данных sessions:', typeof sessions);
+    console.log('📦 Array.isArray(sessions):', Array.isArray(sessions));
+    
     const historyList = document.getElementById('historyList');
     
-    if (sessions.length === 0) {
+    if (!sessions || sessions.length === 0) {
+        console.log('⚠️ Сессии пустые или отсутствуют');
+    } else {
+        console.log('✅ Найдено сессий:', sessions.length);
+    }
+    
+    if (!sessions || sessions.length === 0) {
         historyList.innerHTML = `
             <div style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.7);">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
@@ -671,7 +808,10 @@ function downloadProject(downloadUrl, projectId) {
 }
 
 function viewProject(projectId) {
-    showNotification('👁️ Функция просмотра файлов будет добавлена в следующем обновлении', 'info');
+    // Открываем проект в новой вкладке
+    const projectUrl = `${window.location.origin}/app/${projectId}`;
+    window.open(projectUrl, '_blank');
+    showNotification('🚀 Проект открыт в новой вкладке', 'success');
 }
 
 function editProject(projectId) {

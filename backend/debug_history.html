@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Chat History</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: white; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #333; border-radius: 8px; }
+        pre { background: #2a2a2a; padding: 15px; border-radius: 5px; overflow: auto; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .error { color: #ff6b6b; }
+        .success { color: #4ecdc4; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug: Chat History API</h1>
+    
+    <div class="section">
+        <h3>Тест API истории чатов</h3>
+        <button onclick="testHistoryAPI()">Загрузить историю</button>
+        <button onclick="testLogin()">Проверить авторизацию</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="section">
+        <h3>Результат</h3>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testHistoryAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            const mainResult = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<p>🔄 Загружаю историю...</p>';
+                
+                const response = await fetch('/api/user/history');
+                const status = response.status;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ API работает! Статус: ${status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    
+                    // Анализируем данные
+                    const sessions = data.sessions || [];
+                    mainResult.innerHTML = `
+                        <h4>📊 Анализ данных:</h4>
+                        <p><strong>Количество сессий:</strong> ${sessions.length}</p>
+                        <p><strong>Тип данных sessions:</strong> ${typeof sessions}</p>
+                        <p><strong>Массив?:</strong> ${Array.isArray(sessions) ? 'Да' : 'Нет'}</p>
+                        ${sessions.length > 0 ? `
+                            <p><strong>Первая сессия:</strong></p>
+                            <pre>${JSON.stringify(sessions[0], null, 2)}</pre>
+                        ` : '<p>❌ Сессии отсутствуют</p>'}
+                    `;
+                    
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Ошибка API! Статус: ${status}</p>
+                        <pre>${errorText}</pre>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Ошибка запроса: ${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch('/api/user/profile');
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <h4>👤 Информация о пользователе:</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Пользователь не авторизован</p>
+                        <p>Нужно сначала войти в систему через главную страницу</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Ошибка: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Автоматически проверяем при загрузке
+        window.onload = function() {
+            testLogin();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Test App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="modern-theme">
+    <div class="game-container">
+        <div class="game-header">
+            <h1>Final Test App</h1>
+            <div class="game-info">
+                <div class="score">Счёт: <span id="score">0</span></div>
+                <div class="high-score">Рекорд: <span id="highScore">0</span></div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div class="game-overlay" id="gameOverlay">
+                <div class="start-screen">
+                    <h2>🐍 Змейка</h2>
+                    <p>Управление: стрелки или WASD</p>
+                    <button id="startBtn" class="game-btn">Начать игру</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <div class="mobile-controls">
+                <button class="control-btn" data-direction="up">↑</button>
+                <div class="control-row">
+                    <button class="control-btn" data-direction="left">←</button>
+                    <button class="control-btn" data-direction="down">↓</button>
+                    <button class="control-btn" data-direction="right">→</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-footer">
+            <p>финальный тест сохранения</p>
+            <p>Создано с помощью Lovable AI</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

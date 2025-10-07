@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новый тест</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="modern-theme">
+    <div class="app-container">
+        <div class="app-header">
+            <h1>Новый тест</h1>
+            <p class="app-description">Тестовое TODO приложение</p>
+        </div>
+
+        <div class="todo-input-section">
+            <div class="input-group">
+                <input type="text" id="todoInput" placeholder="Добавить новую задачу..." maxlength="100">
+                <button id="addBtn" class="add-btn">+</button>
+            </div>
+        </div>
+
+        <div class="todo-filters">
+            <button class="filter-btn active" data-filter="all">Все</button>
+            <button class="filter-btn" data-filter="active">Активные</button>
+            <button class="filter-btn" data-filter="completed">Выполненные</button>
+        </div>
+
+        <div class="todo-list" id="todoList">
+            <!-- Задачи будут добавлены динамически -->
+        </div>
+
+        <div class="todo-stats">
+            <span id="totalTasks">0 задач</span>
+            <button id="clearCompleted" class="clear-btn">Очистить выполненные</button>
+        </div>
+
+        <div class="app-footer">
+            <p>Создано с помощью Lovable AI</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

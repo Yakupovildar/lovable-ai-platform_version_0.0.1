@@ -89,7 +89,7 @@ def register_competitive_routes(app, ai_chat_bot, github_integration, version_co
             return jsonify({'error': str(e)}), 500
     
     @app.route('/api/ai-chat/history/<session_id>', methods=['GET'])
-    def get_chat_history(session_id):
+    def get_ai_chat_session_history(session_id):
         """Получает историю чата"""
         try:
             history = ai_chat_bot.get_chat_history(session_id)

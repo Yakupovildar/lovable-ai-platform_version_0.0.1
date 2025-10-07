@@ -1,0 +1,303 @@
+version: '3.8'
+
+services:
+  # API Gateway - входная точка для всех запросов
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVICE_NAME=api-gateway
+      - SERVICE_PORT=8000
+      - REGISTRY_HOST=service-registry
+      - REGISTRY_PORT=8500
+    depends_on:
+      - service-registry
+      - redis
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service Registry - реестр всех микросервисов
+  service-registry:
+    build:
+      context: .
+      dockerfile: docker/registry.Dockerfile
+    ports:
+      - "8500:8500"
+    environment:
+      - SERVICE_NAME=service-registry
+      - SERVICE_PORT=8500
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - registry-data:/app/data
+
+  # AI Service - обработка AI запросов
+  ai-service:
+    build:
+      context: .
+      dockerfile: docker/ai-service.Dockerfile
+    environment:
+      - SERVICE_NAME=ai-service
+      - SERVICE_PORT=8001
+      - REGISTRY_HOST=service-registry
+      - REGISTRY_PORT=8500
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GIGACHAT_API_KEY=${GIGACHAT_API_KEY}
+    depends_on:
+      - service-registry
+      - redis
+      - postgres
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Mobile Service - генерация мобильных приложений
+  mobile-service:
+    build:
+      context: .
+      dockerfile: docker/mobile-service.Dockerfile
+    environment:
+      - SERVICE_NAME=mobile-service
+      - SERVICE_PORT=8002
+      - REGISTRY_HOST=service-registry
+      - REGISTRY_PORT=8500
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - service-registry
+      - redis
+      - postgres
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - mobile-projects:/app/projects
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Audio Service - обработка аудио/голоса
+  audio-service:
+    build:
+      context: .
+      dockerfile: docker/audio-service.Dockerfile
+    environment:
+      - SERVICE_NAME=audio-service
+      - SERVICE_PORT=8003
+      - REGISTRY_HOST=service-registry
+      - REGISTRY_PORT=8500
+      - REDIS_URL=redis://redis:6379
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - service-registry
+      - redis
+      - postgres
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - audio-cache:/app/audio_cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Video Service - обработка видео и 3D аватаров
+  video-service:
+    build:
+      context: .
+      dockerfile: docker/video-service.Dockerfile
+    environment:
+      - SERVICE_NAME=video-service
+      - SERVICE_PORT=8004
+      - REGISTRY_HOST=service-registry
+      - REGISTRY_PORT=8500
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - service-registry
+      - redis
+      - postgres
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - video-cache:/app/video_cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Build Service - система сборки и деплоя
+  build-service:
+    build:
+      context: .
+      dockerfile: docker/build-service.Dockerfile
+    environment:
+      - SERVICE_NAME=build-service
+      - SERVICE_PORT=8005
+      - REGISTRY_HOST=service-registry
+      - REGISTRY_PORT=8500
+      - REDIS_URL=redis://redis:6379
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    depends_on:
+      - service-registry
+      - redis
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - build-cache:/app/build_cache
+      - mobile-projects:/app/projects:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Template Service - система шаблонов
+  template-service:
+    build:
+      context: .
+      dockerfile: docker/template-service.Dockerfile
+    environment:
+      - SERVICE_NAME=template-service
+      - SERVICE_PORT=8006
+      - REGISTRY_HOST=service-registry
+      - REGISTRY_PORT=8500
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - service-registry
+      - redis
+      - postgres
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - template-cache:/app/templates
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Quality Service - мониторинг качества кода
+  quality-service:
+    build:
+      context: .
+      dockerfile: docker/quality-service.Dockerfile
+    environment:
+      - SERVICE_NAME=quality-service
+      - SERVICE_PORT=8007
+      - REGISTRY_HOST=service-registry
+      - REGISTRY_PORT=8500
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - service-registry
+      - redis
+      - postgres
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - quality-reports:/app/reports
+      - mobile-projects:/app/projects:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis - кэширование и очереди задач
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  # PostgreSQL - основная база данных
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=lovable_platform
+      - POSTGRES_USER=lovable_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  # Monitoring - Prometheus + Grafana
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    networks:
+      - lovable-network
+    restart: unless-stopped
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+
+networks:
+  lovable-network:
+    driver: bridge
+
+volumes:
+  registry-data:
+  redis-data:
+  postgres-data:
+  prometheus-data:
+  grafana-data:
+  mobile-projects:
+  audio-cache:
+  video-cache:
+  build-cache:
+  template-cache:
+  quality-reports:

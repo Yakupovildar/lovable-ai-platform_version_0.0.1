@@ -2,12 +2,13 @@
 console.log('💻 Vibecode AI Platform loaded!');
 
 // Конфигурация для Replit
-const API_BASE_URL = window.location.origin;  // Используем текущий домен
+const API_BASE_URL = 'https://assumption-playlist-incorporate-monsters.trycloudflare.com';  // Backend API URL
 const WS_URL = window.location.origin;        // WebSocket на том же домене
 
 // Глобальные переменные
 let isTyping = false;
 let socket = null;
+let lastUserMessage = '';
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
@@ -77,15 +78,15 @@ function showPreRegistrationForm() {
         <div class="modal-overlay" onclick="closePreRegistrationModal()">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <div class="modal-header">
-                    <h2>🚀 Расскажите о себе</h2>
-                    <button class="modal-close" onclick="closePreRegistrationModal()">&times;</button>
+                    <h2 style="color: #ffffff; margin: 0 0 10px 0;">🚀 Расскажите о себе</h2>
+                    <button class="modal-close" onclick="closePreRegistrationModal()" style="color: #ffffff; background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
                     <p style="color: rgba(255, 255, 255, 0.8); margin: 10px 0 0 0;">Помогите нам создать лучший опыт для вас</p>
                 </div>
                 <div class="modal-body">
                     <form id="preRegistrationForm" class="pre-registration-form">
                         <div class="form-group">
-                            <label for="userRole">Кто вы? *</label>
-                            <select id="userRole" required>
+                            <label for="userRole" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Кто вы? *</label>
+                            <select id="userRole" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
                                 <option value="">Выберите роль</option>
                                 <option value="developer">Разработчик</option>
                                 <option value="designer">Дизайнер</option>
@@ -98,8 +99,8 @@ function showPreRegistrationForm() {
                         </div>
                         
                         <div class="form-group">
-                            <label for="experienceLevel">Уровень опыта в разработке? *</label>
-                            <select id="experienceLevel" required>
+                            <label for="experienceLevel" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Уровень опыта в разработке? *</label>
+                            <select id="experienceLevel" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
                                 <option value="">Выберите уровень</option>
                                 <option value="beginner">Новичок (без опыта)</option>
                                 <option value="intermediate">Средний (1-3 года)</option>
@@ -109,8 +110,8 @@ function showPreRegistrationForm() {
                         </div>
                         
                         <div class="form-group">
-                            <label for="projectType">Что планируете создавать? *</label>
-                            <select id="projectType" required>
+                            <label for="projectType" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Что планируете создавать? *</label>
+                            <select id="projectType" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
                                 <option value="">Выберите тип проекта</option>
                                 <option value="landing">Лендинги</option>
                                 <option value="ecommerce">Интернет-магазины</option>
@@ -124,8 +125,8 @@ function showPreRegistrationForm() {
                         </div>
                         
                         <div class="form-group">
-                            <label for="teamSize">Размер команды? *</label>
-                            <select id="teamSize" required>
+                            <label for="teamSize" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Размер команды? *</label>
+                            <select id="teamSize" required style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
                                 <option value="">Выберите размер</option>
                                 <option value="solo">Работаю один</option>
                                 <option value="small">2-5 человек</option>
@@ -135,8 +136,8 @@ function showPreRegistrationForm() {
                         </div>
                         
                         <div class="form-group">
-                            <label for="hearAbout">Как узнали о нас?</label>
-                            <select id="hearAbout">
+                            <label for="hearAbout" style="color: #ffffff; font-weight: 600; display: block; margin-bottom: 8px;">Как узнали о нас?</label>
+                            <select id="hearAbout" style="color: #1a1a1a; background-color: #ffffff; border: 1px solid #ddd; padding: 8px 12px; border-radius: 6px; width: 100%;">
                                 <option value="">Выберите источник</option>
                                 <option value="search">Поиск Google</option>
                                 <option value="social">Социальные сети</option>
@@ -951,6 +952,9 @@ async function sendMessage() {
 
     if (!message) return;
 
+    // Сохраняем последнее сообщение пользователя
+    lastUserMessage = message;
+
     // Добавляем сообщение пользователя
     addMessage(message, 'user');
     chatInput.value = '';
@@ -1158,7 +1162,14 @@ function showSuggestions(suggestions) {
 // Отправить предложение
 function sendSuggestion(suggestion) {
     const chatInput = document.getElementById('chatInput');
-    chatInput.value = suggestion;
+    
+    // Если это кнопка "Повторить", используем последнее сообщение пользователя
+    if (suggestion === 'Повторить' && lastUserMessage) {
+        chatInput.value = lastUserMessage;
+    } else {
+        chatInput.value = suggestion;
+    }
+    
     sendMessage();
 
     // Удаляем предложения
