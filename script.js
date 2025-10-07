@@ -546,6 +546,14 @@ window.closePreRegistrationModal = function() {
     }
 };
 
+window.closeDemoSection = function() {
+    const demoSection = document.getElementById('demo');
+    if (demoSection) {
+        // Прокручиваем обратно наверх
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+};
+
 window.showLogin = function() {
     console.log('🔐 Показываем форму входа...');
 
